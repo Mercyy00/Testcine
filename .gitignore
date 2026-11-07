@@ -6,3 +6,4 @@ node_modules/
 test-results/
 playwright-report/
 temp_found.json
+*.zip
