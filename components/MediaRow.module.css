@@ -1,0 +1,145 @@
+.section {
+  padding: 0 var(--page-pad);
+  margin-top: 40px;
+  animation: riseIn 0.6s var(--ease-out) backwards;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 23.472px;
+  line-height: 28.1664px;
+  font-weight: 700;
+  letter-spacing: -0.35208px;
+}
+
+.titleLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.titleLink svg {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.titleLink:hover svg {
+  opacity: 0.7;
+  transform: none;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menuTrigger {
+  height: 32px;
+}
+
+.menu {
+  position: absolute;
+  z-index: var(--z-raised);
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 160px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--radius-panel);
+  background: var(--surface-2);
+  box-shadow: var(--ctl-ring), var(--glass-shadow);
+  animation: popInUp 0.2s var(--ease-out) backwards;
+}
+
+.menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-menu-item);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.menu button:hover {
+  background: var(--fill-3);
+}
+
+.arrows {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.section:hover .arrows,
+.arrows:focus-within {
+  opacity: 1;
+}
+
+.arrows button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--bar-glass);
+  backdrop-filter: var(--bar-blur);
+  -webkit-backdrop-filter: var(--bar-blur);
+  border: var(--bar-border);
+  box-shadow: rgba(255, 255, 255, 0.14) 0 1px 0 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px inset,
+    rgba(0, 0, 0, 0.32) 0 1px 2px 0;
+  transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.arrows button:hover:not(:disabled) {
+  background: var(--bar-glass-hover);
+}
+
+.arrows button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.scroller {
+  display: flex;
+  gap: 14px;
+  margin: -12px calc(var(--page-pad) * -1) 0;
+  padding: 12px var(--page-pad) 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--page-pad);
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+@media (hover: none) {
+  .arrows {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    margin-top: 28px;
+  }
+  .title {
+    font-size: 20px;
+  }
+}

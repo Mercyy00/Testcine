@@ -1,0 +1,26 @@
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+.panel {
+  position: absolute;
+  z-index: var(--z-sticky);
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 260px;
+  padding: 8px;
+  border-radius: var(--radius-panel);
+  background: rgba(18, 22, 32, 0.84);
+  backdrop-filter: blur(32px) saturate(190%) brightness(108%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) brightness(108%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform-origin: top right;
+  animation: popIn 0.22s var(--ease-out) backwards;
+}

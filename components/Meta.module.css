@@ -1,0 +1,43 @@
+.ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+
+.ring svg {
+  position: absolute;
+  inset: 0;
+}
+
+.ring b {
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.cert {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: var(--radius-hair);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.certSmall {
+  min-width: 26px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex: none;
+}

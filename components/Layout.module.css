@@ -1,0 +1,65 @@
+/* Soft colour wash behind the page, driven by the --mood tokens */
+.mood {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--mood-h);
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 18% 0%, rgba(120, 140, 255, calc(var(--mood-end-a) * 1.4)), transparent 70%),
+    radial-gradient(50% 45% at 85% 8%, rgba(255, 170, 120, calc(var(--mood-end-a) * 1.2)), transparent 70%);
+  filter: blur(var(--mood-blur)) saturate(var(--mood-sat));
+  animation: moodDrift 22s ease-in-out infinite;
+}
+
+.padded {
+  padding-top: calc(var(--nav-h) + 40px + env(safe-area-inset-top, 0px));
+}
+
+.footer {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 36px var(--page-pad) calc(48px + var(--safe-b));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--text-dim);
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+
+.links a {
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.links a:hover {
+  color: #fff;
+}
+
+.footer p {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.5;
+}
+
+.footer code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding-bottom: calc(110px + var(--safe-b));
+  }
+  .padded {
+    padding-top: calc(var(--nav-h) + 16px + env(safe-area-inset-top, 0px));
+  }
+}

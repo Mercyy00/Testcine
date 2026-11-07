@@ -1,0 +1,237 @@
+.hero {
+  position: relative;
+  height: clamp(560px, 100vh, 940px);
+  min-height: 560px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.art {
+  width: 100%;
+  height: 100%;
+}
+
+.fadeLeft {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(8, 8, 8, 0.82) 0%, rgba(8, 8, 8, 0.5) 34%, rgba(8, 8, 8, 0) 66%);
+}
+
+.fadeBottom {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 62%;
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0), rgba(8, 8, 8, 0.78) 62%, var(--bg));
+}
+
+.content {
+  position: relative;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad) clamp(44px, 7vh, 86px);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+  max-width: min(720px, 100%);
+}
+
+.logoWrap {
+  max-width: min(440px, 80vw);
+  max-height: 140px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 2px;
+}
+
+.logoImg {
+  max-width: 100%;
+  max-height: 125px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 26px rgba(0, 0, 0, 0.7));
+}
+
+.mark {
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 6px 40px rgba(0, 0, 0, 0.55);
+}
+
+.markStack {
+  display: flex;
+  flex-direction: column;
+  font-family: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
+  font-weight: 400;
+  font-size: clamp(56px, min(9.4vw, 15vh), 140px);
+  line-height: 0.88;
+  letter-spacing: 0.005em;
+  background: linear-gradient(180deg, #fff 30%, #d4d4d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.5));
+}
+
+.markWide {
+  font-weight: 600;
+  font-size: clamp(36px, 6vw, 86px);
+  line-height: 1;
+  letter-spacing: 0.22em;
+  color: #d9d3cc;
+  text-transform: uppercase;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.overview {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.infoIcon {
+  display: none;
+}
+
+.pager {
+  position: absolute;
+  right: var(--page-pad);
+  bottom: clamp(44px, 7vh, 86px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.arrow {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--bar-glass);
+  backdrop-filter: var(--bar-blur);
+  -webkit-backdrop-filter: var(--bar-blur);
+  border: var(--bar-border);
+  box-shadow: rgba(255, 255, 255, 0.14) 0 1px 0 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px inset,
+    rgba(0, 0, 0, 0.32) 0 1px 2px 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.arrow:hover {
+  background: var(--bar-glass-hover);
+}
+
+.arrow:active {
+  transform: scale(0.92);
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+  transition: width 0.3s var(--ease-out), background-color 0.2s ease;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.dotOn {
+  width: 8px;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    height: min(100svh, 820px);
+    min-height: 600px;
+    align-items: flex-end;
+  }
+  .fadeLeft {
+    background: linear-gradient(180deg, rgba(8, 8, 8, 0.35), rgba(8, 8, 8, 0) 32%);
+  }
+  .content {
+    padding-bottom: calc(150px + var(--safe-b));
+  }
+  .copy {
+    align-items: center;
+    text-align: center;
+    max-width: 100%;
+    gap: 16px;
+  }
+  .markStack {
+    align-items: center;
+    font-size: clamp(54px, 17vw, 92px);
+  }
+  .markWide {
+    font-size: clamp(30px, 10vw, 52px);
+  }
+  .meta {
+    justify-content: center;
+    font-size: 17px;
+    gap: 10px;
+  }
+  .overview {
+    font-size: 16px;
+    -webkit-line-clamp: 2;
+  }
+  .actions {
+    width: 100%;
+  }
+  .actions > a {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .pager {
+    left: 0;
+    right: 0;
+    bottom: calc(92px + var(--safe-b));
+    justify-content: center;
+  }
+  .arrow {
+    display: none;
+  }
+}

@@ -1,0 +1,547 @@
+.card {
+  position: relative;
+  flex: none;
+  width: clamp(220px, 19vw, 320px);
+  scroll-snap-align: start;
+}
+
+.wide {
+  width: clamp(220px, 19vw, 320px);
+}
+
+.poster {
+  width: clamp(140px, 12vw, 210px);
+}
+
+.fluid,
+.fluid.wide {
+  width: 100%;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link:focus-visible .art {
+  box-shadow: var(--ring), 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.art {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-2, #14171d);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1), box-shadow 0.28s ease;
+}
+
+.poster .art {
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.2) 70%, rgba(0, 0, 0, 0.65) 100%);
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tileTitleWrap {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  z-index: 2;
+  pointer-events: none;
+  min-height: 28px;
+  max-height: 48%;
+  overflow: hidden;
+}
+
+.tileLogo {
+  max-width: 68%;
+  max-height: 46px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: bottom left;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.9)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+  display: block;
+}
+
+.tileTitleText {
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92), 0 1px 2px rgba(0, 0, 0, 0.98);
+  max-width: 85%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Inset Notch Cutout in top-left */
+.notch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 27px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #080808);
+  border-bottom-right-radius: 10px;
+  z-index: 3;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Inverted concave fillet on top edge (to the right of the notch) */
+.notch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 100% 100%, transparent 10px, var(--bg, #080808) 10.5px);
+  pointer-events: none;
+}
+
+/* Inverted concave fillet on left edge (below the notch) */
+.notch::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 100% 100%, transparent 10px, var(--bg, #080808) 10.5px);
+  pointer-events: none;
+}
+
+.badgeRank {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  min-width: 12px;
+  text-align: center;
+}
+
+.badgeHd {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+  line-height: 1;
+}
+
+.badgeCam {
+  font-size: 13px;
+  font-weight: 800;
+  color: #e5a93c;
+  letter-spacing: -0.2px;
+  line-height: 1;
+}
+
+.badgeNew {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hoverPlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1);
+  pointer-events: none;
+}
+
+.hoverPlay > svg {
+  box-sizing: content-box;
+  padding: 12px 12px 12px 14px;
+  border-radius: 999px;
+  background: var(--primary, #00e599);
+  color: var(--on-accent, #000);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+@media (hover: hover) {
+  .card:hover .art {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.16) 0 0 0 1px inset;
+  }
+  .card:hover .shade,
+  .card:hover .hoverPlay {
+    opacity: 1;
+    transform: none;
+  }
+  .card:hover .save {
+    opacity: 1;
+  }
+}
+
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3.5px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  z-index: 2;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  background: #ffffff;
+}
+
+.timeLeft {
+  color: #9aa0a6;
+  font-weight: 500;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 7px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.15px;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #9aa0a6;
+  font-weight: 500;
+}
+
+.star {
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.ratingVal {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.dot {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.year {
+  color: #9aa0a6;
+}
+
+.quality {
+  color: #9aa0a6;
+  font-weight: 600;
+}
+
+.cardActionsTop {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+}
+
+.moreBtn,
+.save {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.14) 0 0 0 1px;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.card:hover .moreBtn,
+.card:hover .save {
+  opacity: 1;
+}
+
+.moreBtn:hover,
+.save:hover {
+  background: rgba(30, 36, 48, 0.95);
+  transform: scale(1.08);
+}
+
+.save[aria-pressed="true"] {
+  opacity: 1;
+  background: #ffffff;
+  color: #000000;
+}
+
+.save:focus-visible,
+.moreBtn:focus-visible {
+  opacity: 1;
+}
+
+.save:active,
+.moreBtn:active {
+  transform: scale(0.92);
+}
+
+@media (hover: none) {
+  .moreBtn,
+  .save {
+    opacity: 1;
+  }
+}
+
+/* Context Menu matching user screenshots */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: transparent;
+  cursor: default;
+}
+
+.contextMenu {
+  position: fixed;
+  z-index: 99999;
+  background: rgba(20, 24, 34, 0.95);
+  backdrop-filter: blur(28px) saturate(190%) brightness(112%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(112%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 8px;
+  width: 230px;
+  animation: menuPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.reactionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 6px 4px 10px;
+}
+
+.reactBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.65);
+  width: 44px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reactBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: scale(1.12);
+}
+
+.reactActive {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.menuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.subTriggerWrap {
+  position: relative;
+  width: 100%;
+}
+
+.subChevron {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.subMenu {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 6px;
+  background: rgba(20, 24, 34, 0.96);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 8px;
+  width: 190px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72);
+  animation: menuPop 0.15s ease;
+  z-index: 100000;
+}
+
+.subMenuLeft {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+.subMenuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.subMenuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.subMenuItemActive {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.subEmpty {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+}
+
+.cardToast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 22, 32, 0.95);
+  backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+  z-index: 100001;
+  animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+@keyframes menuPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .card,
+  .wide {
+    width: clamp(200px, 58vw, 260px);
+  }
+  .poster {
+    width: clamp(120px, 34vw, 160px);
+  }
+}

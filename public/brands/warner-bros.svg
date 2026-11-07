@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 180" width="100%" height="100%">
+  <!-- Gold outer shield rim -->
+  <path d="M 80 5 C 105 18 142 22 152 26 C 153 60 150 115 125 148 C 105 172 85 178 80 178 C 75 178 55 172 35 148 C 10 115 7 60 8 26 C 18 22 55 18 80 5 Z" fill="#E49B1C"/>
+  <!-- Navy blue inner shield -->
+  <path d="M 80 14 C 103 26 136 29 144 33 C 145 62 142 110 120 140 C 102 162 84 167 80 167 C 76 167 58 162 40 140 C 18 110 15 62 16 33 C 24 29 57 26 80 14 Z" fill="#00356B"/>
+  
+  <!-- Horizontal cloud/sky bar stripes behind letters -->
+  <g fill="#004D99" opacity="0.6">
+    <path d="M 22 45 Q 80 35 138 45 L 140 54 Q 80 44 20 54 Z"/>
+    <path d="M 18 64 Q 80 54 142 64 L 144 73 Q 80 63 16 73 Z"/>
+    <path d="M 16 83 Q 80 73 144 83 L 143 92 Q 80 82 17 92 Z"/>
+    <path d="M 18 102 Q 80 92 141 102 L 138 111 Q 80 101 22 111 Z"/>
+    <path d="M 26 121 Q 80 111 133 121 L 128 130 Q 80 120 32 130 Z"/>
+  </g>
+
+  <!-- Iconic Gold 'W' and 'B' letters -->
+  <g fill="#F5AE2B" stroke="#B8770C" stroke-width="1.2" stroke-linejoin="round">
+    <!-- W -->
+    <path d="M 33 46 L 47 46 L 56 108 L 68 46 L 79 46 L 68 118 L 54 118 L 44 68 L 34 118 L 22 118 Z"/>
+    <!-- B -->
+    <path d="M 82 46 L 109 46 C 122 46 130 52 130 63 C 130 71 125 77 116 80 C 127 83 133 90 133 100 C 133 113 123 118 108 118 L 82 118 Z M 95 57 L 95 75 L 107 75 C 114 75 118 72 118 66 C 118 60 114 57 107 57 Z M 95 86 L 95 107 L 109 107 C 116 107 121 103 121 96 C 121 90 116 86 109 86 Z"/>
+  </g>
+</svg>

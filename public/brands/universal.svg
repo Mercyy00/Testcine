@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" width="100%" height="100%">
+  <!-- Globe outer circle -->
+  <circle cx="160" cy="80" r="64" fill="none" stroke="#111111" stroke-width="3"/>
+  
+  <!-- Globe latitude ellipses -->
+  <ellipse cx="160" cy="80" rx="64" ry="24" fill="none" stroke="#111111" stroke-width="2"/>
+  <ellipse cx="160" cy="80" rx="64" ry="46" fill="none" stroke="#111111" stroke-width="2"/>
+  <line x1="96" y1="80" x2="224" y2="80" stroke="#111111" stroke-width="2.5"/>
+
+  <!-- Globe longitude arcs -->
+  <ellipse cx="160" cy="80" rx="42" ry="64" fill="none" stroke="#111111" stroke-width="2"/>
+  <ellipse cx="160" cy="80" rx="20" ry="64" fill="none" stroke="#111111" stroke-width="2"/>
+  <line x1="160" y1="16" x2="160" y2="144" stroke="#111111" stroke-width="2"/>
+
+  <!-- White halo behind the UNIVERSAL banner -->
+  <rect x="25" y="62" width="270" height="36" rx="4" fill="#ffffff" opacity="0.95"/>
+
+  <!-- UNIVERSAL bold typography with 3D shadow effect -->
+  <text x="160" y="88" fill="#111111" font-family="'Arial Black', 'Helvetica Neue', 'Impact', sans-serif" font-size="28" font-weight="900" letter-spacing="3px" text-anchor="middle">UNIVERSAL</text>
+  <text x="160" y="106" fill="#111111" font-family="Georgia, serif" font-size="7.5" font-weight="700" letter-spacing="2.5px" text-anchor="middle">A COMCAST COMPANY</text>
+</svg>
