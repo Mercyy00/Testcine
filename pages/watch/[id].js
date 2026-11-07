@@ -67,8 +67,13 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   const [sources, setSources] = useState({ loading: true, servers: [], default: null, error: "" });
   const [request, setRequest] = useState(0);
   const [history, setHistory] = useHistory();
-  const saved = history.find((item) => item.id === t.id &&
-    (t.type === "movie" || ((item.season || 1) === Number(season) && (item.episode || 1) === Number(episode))));
+  const currentSeason = Number(season) || 1;
+  const currentEpisode = Number(episode) || 1;
+  const saved = history.find(
+    (item) =>
+      item.id === t.id &&
+      (t.type === "movie" || ((item.season || 1) === currentSeason && (item.episode || 1) === currentEpisode))
+  );
 
   useEffect(() => {
     if (!isReady) return;
@@ -92,11 +97,31 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
   const saveProgress = useCallback((time, duration) => {
     if (!Number.isFinite(duration) || duration <= 0) return;
-    setHistory((previous) => [{ id: t.id, progress: Math.min(1, Math.max(0, time / duration)),
-      timeLeft: Math.ceil((duration - time) / 60), at: Date.now(),
-      ...(t.type !== "movie" ? { season: Number(season), episode: Number(episode) } : {}),
-    }, ...previous.filter((item) => item.id !== t.id)].slice(0, 40));
-  }, [t.id, t.type, season, episode, setHistory]);
+    const progress = Math.min(1, Math.max(0, time / duration));
+    const minsLeft = Math.ceil((duration - time) / 60);
+    const timeLeft = minsLeft > 60
+      ? `${Math.floor(minsLeft / 60)}h ${minsLeft % 60}m left`
+      : `${minsLeft}m left`;
+
+    const entry = {
+      id: t.id,
+      progress,
+      timeLeft,
+      secondsLeft: Math.ceil(duration - time),
+      at: Date.now(),
+      ...(t.type !== "movie" ? { season: currentSeason, episode: currentEpisode } : {}),
+    };
+
+    setHistory((previous) => {
+      const list = previous || [];
+      const filtered = list.filter((item) => {
+        if (item.id !== t.id) return true;
+        if (t.type === "movie") return false;
+        return !((item.season || 1) === currentSeason && (item.episode || 1) === currentEpisode);
+      });
+      return [entry, ...filtered].slice(0, 60);
+    });
+  }, [t.id, t.type, currentSeason, currentEpisode, setHistory]);
 
   const top = <>
     <Link href={`/title/${t.id}`} className={styles.back}><ArrowLeft size={20} /><span>{t.title}</span></Link>

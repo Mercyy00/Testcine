@@ -259,7 +259,7 @@ export default function Header() {
                 ref={(el) => (linkRefs.current[href] = el)}
                 className={`${styles.link} ${active ? styles.linkOn : ""}`}
                 aria-current={active ? "page" : undefined}
-                onClick={() => setTimeout(updatePill, 50)}
+                onClick={updatePill}
               >
                 <span className={styles.linkIcon}>
                   <Icon size={22} strokeWidth={2} />
@@ -479,10 +479,12 @@ export default function Header() {
               {label}
             </Link>
           ))}
-          <a href={BRAND.discord} target="_blank" rel="noreferrer" role="menuitem" className={styles.item}>
-            <Discord />
-            Discord
-          </a>
+          {BRAND.discord && (
+            <a href={BRAND.discord} target="_blank" rel="noreferrer" role="menuitem" className={styles.item}>
+              <Discord />
+              Discord
+            </a>
+          )}
         </Popover>
       </div>
     </header>

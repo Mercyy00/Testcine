@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useToast } from "../lib/useToast";
 import {
   Plus,
   Check,
@@ -48,7 +49,7 @@ export default function MediaCard({
   const [openMenu, setOpenMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showSubList, setShowSubList] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toast, showToast] = useToast(2400);
   const [logoFailed, setLogoFailed] = useState(false);
 
   const menuRef = useRef(null);
@@ -59,11 +60,6 @@ export default function MediaCard({
   const inSchedule = (schedule || []).includes(title.id);
   const reaction = reactions?.[title.id] || null;
   const isContinueWatching = typeof progress === "number";
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2400);
-  };
 
   // Close context menu on outside events or when another card opens its menu
   useEffect(() => {
@@ -237,12 +233,22 @@ export default function MediaCard({
       ? Number(title.rating).toFixed(1)
       : title.rating || null;
 
-  // Quality label (HD or CAM)
+  // Quality label (HD)
   const displayQuality = title.quality || (title.type === "movie" ? "HD" : null);
 
   // Remaining time
+  const formatTimeLeft = (val) => {
+    if (!val) return null;
+    if (typeof val === "string" && val.includes("left")) return val;
+    const mins = typeof val === "number" ? val : parseInt(val, 10);
+    if (Number.isNaN(mins) || mins <= 0) return null;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
+  };
+
   const remainingTime =
-    timeLeft ||
+    formatTimeLeft(timeLeft) ||
     (isContinueWatching && progress > 0
       ? (() => {
           const rem = Math.round((title.runtime || 120) * (1 - progress));

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
 import { getTitle } from "../lib/data";
+import { useToast } from "../lib/useToast";
 import {
   useList,
   useCustomLists,
@@ -37,8 +38,7 @@ import {
 } from "lucide-react";
 import styles from "../styles/Lists.module.css";
 
-// Default liked titles matching user screenshot (Avengers: Endgame, Natsamrat)
-const DEFAULT_LIKED = ["avengers-endgame", "natsamrat"];
+const DEFAULT_LIKED = [];
 
 export default function Lists() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export default function Lists() {
 
   // Context Menu State: { item, x, y } | null
   const [contextMenu, setContextMenu] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toast, showToast] = useToast(2400);
 
   const menuRef = useRef(null);
 
@@ -95,11 +95,6 @@ export default function Lists() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2400);
-  };
 
   // Compute Liked titles
   const userLikedIds = useMemo(() => {

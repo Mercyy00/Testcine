@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   ExternalLink,
 } from "lucide-react";
+import { BRAND } from "../lib/data";
+import { useToast } from "../lib/useToast";
 import {
   useSettings,
   useProfiles,
@@ -109,13 +111,8 @@ export default function SettingsPage() {
   const [dialogMode, setDialogMode] = useState(null); // "email" | "password" | "clear-history" | "clear-watchlist" | "reset-all" | "signout-all"
   const [dialogInput, setDialogInput] = useState("");
 
-  // Toast
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
+  // Toast with auto-cleanup
+  const [toast, showToast] = useToast(2500);
 
   // Sync profile name
   useEffect(() => {
@@ -1160,18 +1157,20 @@ export default function SettingsPage() {
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>Legal & Community</h2>
 
-                  <div className={styles.settingRow}>
-                    <span className={styles.settingLabel}>Discord</span>
-                    <a
-                      href="https://discord.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}
-                    >
-                      <span>Join Discord</span>
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
+                  {BRAND.discord && (
+                    <div className={styles.settingRow}>
+                      <span className={styles.settingLabel}>Discord</span>
+                      <a
+                        href={BRAND.discord}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}
+                      >
+                        <span>Join Discord</span>
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  )}
 
                   <div className={styles.settingRow}>
                     <span className={styles.settingLabel}>Terms of Service</span>

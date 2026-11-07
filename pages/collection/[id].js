@@ -5,6 +5,7 @@ import Layout from "../../components/Layout";
 import { getCollection, getAllCollections, getTitle, runtimeLabel } from "../../lib/data";
 import { fetchLiveCollection } from "../../lib/tmdb";
 import { useList } from "../../lib/store";
+import { useToast } from "../../lib/useToast";
 import {
   Play,
   Plus,
@@ -77,7 +78,7 @@ export default function CollectionPage({ collection: initialCollection }) {
   const router = useRouter();
   const [collection, setCollection] = useState(initialCollection);
   const [watchlist, setWatchlist] = useList();
-  const [toast, setToast] = useState(null);
+  const [toast, showToast] = useToast(2500);
 
   useEffect(() => {
     if (!collection && router.query.id) {
@@ -112,11 +113,6 @@ export default function CollectionPage({ collection: initialCollection }) {
       </Layout>
     );
   }
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const parts = collection.parts || [];
   const firstPart = parts[0];

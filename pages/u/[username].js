@@ -5,6 +5,7 @@ import Link from "next/link";
 import Layout from "../../components/Layout";
 import MediaCard from "../../components/MediaCard";
 import { getTitle } from "../../lib/data";
+import { useToast } from "../../lib/useToast";
 import {
   useProfiles,
   useActiveProfileId,
@@ -75,13 +76,8 @@ export default function UserProfile() {
   const [editAvatar, setEditAvatar] = useState("");
   const [editHidden, setEditHidden] = useState(true);
 
-  // Toast
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
+  // Toast with auto-cleanup
+  const [toast, showToast] = useToast(2500);
 
   // Find profile by username slug, or fallback to active/first profile
   const profile = useMemo(() => {

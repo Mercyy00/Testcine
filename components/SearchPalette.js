@@ -23,15 +23,27 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
       setLiveResults([]);
       return;
     }
+    const controller = new AbortController();
     const timer = setTimeout(() => {
-      fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}&limit=8`)
+      fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}&limit=8`, {
+        signal: controller.signal,
+      })
         .then((r) => (r.ok ? r.json() : []))
         .then((data) => {
-          if (Array.isArray(data)) setLiveResults(data);
+          if (!controller.signal.aborted && Array.isArray(data)) {
+            setLiveResults(data);
+          }
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            // Ignore aborts
+          }
+        });
     }, 200);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [q]);
 
   const results = useMemo(() => {

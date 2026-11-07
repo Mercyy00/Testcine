@@ -27,9 +27,10 @@ export default function SearchPage() {
     }
 
     let active = true;
+    const controller = new AbortController();
     setLoading(true);
 
-    fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}`)
+    fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (!active) return;
@@ -59,6 +60,7 @@ export default function SearchPage() {
 
     return () => {
       active = false;
+      controller.abort();
     };
   }, [q, localResults]);
 

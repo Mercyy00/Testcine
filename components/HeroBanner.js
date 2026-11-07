@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Play, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Pause, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
 import { RatingRing, CertBadge, Dot } from "./Meta";
 import { runtimeLabel } from "../lib/data";
@@ -12,7 +12,7 @@ function Wordmark({ title }) {
   const [logoFailed, setLogoFailed] = useState(false);
   if (title.logo && !logoFailed) {
     return (
-      <div className={styles.logoWrap}>
+      <h1 className={styles.logoWrap} style={{ margin: 0, padding: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={title.logo}
@@ -20,7 +20,10 @@ function Wordmark({ title }) {
           className={styles.logoImg}
           onError={() => setLogoFailed(true)}
         />
-      </div>
+        <span style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", border: 0 }}>
+          {title.title}
+        </span>
+      </h1>
     );
   }
   const words = title.title.toUpperCase().split(" ");
@@ -35,9 +38,11 @@ function Wordmark({ title }) {
 export default function HeroBanner({ items = [], interval = 8000 }) {
   const validItems = items.filter(Boolean);
   const [i, setI] = useState(0);
-  const [hover, setPaused] = useState(false);
+  const [hover, setHover] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [settings] = useSettings();
-  const paused = hover || settings.autoplay === false || settings.autoplayPreviews === false;
+  const paused = hover || isFocused || isManuallyPaused || settings.autoplay === false || settings.autoplayPreviews === false;
   const n = validItems.length;
   const go = useCallback((next) => setI(((next % n) + n) % n), [n]);
 
@@ -56,8 +61,10 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
       className={styles.hero}
       aria-roledescription="carousel"
       aria-label="Featured titles"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocusCapture={() => setIsFocused(true)}
+      onBlurCapture={() => setIsFocused(false)}
     >
       <div className={styles.stage}>
         <AnimatePresence mode="popLayout" initial={false}>
@@ -118,6 +125,15 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
       </div>
 
       <div className={styles.pager}>
+        <button
+          type="button"
+          className={styles.arrow}
+          onClick={() => setIsManuallyPaused((p) => !p)}
+          aria-label={isManuallyPaused ? "Resume carousel autoplay" : "Pause carousel autoplay"}
+          title={isManuallyPaused ? "Resume autoplay" : "Pause autoplay"}
+        >
+          {isManuallyPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
+        </button>
         <button type="button" className={styles.arrow} onClick={() => go(i - 1)} aria-label="Previous title">
           <ChevronLeft size={18} strokeWidth={2.6} />
         </button>

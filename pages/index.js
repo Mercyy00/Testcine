@@ -36,7 +36,17 @@ export default function Home() {
   const [period, setPeriod] = useState("all");
   const [serviceId, setServiceId] = useState(SERVICES[0].id);
 
-  const cont = history || [];
+  const cont = useMemo(() => {
+    const seen = new Set();
+    const unique = [];
+    for (const h of history || []) {
+      if (!seen.has(h.id)) {
+        seen.add(h.id);
+        unique.push(h);
+      }
+    }
+    return unique;
+  }, [history]);
 
   const popularItems = useMemo(
     () => rotate(popular, period === "all" ? 0 : period === "week" ? 3 : 6),

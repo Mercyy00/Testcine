@@ -36,6 +36,7 @@ import {
   formatDate,
 } from "../../lib/data";
 import { fetchLiveTitle } from "../../lib/tmdb";
+import { useToast } from "../../lib/useToast";
 import {
   useList,
   useHistory,
@@ -189,7 +190,7 @@ export default function TitlePage({ initialTitle, id }) {
   const [hoverListBtn, setHoverListBtn] = useState(false);
   const [hoverStar, setHoverStar] = useState(0);
   const [newListName, setNewListName] = useState("");
-  const [toast, setToast] = useState(null);
+  const [toast, showToast] = useToast(2500);
 
   const relatedScrollRef = useRef(null);
   const moreMenuRef = useRef(null);
@@ -296,11 +297,6 @@ export default function TitlePage({ initialTitle, id }) {
     }
   }, [t?.id, setHistory]);
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
   useEffect(() => {
     function handleClickOutside(event) {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
@@ -331,12 +327,10 @@ export default function TitlePage({ initialTitle, id }) {
     if (!t) return null;
     if (t.upcomingPill) return t.upcomingPill;
     if (t.releaseDate) {
-      const isFuture =
-        t.status === "upcoming" ||
-        t.year >= 2026 ||
-        new Date(t.releaseDate) > new Date("2025-01-01");
+      const releaseTime = new Date(t.releaseDate).getTime();
+      const isFuture = !Number.isNaN(releaseTime) && releaseTime > Date.now();
       if (isFuture) {
-        return `${t.title}  coming ${formatDate(t.releaseDate)}`;
+        return `${t.title} · coming ${formatDate(t.releaseDate)}`;
       }
     }
     return null;

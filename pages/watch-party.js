@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Layout from "../components/Layout";
 import { PageHead, Select } from "../components/Page";
 import { Copy, Check, Send } from "lucide-react";
@@ -26,13 +26,24 @@ export default function WatchParty() {
 
   const link = room && typeof window !== "undefined" ? `${window.location.origin}/watch/${room.titleId}?room=${room.code}` : "";
 
+  const copyTimerRef = useRef(null);
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(link);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      copyTimerRef.current = setTimeout(() => {
+        setCopied(false);
+        copyTimerRef.current = null;
+      }, 1800);
     } catch {}
   };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const send = (e) => {
     e.preventDefault();

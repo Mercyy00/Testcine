@@ -47,7 +47,8 @@ export default function VideoPlayer({ servers, defaultServer, title, initialProg
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA" || document.activeElement?.tagName === "SELECT") return;
+      const tag = (e.target?.tagName || document.activeElement?.tagName || "").toUpperCase();
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || tag === "A") return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         player.seek(Math.max(0, player.currentTime - skipSec));

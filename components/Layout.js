@@ -6,7 +6,8 @@ import styles from "./Layout.module.css";
 
 // `flush` lets the page start under the header (home hero). Otherwise content is padded below it.
 export default function Layout({ title, description, flush = false, children }) {
-  const full = title ? `${title} · ${BRAND.name}` : `${BRAND.name} · ${BRAND.tagline}`;
+  const cleanTitle = title ? title.replace(/\s*·\s*Vivarium.*$/i, "").trim() : "";
+  const full = cleanTitle ? `${cleanTitle} · ${BRAND.name}` : `${BRAND.name} · ${BRAND.tagline}`;
   return (
     <>
       <Head>

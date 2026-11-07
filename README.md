@@ -25,11 +25,10 @@ npm run build && npm start
 
 On phones the nav becomes a bottom tab bar with an animated active pill.
 
-## Make it yours
+## Architecture & Data Sources
 
-- `lib/data.js` holds the placeholder catalogue, services, studios and brand name. Replace it with your API or CMS. Titles are fictional on purpose.
-- `components/Art.js` draws generated posters and backdrops. Swap it for real images in `MediaCard` and `HeroBanner`.
-- `styles/globals.css` holds the design tokens (`--bg`, `--surface-*`, `--glow-shadow`, motion keyframes) copied from the reference measurements.
-- `lib/store.js` keeps lists, history, searches and settings in `localStorage`.
-- Font: the reference uses "NS Sans", which is not on Google Fonts. Figtree is the fallback. Add your licensed font via `@font-face` and it takes priority.
-- Configure video origins and encode media using the [streaming setup guide](docs/streaming.md). The watch party still needs a realtime backend.
+- **Metadata Engine**: Vivarium uses a committed TMDB (The Movie Database) snapshot in `lib/tmdb_titles.json` as the offline catalogue base, with dynamic real-time lookups via `lib/tmdb.js` and server-side routes in `pages/api/tmdb/*`.
+- **Streaming Pipeline**: HLS video playback is powered by `hls.js` and resolved through `pages/api/sources.js`. Configure your own HTTPS CDN mirrors via `STREAM_*_ORIGIN` environment variables as documented in [streaming guide](docs/streaming.md).
+- **Client State**: `lib/store.js` manages user watchlist, per-episode watch history, custom lists, reactions, and player settings via structured, versioned `localStorage`.
+- **Art & Assets**: Titles use official high-resolution posters and backdrops from TMDB with SVG fallback generation in `components/Art.js`.
+- **Attribution**: This product uses the TMDB API but is not endorsed or certified by TMDB.

@@ -20,7 +20,7 @@ export default function WatchlistPage() {
   }, [titles, filter]);
 
   return (
-    <Layout title="My list · Vivarium">
+    <Layout title="My list">
       <div className={styles.container}>
         <div className={styles.topRow}>
           <div>

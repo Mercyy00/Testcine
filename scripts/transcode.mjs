@@ -51,7 +51,8 @@ if (result.error || result.status !== 0) {
   console.error("Transcoding failed. Inspect the output directory before retrying with a new directory.");
   process.exit(1);
 }
-if (!readFileSync(join(output, "master.m3u8"), "utf8").includes("#EXT-X-STREAM-INF")) {
+const masterPath = join(output, "master.m3u8");
+if (!existsSync(masterPath) || !readFileSync(masterPath, "utf8").includes("#EXT-X-STREAM-INF")) {
   console.error("FFmpeg did not produce a usable master playlist. The input may be too short; inspect the output before retrying.");
   process.exit(1);
 }
