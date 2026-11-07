@@ -27,6 +27,8 @@ import {
   toggleScheduleItem,
   removeFromHistory,
   createCustomList,
+  inList,
+  toggleListEntry,
 } from "../lib/store";
 import styles from "./MediaCard.module.css";
 
@@ -55,16 +57,9 @@ export default function MediaCard({
 
   const menuRef = useRef(null);
 
-  if (!title) return null;
-
-  const saved = (list || []).includes(title.id);
-  const inSchedule = (schedule || []).includes(title.id);
-  const reaction = reactions?.[title.id] || null;
-  const isContinueWatching = typeof progress === "number";
-
   // Lazily fetch logo if this is a wide card without a logo pre-attached
   useEffect(() => {
-    if (!wide || title.logo || asyncLogo || logoFailed) return;
+    if (!wide || !title || title.logo || asyncLogo || logoFailed) return;
     const tid = title.tmdbId || (typeof title.id === "string" && title.id.match(/\d+$/)?.[0]);
     if (!tid) return;
 
@@ -121,17 +116,24 @@ export default function MediaCard({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("viv:close-card-menu", handleOtherMenu);
     };
-  }, [openMenu, title.id]);
+  }, [openMenu, title?.id]);
+
+  if (!title) return null;
+
+  const saved = inList(list, title.id);
+  const inSchedule = (schedule || []).includes(title.id);
+  const reaction = reactions?.[title.id] || null;
+  const isContinueWatching = typeof progress === "number";
 
   const toggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setList((l) => (l.includes(title.id) ? l.filter((x) => x !== title.id) : [title.id, ...l]));
+    toggleListEntry(setList, title.id, title);
     showToast(saved ? "Removed from watchlist" : "Added to watchlist");
   };
 
   const handleCardClick = () => {
-    touchHistory(setHistory, title.id, 0.15);
+    touchHistory(setHistory, title.id, 0.15, undefined, title);
   };
 
   // Open context menu on right click
@@ -199,7 +201,7 @@ export default function MediaCard({
   const handleToggleWatchlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setList((l) => (l.includes(title.id) ? l.filter((x) => x !== title.id) : [title.id, ...l]));
+    toggleListEntry(setList, title.id, title);
     setOpenMenu(false);
     setShowSubList(false);
     showToast(saved ? "Removed from watchlist" : "Added to watchlist");

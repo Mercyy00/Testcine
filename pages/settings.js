@@ -129,6 +129,15 @@ export default function SettingsPage() {
     }
   }, [settings.theme, settings.bgIntensity]);
 
+  // Function hoisted before useEffect to prevent TDZ error
+  function handleClose() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  }
+
   // ESC key closes modal / navigates back
   useEffect(() => {
     const handleKey = (e) => {
@@ -143,14 +152,6 @@ export default function SettingsPage() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [dialogMode]);
-
-  const handleClose = () => {
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push("/");
-    }
-  };
 
   // Helper to toggle boolean settings
   const toggleSetting = (key) => {
@@ -252,9 +253,9 @@ export default function SettingsPage() {
     }
   }, [searchQuery]);
 
-  // Storage calculation for About tab
-  const storageKb = useMemo(() => {
-    if (typeof window === "undefined") return "14 KB";
+  // Storage calculation for About tab - client only to avoid SSR hydration mismatch
+  const [storageKb, setStorageKb] = useState("0 KB");
+  useEffect(() => {
     try {
       let total = 0;
       for (const k in window.localStorage) {
@@ -262,9 +263,9 @@ export default function SettingsPage() {
           total += (window.localStorage[k] || "").length * 2;
         }
       }
-      return `${Math.max(12, Math.round(total / 1024))} KB`;
+      setStorageKb(`${Math.max(12, Math.round(total / 1024))} KB`);
     } catch {
-      return "14 KB";
+      setStorageKb("14 KB");
     }
   }, []);
 
@@ -626,7 +627,7 @@ export default function SettingsPage() {
                           className={styles.dropdownSelectBtn}
                           onClick={() => setOpenAudioMenu((o) => !o)}
                         >
-                          <span>{settings.preferredAudio || "Hindi"}</span>
+                          <span>{settings.preferredAudio || "Original"}</span>
                           <ChevronDown size={14} />
                         </button>
 
@@ -637,7 +638,7 @@ export default function SettingsPage() {
                                 key={lang}
                                 type="button"
                                 className={`${styles.dropdownItem} ${
-                                  (settings.preferredAudio || "Hindi") === lang
+                                  (settings.preferredAudio || "Original") === lang
                                     ? styles.dropdownItemActive
                                     : ""
                                 }`}
@@ -648,7 +649,7 @@ export default function SettingsPage() {
                                 }}
                               >
                                 <span>{lang}</span>
-                                {(settings.preferredAudio || "Hindi") === lang && (
+                                {(settings.preferredAudio || "Original") === lang && (
                                   <Check size={14} />
                                 )}
                               </button>

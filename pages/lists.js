@@ -27,6 +27,10 @@ import {
   clearCustomList,
   toggleCustomListItem,
   removeFromHistory,
+  entryCard,
+  entryId,
+  toggleListEntry,
+  inList,
 } from "../lib/store";
 import {
   Plus,
@@ -61,7 +65,7 @@ export default function Lists({ cardMap = {} }) {
 
   const resolveTitle = (id) => {
     if (!id) return null;
-    if (typeof id === "object" && id.id) return id;
+    if (typeof id === "object" && id.id) return entryCard(id) || id;
     return cardMap[String(id).toLowerCase()] || null;
   };
 
@@ -222,11 +226,10 @@ export default function Lists({ cardMap = {} }) {
 
   const handleToggleWatchlist = (item) => {
     setContextMenu(null);
-    const inWatchlist = (watchlist || []).includes(item.id);
-    setWatchlist((l) =>
-      inWatchlist ? l.filter((x) => x !== item.id) : [item.id, ...(l || [])]
-    );
-    showToast(inWatchlist ? "Removed from Watchlist" : "Added to Watchlist");
+    toggleListEntry(setWatchlist, item.id, item);
+    showToast((watchlist || []).some((e) => entryId(e) === item.id)
+      ? "Removed from Watchlist"
+      : "Added to Watchlist");
   };
 
   const handleToggleCustomList = (item, list) => {
@@ -609,7 +612,7 @@ export default function Lists({ cardMap = {} }) {
               className={styles.menuItem}
               onClick={() => handleToggleWatchlist(contextMenu.item)}
             >
-              {(watchlist || []).includes(contextMenu.item.id) ? (
+              {inList(watchlist, contextMenu.item.id) ? (
                 <>
                   <Check size={14} />
                   <span>In watchlist</span>

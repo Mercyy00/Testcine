@@ -51,6 +51,8 @@ import {
   toggleWatchedEpisode,
   useUserRatings,
   setUserRating,
+  inList,
+  toggleListEntry,
 } from "../../lib/store";
 import styles from "../../styles/Title.module.css";
 
@@ -184,6 +186,11 @@ export default function TitlePage({ initialTitle, id }) {
       </Layout>
     );
   }
+
+  return <TitleContent t={t} id={id} />;
+}
+
+function TitleContent({ t, id }) {
   const [list, setList] = useList();
   const [, setHistory] = useHistory();
   const [customLists, setCustomLists] = useCustomLists();
@@ -217,6 +224,7 @@ export default function TitlePage({ initialTitle, id }) {
   const relatedScrollRef = useRef(null);
   const moreMenuRef = useRef(null);
   const listMenuRef = useRef(null);
+
   const seasonPickerRef = useRef(null);
   const seasonCardsRowRef = useRef(null);
 
@@ -367,7 +375,7 @@ export default function TitlePage({ initialTitle, id }) {
   // Track to history when viewed/clicked
   useEffect(() => {
     if (t?.id) {
-      touchHistory(setHistory, t.id, 0.15);
+      touchHistory(setHistory, t.id, 0.15, undefined, t);
     }
   }, [t?.id, setHistory]);
 
@@ -386,7 +394,7 @@ export default function TitlePage({ initialTitle, id }) {
     };
   }, []);
 
-  const saved = list.includes(t?.id);
+  const saved = inList(list, t?.id);
   const service = getService(t?.service);
   const studio = getStudio(t?.studio);
   const reaction = t?.id ? reactions?.[t.id] : null;
@@ -400,28 +408,12 @@ export default function TitlePage({ initialTitle, id }) {
   const comingLabel = useMemo(() => {
     if (!t) return null;
     if (t.upcomingPill) return t.upcomingPill;
-    if (t.releaseDate) {
-      const releaseTime = new Date(t.releaseDate).getTime();
-      const isFuture = !Number.isNaN(releaseTime) && releaseTime > Date.now();
-      if (isFuture) {
-        return `${t.title} · coming ${formatDate(t.releaseDate)}`;
-      }
+    if (t.releaseDate && (t.status === "upcoming" || String(t.releaseDate) > "2026-01-01")) {
+      return `${t.title} · coming ${formatDate(t.releaseDate)}`;
     }
     return null;
   }, [t]);
 
-  if (!t) {
-    return (
-      <Layout title="Title not found">
-        <div className="pageInner" style={{ textAlign: "center", padding: "100px 0" }}>
-          <h1>Title not found</h1>
-          <Link href="/" className="btnHero" style={{ marginTop: 20 }}>
-            Return Home
-          </Link>
-        </div>
-      </Layout>
-    );
-  }
 
   const toggleReaction = (type) => {
     setReactions((prev) => ({
@@ -473,15 +465,6 @@ export default function TitlePage({ initialTitle, id }) {
     return t?.recommendations || [];
   }, [t]);
 
-  if (!t) {
-    return (
-      <Layout title="Loading..." flush>
-        <div style={{ minHeight: "80vh", display: "grid", placeItems: "center", color: "var(--text-dim)" }}>
-          <p style={{ fontSize: "18px", fontWeight: 600 }}>Loading title details from TMDB...</p>
-        </div>
-      </Layout>
-    );
-  }
 
   const overviewText = t.overview || "No overview available.";
   const showMoreToggle = overviewText.length > 170;
@@ -660,11 +643,7 @@ export default function TitlePage({ initialTitle, id }) {
               <button
                 type="button"
                 className={styles.glassBtn}
-                onClick={() =>
-                  setList((l) =>
-                    l.includes(t.id) ? l.filter((x) => x !== t.id) : [t.id, ...l]
-                  )
-                }
+                onClick={() => toggleListEntry(setList, t.id, t)}
               >
                 {saved ? <Check size={18} /> : <Plus size={18} />}
                 {saved ? "Watchlist" : "Watchlist"}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import MediaCard from "../components/MediaCard";
 import { getCardMap } from "../lib/data.server";
-import { useList } from "../lib/store";
+import { useList, entryCard, entryId } from "../lib/store";
 import styles from "../styles/Lists.module.css";
 
 export async function getStaticProps() {
@@ -22,7 +22,7 @@ export default function WatchlistPage({ cardMap = {} }) {
 
   const titles = useMemo(() => {
     return (watchlist || [])
-      .map((id) => (typeof id === "object" && id?.id ? id : cardMap[String(id).toLowerCase()] || null))
+      .map((entry) => entryCard(entry) || cardMap[String(entryId(entry)).toLowerCase()] || null)
       .filter(Boolean);
   }, [watchlist, cardMap]);
 

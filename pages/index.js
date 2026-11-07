@@ -6,7 +6,8 @@ import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
 import { SkeletonHero, SkeletonRow } from "../components/Skeleton";
 import { SERVICES, STUDIOS, BRAND, formatDate } from "../lib/constants";
-import { useHistory } from "../lib/store";
+import { useHistory, entryCard } from "../lib/store";
+import { getHomePageData } from "../lib/data.server";
 
 const PERIODS = [
   { value: "day", label: "Today" },
@@ -17,177 +18,54 @@ const PERIODS = [
 const rotate = (list, k) => [...list.slice(k), ...list.slice(0, k)];
 
 export async function getStaticProps() {
+  const data = getHomePageData();
   return {
-    props: {},
+    props: {
+      initialData: data,
+    },
     revalidate: 1800,
   };
 }
 
-export default function Home() {
+export default function Home({ initialData }) {
   const [history] = useHistory();
   const [period, setPeriod] = useState("all");
   const [serviceId, setServiceId] = useState(SERVICES[0].id);
 
-  // Dynamic TMDB API state
-  const [heroItems, setHeroItems] = useState([]);
-  const [heroLoading, setHeroLoading] = useState(true);
+  // Use pre-fetched server data as initial state, then optionally enhance client-side
+  const [heroItems, setHeroItems] = useState(initialData?.heroItems || []);
+  const [heroLoading, setHeroLoading] = useState(!initialData?.heroItems?.length);
 
-  const [topToday, setTopToday] = useState([]);
-  const [topLoading, setTopLoading] = useState(true);
+  const [topToday, setTopToday] = useState(initialData?.topToday || []);
+  const [topLoading, setTopLoading] = useState(!initialData?.topToday?.length);
 
-  const [popular, setPopular] = useState([]);
-  const [popularLoading, setPopularLoading] = useState(true);
+  const [popular, setPopular] = useState(initialData?.popular || []);
+  const [popularLoading, setPopularLoading] = useState(!initialData?.popular?.length);
 
-  const [trending, setTrending] = useState([]);
-  const [trendingLoading, setTrendingLoading] = useState(true);
+  const [trending, setTrending] = useState(initialData?.trending || []);
+  const [trendingLoading, setTrendingLoading] = useState(!initialData?.trending?.length);
 
-  const [serviceItems, setServiceItems] = useState([]);
-  const [serviceLoading, setServiceLoading] = useState(true);
+  const [serviceItems, setServiceItems] = useState(initialData?.serviceItemsMap?.[serviceId] || []);
+  const [serviceLoading, setServiceLoading] = useState(!initialData?.serviceItemsMap?.[serviceId]?.length);
 
-  const [comingSoon, setComingSoon] = useState([]);
-  const [comingSoonLoading, setComingSoonLoading] = useState(true);
+  const [comingSoon, setComingSoon] = useState(initialData?.comingSoon || []);
+  const [comingSoonLoading, setComingSoonLoading] = useState(!initialData?.comingSoon?.length);
 
-  const [airing, setAiring] = useState([]);
-  const [airingLoading, setAiringLoading] = useState(true);
-
-  // 1. Hero & Trending from TMDB
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tmdb/discover?category=trending&type=movie")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setHeroItems(data.slice(0, 5));
-          setTrending(data.slice(0, 14));
-          setHeroLoading(false);
-          setTrendingLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setHeroLoading(false);
-          setTrendingLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 2. Top Today from TMDB
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tmdb/discover?category=top&type=movie")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setTopToday(data.slice(0, 10));
-          setTopLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setTopLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 3. Popular on Vivarium from TMDB
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tmdb/discover?category=popular&type=movie")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setPopular(data.slice(0, 14));
-          setPopularLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setPopularLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 4. Popular by selected streaming service from TMDB
-  useEffect(() => {
-    let active = true;
-    setServiceLoading(true);
-    fetch(`/api/tmdb/discover?service=${serviceId}&type=movie`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active) {
-          setServiceItems(Array.isArray(data) ? data.slice(0, 12) : []);
-          setServiceLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setServiceItems([]);
-          setServiceLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [serviceId]);
-
-  // 5. Coming Soon from TMDB
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tmdb/discover?category=upcoming&type=movie")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setComingSoon(data.slice(0, 12));
-          setComingSoonLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setComingSoonLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 6. Airing TV Series from TMDB
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tmdb/discover?category=on_the_air&type=tv")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setAiring(data.slice(0, 12));
-          setAiringLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setAiringLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
+  const [airing, setAiring] = useState(initialData?.airing || []);
+  const [airingLoading, setAiringLoading] = useState(!initialData?.airing?.length);
 
   // Deduplicate continue watching by title
   const cont = useMemo(() => {
     const seen = new Set();
     const unique = [];
     for (const h of history || []) {
-      if (!seen.has(h.id)) {
-        seen.add(h.id);
-        unique.push(h);
-      }
+      const id = typeof h === "object" ? h?.id : h;
+      if (!id || seen.has(id)) continue;
+      const card = entryCard(h);
+      // Skip entries that cannot render (no snapshot and not in cardMap)
+      if (!card) continue;
+      seen.add(id);
+      unique.push({ ...h, title: card });
     }
     return unique;
   }, [history]);

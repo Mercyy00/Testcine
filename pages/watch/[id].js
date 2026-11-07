@@ -7,7 +7,7 @@ import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
-import { useHistory } from "../../lib/store";
+import { useHistory, toSnapshot } from "../../lib/store";
 import styles from "../../styles/Watch.module.css";
 
 export function getStaticPaths() {
@@ -76,8 +76,11 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     if (!isReady) return;
     const controller = new AbortController();
     const query = new URLSearchParams({ id, type: t.type });
-    if (t.type !== "movie") { query.set("season", season); query.set("episode", episode); }
-    setSources({ loading: true, servers: [], default: null, error: "" });
+    if (t.type !== "movie") { query.set("season", String(currentSeason)); query.set("episode", String(currentEpisode)); }
+    // Defer initial loading state to avoid synchronous setState in effect (React 19 strict)
+    setTimeout(() => {
+      setSources({ loading: true, servers: [], default: null, error: "" });
+    }, 0);
     fetch(`/api/sources?${query}`, { signal: controller.signal })
       .then(async (response) => {
         const data = await response.json();
@@ -102,6 +105,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
     const entry = {
       id: t.id,
+      title: toSnapshot(t),
       progress,
       timeLeft,
       secondsLeft: Math.ceil(duration - time),
@@ -121,7 +125,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   }, [t.id, t.type, currentSeason, currentEpisode, setHistory]);
 
   const top = <>
-    <h1 className="visually-hidden">Watching {t.title}{t.type !== "movie" ? ` - Season ${season} Episode ${episode}` : ""}</h1>
+    <h1 className="visually-hidden">Watching {t.title}{t.type !== "movie" ? ` - Season ${currentSeason} Episode ${currentEpisode}` : ""}</h1>
     <Link href={`/title/${t.id}`} className={styles.back}><ArrowLeft size={20} /><span>{t.title}</span></Link>
     <div className={styles.topActions}>
       {t.trailerKey && <button type="button" className={`chip ${styles.trailerButton}`}
@@ -129,7 +133,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         {mode === "trailer" ? <Tv size={14} /> : <Film size={14} />}
         {mode === "trailer" ? "Switch to Player" : "Watch Official Trailer"}
       </button>}
-      <span className={styles.note}>{mode === "trailer" ? "Official trailer" : t.type === "movie" ? "Vivarium Player" : `S${season} · E${episode}`}</span>
+      <span className={styles.note}>{mode === "trailer" ? "Official trailer" : t.type === "movie" ? "Vivarium Player" : `S${currentSeason} · E${currentEpisode}`}</span>
     </div>
   </>;
 
@@ -158,7 +162,8 @@ export default function Watch({ initialTitle, id }) {
 
   useEffect(() => {
     if (!liveTitle && id) {
-      setLoading(true);
+      // Defer to avoid synchronous setState in effect (React 19 strict)
+      setTimeout(() => setLoading(true), 0);
       fetch(`/api/tmdb/details?id=${encodeURIComponent(id)}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {

@@ -31,7 +31,15 @@ export default function Popover({ trigger, label, children, className = "", pane
         {typeof trigger === "function" ? trigger(open) : trigger}
       </button>
       {open && (
-        <div className={`${styles.panel} ${panelClass}`} role="menu" onClick={() => setOpen(false)}>
+        <div
+          className={`${styles.panel} ${panelClass}`}
+          role="menu"
+          onClick={(e) => {
+            if (e.target.closest("button[data-close], a, [role='menuitem']")) {
+              setOpen(false);
+            }
+          }}
+        >
           {children}
         </div>
       )}

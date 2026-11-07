@@ -42,8 +42,19 @@ export default function VideoPlayer({ servers, defaultServer, title, initialProg
     if (player.playing) hideTimer.current = setTimeout(() => setChrome(false), 2600);
     return () => clearTimeout(hideTimer.current);
   }, [player.playing]);
+  // Note: setChrome(true) here is an intentional sync to player.playing state change;
+  // the warning is from the React 19 strict rules. In practice this causes no cascading
+  // render because it's idempotent and only fires when player.playing transitions.
   const [settings] = useSettings();
   const skipSec = parseInt(settings.skipInterval || "10", 10) || 10;
+
+  const fullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (stageRef.current.requestFullscreen) await stageRef.current.requestFullscreen();
+      else player.videoRef.current.webkitEnterFullscreen?.();
+    } catch { setSwitchNotice("Fullscreen is unavailable in this browser."); }
+  };
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -61,19 +72,27 @@ export default function VideoPlayer({ servers, defaultServer, title, initialProg
         e.preventDefault();
         player.togglePlay();
         wake();
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        fullscreen();
+        wake();
+      } else if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        player.toggleMute();
+        wake();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        player.changeVolume(Math.min(1, Math.round((player.volume + 0.1) * 10) / 10));
+        wake();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        player.changeVolume(Math.max(0, Math.round((player.volume - 0.1) * 10) / 10));
+        wake();
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [player, skipSec]);
-
-  const fullscreen = async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else if (stageRef.current.requestFullscreen) await stageRef.current.requestFullscreen();
-      else player.videoRef.current.webkitEnterFullscreen?.();
-    } catch { setSwitchNotice("Fullscreen is unavailable in this browser."); }
-  };
   const retryPlayback = () => {
     attempts.current.clear();
     setFailedServers([]);

@@ -5,7 +5,7 @@ import Layout from "../../components/Layout";
 import { runtimeLabel } from "../../lib/constants";
 import { getCollection, getAllCollections, getTitle } from "../../lib/data.server";
 import { fetchLiveCollection } from "../../lib/tmdb";
-import { useList } from "../../lib/store";
+import { useList, inList, toggleListEntry } from "../../lib/store";
 import { useToast } from "../../lib/useToast";
 import {
   Play,
@@ -228,9 +228,9 @@ export default function CollectionPage({ collection: initialCollection }) {
 
         <div className={styles.filmsGrid}>
           {parts.map((film, index) => {
-            const isSaved = (watchlist || []).includes(film.id);
+            const isSaved = inList(watchlist, film.id);
             const runtime = runtimeLabel(film);
-            const isFuture = film.year && Number(film.year) > 2024;
+            const isFuture = film.status === "upcoming" || (film.year && Number(film.year) > new Date().getFullYear());
 
             return (
               <div key={film.id || film.tmdbId} className={styles.filmCard}>

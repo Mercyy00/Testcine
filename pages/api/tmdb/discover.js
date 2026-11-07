@@ -23,6 +23,7 @@ export default async function handler(req, res) {
     studio,
     year,
     country,
+    region,
     language,
     rating,
     sort_by,

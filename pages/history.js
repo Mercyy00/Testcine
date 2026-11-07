@@ -4,7 +4,7 @@ import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
 import Art from "../components/Art";
 import { getCardMap } from "../lib/data.server";
-import { useHistory, removeFromHistory } from "../lib/store";
+import { useHistory, removeFromHistory, entryCard, entryId } from "../lib/store";
 import { Play, X, Trash2, Search, Film, Tv, Clock } from "lucide-react";
 import styles from "../styles/History.module.css";
 
@@ -22,12 +22,16 @@ export default function History({ cardMap = {} }) {
   const [history, setHistory] = useHistory();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
 
   // Map history records to titles
   const allEntries = useMemo(() => {
     return (history || [])
       .map((h) => {
-        const title = (h && h.id && cardMap[String(h.id).toLowerCase()]) || (h && h.title ? h.title : null);
+        const title =
+          entryCard(h) ||
+          (h && h.id && cardMap[String(h.id).toLowerCase()]) ||
+          null;
         if (!title) return null;
         return {
           ...h,
@@ -85,8 +89,11 @@ export default function History({ cardMap = {} }) {
   };
 
   const handleClearAll = () => {
-    if (window.confirm("Are you sure you want to clear your entire watch history?")) {
+    if (confirmClear) {
       setHistory([]);
+      setConfirmClear(false);
+    } else {
+      setConfirmClear(true);
     }
   };
 
@@ -118,8 +125,18 @@ export default function History({ cardMap = {} }) {
                 title="Clear all watch history"
               >
                 <Trash2 size={15} />
-                <span>Clear history</span>
+                <span>{confirmClear ? "Confirm clear?" : "Clear history"}</span>
               </button>
+              {confirmClear && (
+                <button
+                  type="button"
+                  className={styles.clearBtn}
+                  onClick={() => setConfirmClear(false)}
+                  style={{ opacity: 0.8 }}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           )}
         </div>

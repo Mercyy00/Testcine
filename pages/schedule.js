@@ -33,7 +33,21 @@ export default function Schedule() {
     ])
       .then(([airingData, upcomingData]) => {
         if (active) {
-          setAiring(Array.isArray(airingData) ? airingData : []);
+          const mappedAiring = (Array.isArray(airingData) ? airingData : []).map((t, idx) => {
+            if (t.airDay) return t;
+            let day = null;
+            if (t.releaseDate || t.firstAirDate) {
+              const dt = new Date(t.releaseDate || t.firstAirDate);
+              if (!Number.isNaN(dt.getTime())) {
+                day = JS_DAY[dt.getDay()];
+              }
+            }
+            if (!day || !DAYS.includes(day)) {
+              day = DAYS[idx % DAYS.length];
+            }
+            return { ...t, airDay: day };
+          });
+          setAiring(mappedAiring);
           setComingSoon(Array.isArray(upcomingData) ? upcomingData : []);
           setLoading(false);
         }

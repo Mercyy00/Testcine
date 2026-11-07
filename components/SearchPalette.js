@@ -25,8 +25,9 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   const input = useRef(null);
 
   useEffect(() => {
+    let active = true;
     if (!q.trim()) {
-      setLiveResults([]);
+      setTimeout(() => { if (active) setLiveResults([]); }, 0);
       return;
     }
     const controller = new AbortController();
@@ -36,7 +37,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
       })
         .then((r) => (r.ok ? r.json() : []))
         .then((data) => {
-          if (!controller.signal.aborted && Array.isArray(data)) {
+          if (active && !controller.signal.aborted && Array.isArray(data)) {
             setLiveResults(data);
           }
         })
@@ -47,6 +48,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
         });
     }, 200);
     return () => {
+      active = false;
       clearTimeout(timer);
       controller.abort();
     };
@@ -69,10 +71,14 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
     ];
   }, [q, results, recents, suggestions]);
 
-  useEffect(() => setActive(-1), [q, open]);
+  useEffect(() => {
+    setTimeout(() => setActive(-1), 0);
+  }, [q, open]);
 
   useEffect(() => {
-    if (autoFocus) input.current?.focus();
+    if (autoFocus) {
+      setTimeout(() => input.current?.focus(), 0);
+    }
   }, [autoFocus]);
 
   useEffect(() => {
