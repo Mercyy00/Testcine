@@ -4,29 +4,53 @@ import Layout from "../components/Layout";
 import { PageHead } from "../components/Page";
 import { CertBadge } from "../components/Meta";
 import { DAYS, formatDate, getService, TYPE_LABEL } from "../lib/constants";
-import { getSchedulePageData } from "../lib/data.server";
 import styles from "../styles/Schedule.module.css";
 
 export async function getStaticProps() {
-  const data = getSchedulePageData();
   return {
-    props: {
-      ...data,
-    },
+    props: {},
     revalidate: 1800,
   };
 }
 
 const JS_DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function Schedule({ airing = [], comingSoon = [] }) {
+export default function Schedule() {
   const [today, setToday] = useState(null);
-  useEffect(() => setToday(JS_DAY[new Date().getDay()]), []);
+  const [airing, setAiring] = useState([]);
+  const [comingSoon, setComingSoon] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setToday(JS_DAY[new Date().getDay()]);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch("/api/tmdb/discover?category=on_the_air&type=tv").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/tmdb/discover?category=upcoming&type=movie").then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([airingData, upcomingData]) => {
+        if (active) {
+          setAiring(Array.isArray(airingData) ? airingData : []);
+          setComingSoon(Array.isArray(upcomingData) ? upcomingData : []);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
-    <Layout title="Schedule" description="What airs this week and what is coming soon.">
+    <Layout title="Schedule" description="What airs this week and what is coming soon dynamically from TMDB.">
       <div className="pageInner">
-        <PageHead title="Schedule" sub="Weekly episodes are listed by the day they land." />
+        <PageHead title="Schedule" sub="Weekly episodes and upcoming releases fetched directly from TMDB." />
 
         <div className={styles.week}>
           {DAYS.map((d) => {
@@ -37,9 +61,11 @@ export default function Schedule({ airing = [], comingSoon = [] }) {
                   {d}
                   {today === d && <span>Today</span>}
                 </h2>
-                {items.length ? (
+                {loading ? (
+                  <p className={styles.none}>Loading...</p>
+                ) : items.length ? (
                   items.map((t) => (
-                    <Link key={t.id} href={`/title/${t.id}`} className={styles.item}>
+                    <Link key={t.id || t.tmdbId} href={`/title/${t.id}`} className={styles.item}>
                       <b>{t.title}</b>
                       <small>
                         {TYPE_LABEL[t.type] || "Title"} · {getService(t.service)?.name || "Vivarium"}
@@ -57,11 +83,13 @@ export default function Schedule({ airing = [], comingSoon = [] }) {
         <h2 className={styles.h2}>Coming soon</h2>
         <ul className={styles.soon}>
           {comingSoon.map((t) => (
-            <li key={t.id}>
-              <time dateTime={t.releaseDate}>{formatDate(t.releaseDate)}</time>
-              <Link href={`/title/${t.id}`}>{t.title}</Link>
-              <span>{TYPE_LABEL[t.type]}</span>
-              <CertBadge cert={t.cert} small />
+            <li key={t.id || t.tmdbId}>
+              <Link href={`/title/${t.id}`}>
+                <span className={styles.date}>{formatDate(t.releaseDate)}</span>
+                <span className={styles.title}>{t.title}</span>
+                <CertBadge cert={t.cert} />
+                <span className={styles.type}>{TYPE_LABEL[t.type]}</span>
+              </Link>
             </li>
           ))}
         </ul>

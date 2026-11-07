@@ -22,11 +22,13 @@ import {
   Download,
   Clapperboard,
   ChevronDown,
+  ChevronUp,
   Search,
   ArrowUpDown,
   Share2,
 } from "lucide-react";
 import Layout from "../../components/Layout";
+import { SkeletonHero, SkeletonRow } from "../../components/Skeleton";
 import {
   getService,
   getStudio,
@@ -73,7 +75,7 @@ export function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const { id } = params;
-  if (!id || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) {
+  if (!id || typeof id !== "string" || !/^[a-zA-Z0-9_.-]{1,200}$/.test(id)) {
     return { notFound: true };
   }
 
@@ -94,12 +96,12 @@ export async function getStaticProps({ params }) {
     }
 
     try {
-      const live = await fetchLiveTitle(type || "any", tmdbId);
+      const live = await fetchLiveTitle(type || "any", id);
       if (live) {
         t = { ...(t || {}), ...live };
       } else if (!t) {
         const fallbackType = type === "movie" ? "tv" : "movie";
-        const altLive = await fetchLiveTitle(fallbackType, tmdbId);
+        const altLive = await fetchLiveTitle(fallbackType, id);
         if (altLive) t = altLive;
       }
     } catch (e) {
@@ -160,9 +162,10 @@ export default function TitlePage({ initialTitle, id }) {
 
   if (router.isFallback || (!t && !error)) {
     return (
-      <Layout title="Loading Title · Vivarium">
-        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-dim)" }}>
-          Loading title from TMDB...
+      <Layout flush title="Loading Title · Vivarium">
+        <SkeletonHero />
+        <div style={{ maxWidth: "var(--page-max)", margin: "40px auto", padding: "0 var(--page-pad)" }}>
+          <SkeletonRow title="Similar & Recommended" count={6} wide={true} />
         </div>
       </Layout>
     );
@@ -208,10 +211,33 @@ export default function TitlePage({ initialTitle, id }) {
   const [hoverStar, setHoverStar] = useState(0);
   const [newListName, setNewListName] = useState("");
   const [toast, showToast] = useToast(2500);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [showSeasonModal, setShowSeasonModal] = useState(false);
 
   const relatedScrollRef = useRef(null);
   const moreMenuRef = useRef(null);
   const listMenuRef = useRef(null);
+  const seasonPickerRef = useRef(null);
+  const seasonCardsRowRef = useRef(null);
+
+  // Close season modal popover on outside click or escape
+  useEffect(() => {
+    if (!showSeasonModal) return;
+    const handleDown = (e) => {
+      if (seasonPickerRef.current && !seasonPickerRef.current.contains(e.target)) {
+        setShowSeasonModal(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === "Escape") setShowSeasonModal(false);
+    };
+    window.addEventListener("mousedown", handleDown);
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("mousedown", handleDown);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [showSeasonModal]);
 
   // Dynamically load episodes when season changes
   useEffect(() => {
@@ -260,19 +286,50 @@ export default function TitlePage({ initialTitle, id }) {
       : [];
 
   const seasonOptions = useMemo(() => {
-    if (!t) return [{ seasonNumber: 1, name: "Season 1" }];
-    if (Array.isArray(t.seasons) && t.seasons.length > 0) {
-      return t.seasons.map((s, idx) => ({
+    if (!t) return [{ seasonNumber: 1, name: "Season 1", episodeCount: 10, year: 2026, poster: null }];
+    if (Array.isArray(t.seasonsList) && t.seasonsList.length > 0) {
+      return t.seasonsList.map((s, idx) => ({
         seasonNumber: s.seasonNumber || idx + 1,
         name: s.name || `Season ${s.seasonNumber || idx + 1}`,
+        episodeCount: s.episodeCount || 10,
+        year: s.year || (s.airDate ? s.airDate.slice(0, 4) : t.year) || 2026,
+        poster: s.poster || t.poster,
       }));
     }
     const count = typeof t.seasons === "number" ? t.seasons : 1;
     return Array.from({ length: Math.max(1, count) }, (_, i) => ({
       seasonNumber: i + 1,
       name: t.status === "upcoming" && count === 1 ? "Miniseries" : `Season ${i + 1}`,
+      episodeCount: 10,
+      year: t.year || 2026,
+      poster: t.poster,
     }));
   }, [t]);
+
+  const currentSeasonObj = useMemo(() => {
+    return (
+      seasonOptions.find((s) => s.seasonNumber === selectedSeason) ||
+      seasonOptions[0] || {
+        seasonNumber: selectedSeason,
+        name: `Season ${selectedSeason}`,
+        episodeCount: 10,
+        year: t?.year,
+        poster: t?.poster,
+      }
+    );
+  }, [seasonOptions, selectedSeason, t?.year, t?.poster]);
+
+  const activeSeasonIndex = useMemo(() => {
+    const idx = seasonOptions.findIndex((s) => s.seasonNumber === selectedSeason);
+    return idx >= 0 ? idx : 0;
+  }, [seasonOptions, selectedSeason]);
+
+  const navigateSeason = (dir) => {
+    const newIndex = activeSeasonIndex + dir;
+    if (newIndex >= 0 && newIndex < seasonOptions.length) {
+      setSelectedSeason(seasonOptions[newIndex].seasonNumber);
+    }
+  };
 
   const allEpisodes = useMemo(() => {
     if (!t) return [];
@@ -506,12 +563,19 @@ export default function TitlePage({ initialTitle, id }) {
           <div className={styles.info}>
             {/* Logo or Wordmark Title */}
             <div className={styles.logoArea}>
-              <h1 className={t.logo ? "visually-hidden" : styles.titleText}>
-                {t.title}
-              </h1>
-              {t.logo && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.logo} alt="" aria-hidden="true" className={styles.logoImg} />
+              {t.logo && !logoFailed ? (
+                <h1 className={styles.logoWrap} style={{ margin: 0, padding: 0 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={t.logo}
+                    alt={t.title}
+                    className={styles.logoImg}
+                    onError={() => setLogoFailed(true)}
+                  />
+                  <span className="visually-hidden">{t.title}</span>
+                </h1>
+              ) : (
+                <h1 className={styles.titleText}>{t.title}</h1>
               )}
             </div>
 
@@ -823,19 +887,95 @@ export default function TitlePage({ initialTitle, id }) {
             {/* Toolbar */}
             <div className={styles.episodesToolbar}>
               <div className={styles.episodesLeftControls}>
-                <div className={styles.seasonSelectWrap}>
-                  <select
-                    value={selectedSeason}
-                    onChange={(e) => setSelectedSeason(Number(e.target.value))}
-                    className={styles.seasonSelect}
+                <div className={styles.seasonPickerWrap} ref={seasonPickerRef}>
+                  <button
+                    type="button"
+                    className={`${styles.seasonTriggerBtn} ${showSeasonModal ? styles.seasonTriggerActive : ""}`}
+                    onClick={() => setShowSeasonModal((v) => !v)}
+                    aria-haspopup="dialog"
+                    aria-expanded={showSeasonModal}
                   >
-                    {seasonOptions.map((s) => (
-                      <option key={s.seasonNumber} value={s.seasonNumber}>
-                        {s.name || `Season ${s.seasonNumber}`}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className={styles.selectArrow} />
+                    <span>{currentSeasonObj?.name || `Season ${selectedSeason}`}</span>
+                    {showSeasonModal ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                  </button>
+
+                  {showSeasonModal && (
+                    <div className={styles.seasonModalPopover} role="dialog" aria-label="Select Season">
+                      {/* Season Cards Carousel Track */}
+                      <div className={styles.seasonCardsTrack}>
+                        {/* Left Arrow */}
+                        {seasonOptions.length > 1 && (
+                          <button
+                            type="button"
+                            className={`${styles.seasonNavArrow} ${styles.seasonArrowLeft}`}
+                            onClick={() => navigateSeason(-1)}
+                            disabled={activeSeasonIndex <= 0}
+                            aria-label="Previous Season"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                        )}
+
+                        <div className={styles.seasonCardsRow} ref={seasonCardsRowRef}>
+                          {seasonOptions.map((s) => {
+                            const isActive = s.seasonNumber === selectedSeason;
+                            return (
+                              <button
+                                key={s.seasonNumber}
+                                type="button"
+                                data-active={isActive}
+                                className={`${styles.seasonCardBtn} ${isActive ? styles.seasonCardActive : ""}`}
+                                onClick={() => {
+                                  setSelectedSeason(s.seasonNumber);
+                                }}
+                              >
+                                <div className={styles.seasonPosterWrap}>
+                                  {s.poster ? (
+                                    <img
+                                      src={s.poster}
+                                      alt={s.name}
+                                      className={styles.seasonPosterImg}
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    <div className={styles.seasonPosterFallback}>
+                                      <span>{s.name}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Right Arrow */}
+                        {seasonOptions.length > 1 && (
+                          <button
+                            type="button"
+                            className={`${styles.seasonNavArrow} ${styles.seasonArrowRight}`}
+                            onClick={() => navigateSeason(1)}
+                            disabled={activeSeasonIndex >= seasonOptions.length - 1}
+                            aria-label="Next Season"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Active Season Meta Info below matching user screenshot */}
+                      <div className={styles.seasonMetaInfo}>
+                        <h4 className={styles.seasonMetaTitle}>
+                          {currentSeasonObj?.name || `Season ${selectedSeason}`}
+                        </h4>
+                        <p className={styles.seasonMetaSub}>
+                          {currentSeasonObj?.episodeCount
+                            ? `${currentSeasonObj.episodeCount} episodes`
+                            : "10 episodes"}
+                          {currentSeasonObj?.year ? ` · ${currentSeasonObj.year}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.epSearchWrap}>

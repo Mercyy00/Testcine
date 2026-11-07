@@ -7,10 +7,10 @@
 
 .dockField {
   height: var(--bar-ctl, 46px);
-  background: var(--bar-fill);
+  background: rgba(20, 22, 28, 0.94);
   box-shadow: var(--bar-ring);
-  backdrop-filter: var(--bar-glass-blur);
-  -webkit-backdrop-filter: var(--bar-glass-blur);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   border-radius: var(--radius-float, 999px);
   transition: background var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
   margin: 0;
@@ -21,7 +21,7 @@
 }
 
 .dockField:focus-within {
-  background: var(--bar-fill-hover);
+  background: rgba(28, 30, 38, 0.98);
   box-shadow: var(--bar-ring);
 }
 

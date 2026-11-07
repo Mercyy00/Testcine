@@ -3,27 +3,47 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import SearchPalette from "../components/SearchPalette";
 import { PageHead, TitleGrid, Empty } from "../components/Page";
-import { getSearchPageData } from "../lib/data.server";
+import { SkeletonGrid } from "../components/Skeleton";
 
 export async function getStaticProps() {
-  const data = getSearchPageData();
   return {
-    props: {
-      ...data,
-    },
+    props: {},
     revalidate: 1800,
   };
 }
 
-export default function SearchPage({ fallback = [] }) {
+export default function SearchPage() {
   const { query } = useRouter();
   const q = typeof query.q === "string" ? query.q : "";
   const [liveResults, setLiveResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fallback, setFallback] = useState([]);
+  const [fallbackLoading, setFallbackLoading] = useState(true);
+
+  // Fetch popular movies as fallback exploration from TMDB API
+  useEffect(() => {
+    let active = true;
+    fetch("/api/tmdb/discover?category=popular&type=movie")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active) {
+          setFallback(Array.isArray(data) ? data.slice(0, 12) : []);
+          setFallbackLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setFallbackLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!q.trim()) {
       setLiveResults(null);
+      setLoading(false);
       return;
     }
 
@@ -56,7 +76,7 @@ export default function SearchPage({ fallback = [] }) {
   const results = liveResults !== null ? liveResults : [];
 
   return (
-    <Layout title={q ? `Search: ${q}` : "Search"} description="Search movies, series and anime.">
+    <Layout title={q ? `Search: ${q}` : "Search"} description="Search movies, series and anime directly from TMDB.">
       <div className="pageInner">
         <PageHead
           title={q ? `Results for “${q}”` : "Search"}
@@ -65,22 +85,27 @@ export default function SearchPage({ fallback = [] }) {
               ? "Searching TMDB..."
               : q
               ? `${results.length} title${results.length === 1 ? "" : "s"} found`
-              : "Type a title, a genre or a year."
+              : "Type a title, actor, genre or keyword to search TMDB."
           }
         />
         <div style={{ marginBottom: 28 }} className="mobileOnlySearch">
           <SearchPalette wide autoFocus={!q} />
         </div>
-        {q && results.length === 0 && !loading ? (
+
+        {loading ? (
+          <SkeletonGrid count={8} wide={false} />
+        ) : q && results.length === 0 ? (
           <>
             <Empty
               title="No titles match"
-              text="Check the spelling or try a broader word such as a genre. Here are some popular picks instead."
+              text="Check the spelling or try a broader keyword. Here are some popular TMDB picks instead."
             />
-            <TitleGrid items={fallback} />
+            {fallbackLoading ? <SkeletonGrid count={8} wide={false} /> : <TitleGrid items={fallback} />}
           </>
-        ) : results.length ? (
+        ) : results.length > 0 ? (
           <TitleGrid items={results} />
+        ) : fallbackLoading ? (
+          <SkeletonGrid count={8} wide={false} />
         ) : (
           <TitleGrid items={fallback} />
         )}

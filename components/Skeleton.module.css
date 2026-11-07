@@ -1,0 +1,243 @@
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.03) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Card Skeleton */
+.card {
+  position: relative;
+  flex: none;
+  width: clamp(220px, 19vw, 320px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardFluid {
+  width: 100%;
+}
+
+.posterCard {
+  width: clamp(140px, 12vw, 210px);
+}
+
+.artPlaceholder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--surface-2, #14171d);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.posterArtPlaceholder {
+  aspect-ratio: 2 / 3;
+}
+
+.metaPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  gap: 8px;
+}
+
+.titleLine {
+  height: 14px;
+  width: 65%;
+  border-radius: 6px;
+}
+
+.subLine {
+  height: 12px;
+  width: 25%;
+  border-radius: 6px;
+}
+
+/* Grid Skeleton */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(132px, 12vw, 190px), 1fr));
+  gap: 26px 16px;
+}
+
+.gridWide {
+  grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 20vw, 320px), 1fr));
+}
+
+/* Row Skeleton */
+.rowSection {
+  margin: 36px 0;
+  position: relative;
+}
+
+.rowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--page-pad, 36px);
+  margin-bottom: 14px;
+}
+
+.rowTitle {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(20px, 1.8vw, 24px);
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.rowTitlePlaceholder {
+  height: 24px;
+  width: 180px;
+  border-radius: 8px;
+}
+
+.rowScroller {
+  display: flex;
+  gap: 14px;
+  padding: 8px var(--page-pad, 36px) 16px;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Hero Banner Skeleton */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: clamp(480px, 64vh, 760px);
+  display: flex;
+  align-items: flex-end;
+  background: var(--surface-1, #0a0a0c);
+  overflow: hidden;
+}
+
+.heroStage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.heroBackdrop {
+  width: 100%;
+  height: 100%;
+  background-color: var(--surface-2, #121318);
+}
+
+.heroFadeLeft {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(260px, 50vw, 840px);
+  background: linear-gradient(
+    90deg,
+    rgba(8, 8, 8, 0.95) 0%,
+    rgba(8, 8, 8, 0.75) 45%,
+    rgba(8, 8, 8, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.heroFadeBottom {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: clamp(140px, 24vh, 320px);
+  background: linear-gradient(
+    0deg,
+    var(--bg, #080808) 0%,
+    rgba(8, 8, 8, 0.78) 50%,
+    rgba(8, 8, 8, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--page-max, 1600px);
+  margin: 0 auto;
+  padding: 0 var(--page-pad, 36px) clamp(36px, 6vw, 68px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.heroTitlePlaceholder {
+  width: clamp(220px, 40vw, 440px);
+  height: clamp(38px, 4.5vw, 56px);
+  border-radius: 10px;
+}
+
+.heroMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heroMetaPill {
+  height: 22px;
+  width: 54px;
+  border-radius: 6px;
+}
+
+.heroDescPlaceholder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 540px;
+}
+
+.heroDescLine1 {
+  height: 14px;
+  width: 95%;
+  border-radius: 6px;
+}
+
+.heroDescLine2 {
+  height: 14px;
+  width: 82%;
+  border-radius: 6px;
+}
+
+.heroDescLine3 {
+  height: 14px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.heroButtonPrimary {
+  width: 130px;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.heroButtonSecondary {
+  width: 120px;
+  height: 44px;
+  border-radius: 999px;
+}

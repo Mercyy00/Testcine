@@ -21,28 +21,25 @@ export function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const { id } = params;
-  if (!id || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) {
+  if (!id || typeof id !== "string" || !/^[a-zA-Z0-9_.-]{1,200}$/.test(id)) {
     return { notFound: true };
   }
 
   let t = getTitle(id);
 
   if (!t) {
-    let type = "movie";
-    let tmdbId = id;
+    let type = "any";
     if (id.startsWith("movie-")) {
       type = "movie";
-      tmdbId = id.replace("movie-", "");
     } else if (id.startsWith("tv-") || id.startsWith("series-") || id.startsWith("anime-")) {
       type = "tv";
-      tmdbId = id.replace(/^(tv|series|anime)-/, "");
     }
 
     try {
-      t = await fetchLiveTitle(type, tmdbId);
+      t = await fetchLiveTitle(type, id);
       if (!t) {
         const fallbackType = type === "movie" ? "tv" : "movie";
-        t = await fetchLiveTitle(fallbackType, tmdbId);
+        t = await fetchLiveTitle(fallbackType, id);
       }
     } catch (e) {
       console.error("Watch live fetch error:", e.message || e);

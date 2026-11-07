@@ -28,6 +28,14 @@
   pointer-events: none;
 }
 
+.scrolled {
+  background: rgba(10, 12, 16, 0.94);
+  backdrop-filter: blur(24px) saturate(190%) brightness(105%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(105%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
 .scrolled::before {
   opacity: 1;
 }

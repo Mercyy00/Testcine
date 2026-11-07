@@ -1,16 +1,13 @@
 import { useRouter } from "next/router";
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { PageHead, Chips, TitleGrid, Empty } from "../components/Page";
+import { SkeletonGrid } from "../components/Skeleton";
 import { SERVICES, STUDIOS, getService, getStudio } from "../lib/constants";
-import { getDiscoverPageData } from "../lib/data.server";
 
 export async function getStaticProps() {
-  const data = getDiscoverPageData();
   return {
-    props: {
-      ...data,
-    },
+    props: {},
     revalidate: 1800,
   };
 }
@@ -22,14 +19,14 @@ const TYPES = [
   { value: "anime", label: "Anime" },
 ];
 
-export default function Discover({ initialTitles = [] }) {
+export default function Discover() {
   const { query, replace } = useRouter();
   const [type, setType] = useState("all");
   const service = typeof query.service === "string" ? query.service : "all";
   const studio = typeof query.studio === "string" ? query.studio : "all";
 
-  const [liveItems, setLiveItems] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -43,12 +40,15 @@ export default function Discover({ initialTitles = [] }) {
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (active) {
-          setLiveItems(Array.isArray(data) && data.length > 0 ? data : null);
+          setItems(Array.isArray(data) ? data : []);
           setLoading(false);
         }
       })
       .catch(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setItems([]);
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -63,24 +63,18 @@ export default function Discover({ initialTitles = [] }) {
     replace({ pathname: "/discover", query: next }, undefined, { shallow: true });
   };
 
-  const shown = useMemo(
-    () =>
-      initialTitles.filter(
-        (t) =>
-          (type === "all" || t.type === type) &&
-          (service === "all" || t.service === service) &&
-          (studio === "all" || t.studio === studio)
-      ).sort((a, b) => (b.rating || 0) - (a.rating || 0)),
-    [initialTitles, type, service, studio]
-  );
-
-  const displayItems = liveItems || shown;
-  const crumbs = [service !== "all" && getService(service)?.name, studio !== "all" && getStudio(studio)?.name].filter(Boolean);
+  const crumbs = [
+    service !== "all" && getService(service)?.name,
+    studio !== "all" && getStudio(studio)?.name,
+  ].filter(Boolean);
 
   return (
-    <Layout title="Discover" description="Browse the catalogue by format, service and studio.">
+    <Layout title="Discover" description="Browse the catalogue by format, service and studio dynamically via TMDB.">
       <div className="pageInner">
-        <PageHead title="Discover" sub={crumbs.length ? crumbs.join(" · ") : "Filter the whole catalogue by format, service and studio."} />
+        <PageHead
+          title="Discover"
+          sub={crumbs.length ? crumbs.join(" · ") : "Filter the whole catalogue by format, service and studio directly from TMDB."}
+        />
         <div style={{ display: "grid", gap: 14, marginBottom: 30 }}>
           <Chips label="Format" options={TYPES} value={type} onChange={setType} />
           <Chips
@@ -96,14 +90,13 @@ export default function Discover({ initialTitles = [] }) {
             onChange={(v) => setParam("studio", v)}
           />
         </div>
-        {loading && !displayItems.length ? (
-          <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-dim)" }}>
-            Loading catalogue from TMDB...
-          </div>
-        ) : displayItems.length ? (
-          <TitleGrid items={displayItems} />
+
+        {loading ? (
+          <SkeletonGrid count={12} wide={false} />
+        ) : items.length > 0 ? (
+          <TitleGrid items={items} />
         ) : (
-          <Empty title="No matches" text="That combination has no titles. Clear a filter to widen the search." />
+          <Empty title="No matches" text="That combination has no titles on TMDB. Clear a filter to widen the search." />
         )}
       </div>
     </Layout>

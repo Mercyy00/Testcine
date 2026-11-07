@@ -1220,6 +1220,215 @@
   flex-wrap: wrap;
 }
 
+.seasonPickerWrap {
+  position: relative;
+  display: inline-block;
+  z-index: 40;
+}
+
+.seasonTriggerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.seasonTriggerBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.seasonTriggerActive {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.seasonModalPopover {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  width: 375px;
+  max-width: min(375px, 92vw);
+  background: rgba(18, 20, 26, 0.94);
+  backdrop-filter: blur(36px) saturate(190%) brightness(110%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(110%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  padding: 24px 18px 20px;
+  z-index: 120;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.seasonCardsTrack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.seasonCardsRow {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  padding: 10px 4px;
+  width: 100%;
+  scrollbar-width: none;
+}
+
+.seasonCardsRow::-webkit-scrollbar {
+  display: none;
+}
+
+.seasonCardBtn {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.25s ease, filter 0.25s ease;
+  width: 135px;
+  opacity: 0.42;
+  filter: brightness(0.65);
+  transform: scale(0.88);
+  outline: none;
+}
+
+.seasonCardBtn:hover {
+  opacity: 0.78;
+  filter: brightness(0.88);
+}
+
+.seasonCardActive {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: scale(1.04) !important;
+}
+
+.seasonPosterWrap {
+  aspect-ratio: 2 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #181b24;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+  position: relative;
+  transition: box-shadow 0.25s ease;
+}
+
+.seasonCardActive .seasonPosterWrap {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 22px rgba(255, 255, 255, 0.25);
+}
+
+.seasonPosterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.seasonPosterFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(30, 35, 50, 0.9), rgba(15, 18, 25, 0.9));
+}
+
+.seasonNavArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.seasonNavArrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.seasonNavArrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.seasonArrowLeft {
+  left: -10px;
+}
+
+.seasonArrowRight {
+  right: -10px;
+}
+
+.seasonMetaInfo {
+  margin-top: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.seasonMetaTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.seasonMetaSub {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .seasonSelectWrap {
   position: relative;
   display: inline-flex;

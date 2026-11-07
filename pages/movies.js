@@ -5,15 +5,12 @@ import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
-import { STUDIOS, SERVICES, BRAND } from "../lib/constants";
-import { getMoviesPageData } from "../lib/data.server";
+import { SkeletonHero, SkeletonGrid, SkeletonRow } from "../components/Skeleton";
+import { STUDIOS, SERVICES, BRAND, GENRE_MAP } from "../lib/constants";
 
 export async function getStaticProps() {
-  const data = getMoviesPageData();
   return {
-    props: {
-      ...data,
-    },
+    props: {},
     revalidate: 1800,
   };
 }
@@ -26,13 +23,64 @@ const CATEGORIES = [
   { value: "upcoming", label: "Upcoming" },
 ];
 
-export default function Movies({
-  allMovies = [],
-  heroItems = [],
-  top = [],
-  trending = [],
-  popular = [],
-}) {
+const STANDARD_GENRES = [
+  "Action",
+  "Adventure",
+  "Animation",
+  "Comedy",
+  "Crime",
+  "Documentary",
+  "Drama",
+  "Family",
+  "Fantasy",
+  "History",
+  "Horror",
+  "Music",
+  "Mystery",
+  "Romance",
+  "Sci-Fi",
+  "Thriller",
+  "War",
+  "Western",
+];
+
+const COUNTRIES = [
+  { value: "US", label: "United States" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "CA", label: "Canada" },
+  { value: "FR", label: "France" },
+  { value: "DE", label: "Germany" },
+  { value: "JP", label: "Japan" },
+  { value: "KR", label: "South Korea" },
+  { value: "IN", label: "India" },
+  { value: "AU", label: "Australia" },
+  { value: "ES", label: "Spain" },
+  { value: "IT", label: "Italy" },
+];
+
+const LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "hi", label: "Hindi" },
+  { value: "it", label: "Italian" },
+];
+
+const YEARS = [
+  "2026",
+  "2025",
+  "2024",
+  "2023",
+  "2022",
+  "2020s",
+  "2010s",
+  "Earlier",
+];
+
+export default function Movies() {
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -43,10 +91,62 @@ export default function Movies({
     rating: "all",
   });
   const [shuffleSeed, setShuffleSeed] = useState(0);
-  const [liveList, setLiveList] = useState(null);
 
+  // Dynamic state loaded strictly from TMDB API
+  const [heroItems, setHeroItems] = useState([]);
+  const [heroLoading, setHeroLoading] = useState(true);
+
+  const [moviesList, setMoviesList] = useState([]);
+  const [moviesLoading, setMoviesLoading] = useState(true);
+
+  const [topMovies, setTopMovies] = useState([]);
+  const [topLoading, setTopLoading] = useState(true);
+
+  // 1. Fetch featured hero banner movies from TMDB API (trending movies)
   useEffect(() => {
     let active = true;
+    fetch("/api/tmdb/discover?category=trending&type=movie")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setHeroItems(data.slice(0, 5));
+          setHeroLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setHeroLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 2. Fetch Top 10 Rated movies from TMDB API
+  useEffect(() => {
+    let active = true;
+    fetch("/api/tmdb/discover?category=top&type=movie")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setTopMovies(data.slice(0, 10));
+          setTopLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setTopLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 3. Fetch catalog movies based on selected category & filters from TMDB API
+  useEffect(() => {
+    let active = true;
+    setMoviesLoading(true);
+
     const params = new URLSearchParams({
       type: "movie",
       category,
@@ -61,11 +161,17 @@ export default function Movies({
     fetch(`/api/tmdb/discover?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setLiveList(data);
+        if (active) {
+          setMoviesList(Array.isArray(data) ? data : []);
+          setMoviesLoading(false);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active) {
+          setMoviesList([]);
+          setMoviesLoading(false);
+        }
+      });
 
     return () => {
       active = false;
@@ -73,33 +179,14 @@ export default function Movies({
   }, [category, filters]);
 
   const filterOptions = useMemo(() => {
-    const genres = [
-      ...new Set(allMovies.flatMap((t) => t.genres || [])),
-    ].sort();
-    const countries = [
-      ...new Set(allMovies.map((t) => t.country).filter(Boolean)),
-    ].sort();
-    const years = [
-      "2026",
-      "2025",
-      "2024",
-      "2023",
-      "2022",
-      "2020s",
-      "2010s",
-      "Earlier",
-    ];
     const services = SERVICES.map((s) => ({ value: s.id, label: s.name }));
-    const languages = [
-      ...new Set(allMovies.map((t) => t.language).filter(Boolean)),
-    ].sort();
 
     return {
-      genre: genres.map((g) => ({ value: g, label: g })),
-      country: countries.map((c) => ({ value: c, label: c })),
-      year: years.map((y) => ({ value: y, label: y })),
+      genre: STANDARD_GENRES.map((g) => ({ value: g, label: g })),
+      country: COUNTRIES,
+      year: YEARS.map((y) => ({ value: y, label: y })),
       service: services,
-      language: languages.map((l) => ({ value: l, label: l })),
+      language: LANGUAGES,
       rating: [
         { value: "8", label: "★ 8.0+" },
         { value: "7", label: "★ 7.0+" },
@@ -116,61 +203,25 @@ export default function Movies({
     setShuffleSeed((s) => s + 1);
   };
 
-  const shown = useMemo(() => {
-    let list = [];
-    if (category === "trending") {
-      const rest = allMovies.filter((m) => !trending.some((t) => t.id === m.id));
-      list = [...trending, ...rest];
-    } else if (category === "popular") {
-      const rest = allMovies.filter((m) => !popular.some((t) => t.id === m.id));
-      list = [...popular, ...rest];
-    } else if (category === "top") {
-      list = [...allMovies].sort((a, b) => b.rating - a.rating);
-    } else if (category === "now_playing") {
-      list = allMovies.filter((m) => m.year >= 2024 && m.status !== "upcoming");
-    } else if (category === "upcoming") {
-      list = allMovies.filter((m) => m.year >= 2026 || m.status === "upcoming");
-    } else {
-      list = [...allMovies];
-    }
-
-    if (filters.genre !== "all") {
-      list = list.filter((t) => (t.genres || []).includes(filters.genre));
-    }
-    if (filters.country !== "all") {
-      list = list.filter((t) => t.country === filters.country);
-    }
-    if (filters.year !== "all") {
-      if (filters.year === "2020s") list = list.filter((t) => t.year >= 2020);
-      else if (filters.year === "2010s") list = list.filter((t) => t.year >= 2010 && t.year < 2020);
-      else if (filters.year === "Earlier") list = list.filter((t) => t.year < 2010);
-      else list = list.filter((t) => String(t.year) === filters.year);
-    }
-    if (filters.service !== "all") {
-      list = list.filter((t) => t.service === filters.service);
-    }
-    if (filters.language !== "all") {
-      list = list.filter((t) => t.language === filters.language);
-    }
-    if (filters.rating !== "all") {
-      const min = Number(filters.rating);
-      list = list.filter((t) => (t.rating || 0) >= min);
-    }
-
+  const displayedMovies = useMemo(() => {
+    if (!moviesList || moviesList.length === 0) return [];
     if (shuffleSeed > 0) {
-      list = [...list].sort(() => Math.sin(shuffleSeed * 9999 + 1) - 0.5);
+      return [...moviesList].sort(() => Math.sin(shuffleSeed * 9999 + 1) - 0.5);
     }
-
-    return list;
-  }, [category, filters, shuffleSeed]);
+    return moviesList;
+  }, [moviesList, shuffleSeed]);
 
   return (
     <Layout
       flush
       title="Movies"
-      description={`Movies on ${BRAND.name}: stream top rated, new releases and trending blockbusters.`}
+      description={`Movies on ${BRAND.name}: stream top rated, new releases and trending blockbusters directly from TMDB.`}
     >
-      <HeroBanner items={heroItems} />
+      {heroLoading ? (
+        <SkeletonHero />
+      ) : heroItems.length > 0 ? (
+        <HeroBanner items={heroItems} />
+      ) : null}
 
       <section
         style={{
@@ -190,21 +241,27 @@ export default function Movies({
           onShuffle={handleShuffle}
         />
 
-        {(liveList || shown).length ? (
-          <TitleGrid items={liveList || shown} wide={true} />
+        {moviesLoading ? (
+          <SkeletonGrid count={12} wide={true} />
+        ) : displayedMovies.length > 0 ? (
+          <TitleGrid items={displayedMovies} wide={true} />
         ) : (
           <Empty
             title="No movies found"
-            text="No movies match your selected filters. Try resetting genre or year."
+            text="No movies match your selected TMDB filters. Try resetting genre or year."
           />
         )}
       </section>
 
-      <MediaRow title="Top 10 Movies">
-        {top.map((t, i) => (
-          <MediaCard key={t.id} title={t} rank={i + 1} />
-        ))}
-      </MediaRow>
+      {topLoading ? (
+        <SkeletonRow title="Top 10 Movies" count={6} wide={true} />
+      ) : topMovies.length > 0 ? (
+        <MediaRow title="Top 10 Movies">
+          {topMovies.map((t, i) => (
+            <MediaCard key={t.id || t.tmdbId} title={t} rank={i + 1} />
+          ))}
+        </MediaRow>
+      ) : null}
 
       <TileRow title="Browse by studio" items={STUDIOS} param="studio" />
     </Layout>

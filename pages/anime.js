@@ -5,16 +5,13 @@ import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
+import { SkeletonHero, SkeletonGrid, SkeletonRow } from "../components/Skeleton";
 import { BRAND } from "../lib/constants";
-import { getAnimePageData } from "../lib/data.server";
 import styles from "../styles/Anime.module.css";
 
 export async function getStaticProps() {
-  const data = getAnimePageData();
   return {
-    props: {
-      ...data,
-    },
+    props: {},
     revalidate: 1800,
   };
 }
@@ -26,14 +23,20 @@ const CATEGORIES = [
   { value: "simulcasts", label: "Simulcasts" },
 ];
 
-export default function Anime({
-  allAnime = [],
-  heroItems = [],
-  top = [],
-  trending = [],
-  popular = [],
-  topAiring = [],
-}) {
+const STANDARD_GENRES = [
+  "Action",
+  "Adventure",
+  "Comedy",
+  "Drama",
+  "Fantasy",
+  "Mystery",
+  "Romance",
+  "Sci-Fi",
+];
+
+const YEARS = ["2026", "2025", "2024", "2023", "2022", "2010s", "Earlier"];
+
+export default function Anime() {
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -41,16 +44,77 @@ export default function Anime({
     rating: "all",
   });
   const [shuffleSeed, setShuffleSeed] = useState(0);
-  const [liveList, setLiveList] = useState(null);
 
+  // Dynamic TMDB state
+  const [heroItems, setHeroItems] = useState([]);
+  const [heroLoading, setHeroLoading] = useState(true);
+
+  const [topItems, setTopItems] = useState([]);
+  const [topLoading, setTopLoading] = useState(true);
+
+  const [trendingItems, setTrendingItems] = useState([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
+
+  const [animeList, setAnimeList] = useState([]);
+  const [animeLoading, setAnimeLoading] = useState(true);
+
+  // 1. Fetch featured hero banner anime from TMDB API
   useEffect(() => {
     let active = true;
+    fetch("/api/tmdb/discover?category=trending&type=anime")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setHeroItems(data.slice(0, 5));
+          setTrendingItems(data.slice(0, 10));
+          setHeroLoading(false);
+          setTrendingLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHeroLoading(false);
+          setTrendingLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 2. Fetch Top rated anime from TMDB API
+  useEffect(() => {
+    let active = true;
+    fetch("/api/tmdb/discover?category=top&type=anime")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setTopItems(data.slice(0, 10));
+          setTopLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setTopLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 3. Fetch catalog anime from TMDB API based on category & filters
+  useEffect(() => {
+    let active = true;
+    setAnimeLoading(true);
+
     const catMap = {
       trending: "trending",
       popular: "popular",
       top: "top",
       simulcasts: "airing_today",
     };
+
     const params = new URLSearchParams({
       type: "anime",
       category: catMap[category] || category,
@@ -62,11 +126,17 @@ export default function Anime({
     fetch(`/api/tmdb/discover?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        if (active && Array.isArray(data) && data.length > 0) {
-          setLiveList(data);
+        if (active) {
+          setAnimeList(Array.isArray(data) ? data : []);
+          setAnimeLoading(false);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active) {
+          setAnimeList([]);
+          setAnimeLoading(false);
+        }
+      });
 
     return () => {
       active = false;
@@ -74,20 +144,15 @@ export default function Anime({
   }, [category, filters]);
 
   const filterOptions = useMemo(() => {
-    const genres = [
-      ...new Set(allAnime.flatMap((t) => t.genres || [])),
-    ].sort();
-    const years = ["2026", "2025", "2024", "2023", "2022", "2010s", "Earlier"];
-
     return {
-      genre: genres.map((g) => ({ value: g, label: g })),
-      year: years.map((y) => ({ value: y, label: y })),
+      genre: STANDARD_GENRES.map((g) => ({ value: g, label: g })),
+      year: YEARS.map((y) => ({ value: y, label: y })),
       rating: [
         { value: "8", label: "★ 8.0+" },
         { value: "7", label: "★ 7.0+" },
       ],
     };
-  }, [allAnime]);
+  }, []);
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
@@ -97,74 +162,56 @@ export default function Anime({
     setShuffleSeed((s) => s + 1);
   };
 
-  const shown = useMemo(() => {
-    let list = [];
-    if (category === "trending") {
-      const rest = allAnime.filter((a) => !trending.some((t) => t.id === a.id));
-      list = [...trending, ...rest];
-    } else if (category === "popular") {
-      const rest = allAnime.filter((a) => !popular.some((t) => t.id === a.id));
-      list = [...popular, ...rest];
-    } else if (category === "top") {
-      list = [...allAnime].sort((a, b) => b.rating - a.rating);
-    } else {
-      list = [...allAnime];
-    }
-
-    if (filters.genre !== "all") {
-      list = list.filter((t) => (t.genres || []).includes(filters.genre));
-    }
-    if (filters.year !== "all") {
-      if (filters.year === "2010s") list = list.filter((t) => t.year >= 2010 && t.year < 2020);
-      else if (filters.year === "Earlier") list = list.filter((t) => t.year < 2010);
-      else list = list.filter((t) => String(t.year) === filters.year);
-    }
-    if (filters.rating !== "all") {
-      const min = Number(filters.rating);
-      list = list.filter((t) => (t.rating || 0) >= min);
-    }
-
+  const displayedAnime = useMemo(() => {
+    if (!animeList || animeList.length === 0) return [];
     if (shuffleSeed > 0) {
-      list = [...list].sort(() => Math.sin(shuffleSeed * 9999 + 1) - 0.5);
+      return [...animeList].sort(() => Math.sin(shuffleSeed * 9999 + 1) - 0.5);
     }
-
-    return list;
-  }, [allAnime, category, filters, popular, shuffleSeed, trending]);
+    return animeList;
+  }, [animeList, shuffleSeed]);
 
   return (
     <Layout
       flush
       title="Anime"
-      description={`Anime on ${BRAND.name}: top rated series, movies and seasonal simulcasts.`}
+      description={`Anime on ${BRAND.name}: simulcasts, top rated shonen, seinen and fantasy streaming directly from TMDB.`}
     >
-      <HeroBanner items={heroItems} />
+      {heroLoading ? (
+        <SkeletonHero />
+      ) : heroItems.length > 0 ? (
+        <HeroBanner items={heroItems} />
+      ) : null}
 
-      <div className={styles.animeLayout}>
-        {/* Main Column */}
-        <div className={styles.mainColumn}>
-          {/* Top 10 Today matching Image 5 */}
-          <MediaRow title="Top 10 Today">
-            {top.map((t, i) => (
-              <MediaCard
-                key={t.id}
-                title={t}
-                badge={t.badge || `E${(i + 1) * 2} in ${i + 2}d`}
-              />
-            ))}
-          </MediaRow>
+      <div className={styles.mainLayout}>
+        <div className={styles.contentColumn}>
+          {topLoading ? (
+            <SkeletonRow title="Top 10 Anime" count={5} wide={true} />
+          ) : topItems.length > 0 ? (
+            <MediaRow title="Top 10 Anime">
+              {topItems.map((t, i) => (
+                <MediaCard
+                  key={t.id || t.tmdbId}
+                  title={t}
+                  badge={t.badge || `★ ${t.rating}`}
+                />
+              ))}
+            </MediaRow>
+          ) : null}
 
-          {/* Trending now matching Image 5 */}
-          <MediaRow title="Trending now">
-            {trending.map((t, i) => (
-              <MediaCard
-                key={t.id}
-                title={t}
-                badge={t.badge || `E${i + 5} in ${i + 1}d`}
-              />
-            ))}
-          </MediaRow>
+          {trendingLoading ? (
+            <SkeletonRow title="Trending now" count={5} wide={true} />
+          ) : trendingItems.length > 0 ? (
+            <MediaRow title="Trending now">
+              {trendingItems.map((t) => (
+                <MediaCard
+                  key={t.id || t.tmdbId}
+                  title={t}
+                  badge={t.badge || "Trending"}
+                />
+              ))}
+            </MediaRow>
+          ) : null}
 
-          {/* All Anime Filter & Grid */}
           <section style={{ marginTop: 12 }}>
             <CatalogFilterBar
               title="All Anime"
@@ -177,52 +224,18 @@ export default function Anime({
               onShuffle={handleShuffle}
             />
 
-            {(liveList || shown).length ? (
-              <TitleGrid items={liveList || shown} wide={true} />
+            {animeLoading ? (
+              <SkeletonGrid count={12} wide={true} />
+            ) : displayedAnime.length > 0 ? (
+              <TitleGrid items={displayedAnime} wide={true} />
             ) : (
               <Empty
                 title="No anime found"
-                text="No anime match your selected filters. Try another genre."
+                text="No anime match your selected TMDB filters. Try another genre."
               />
             )}
           </section>
         </div>
-
-        {/* Right Sidebar: Top Airing Panel matching Image 5 */}
-        <aside className={styles.sidebarColumn}>
-          <div className={styles.topAiringPanel}>
-            <h2 className={styles.panelTitle}>Top airing</h2>
-            <div className={styles.airingList}>
-              {topAiring.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/title/${item.id}`}
-                  className={styles.airingItem}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.poster}
-                    alt={item.title}
-                    className={styles.airingPoster}
-                  />
-                  <div className={styles.airingInfo}>
-                    <span className={styles.airingName} title={item.title}>
-                      {item.title}
-                    </span>
-                    <span className={styles.airingMeta}>
-                      <span className={styles.airingType}>{item.typeLabel}</span>
-                      <span>·</span>
-                      <span>{item.year}</span>
-                      <span>·</span>
-                      <span className={styles.airingRating}>☆ {item.rating}</span>
-                    </span>
-                    <span className={styles.airingSchedule}>{item.schedule}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </aside>
       </div>
     </Layout>
   );
