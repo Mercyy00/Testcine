@@ -1,13 +1,21 @@
 import { tmdbFetch } from "../../../lib/tmdb";
+import { applyApiGuard, clampInt, handleApiError } from "../../../lib/api-guard";
 
 export default async function handler(req, res) {
+  if (!applyApiGuard(req, res, { cacheSeconds: 3600 })) {
+    return;
+  }
+
   const { tvId, season = 1 } = req.query;
   const id = typeof tvId === "string" ? tvId.trim() : "";
-  const seasonNum = parseInt(season, 10) || 1;
 
-  if (!id) {
-    return res.status(400).json({ error: "Missing tvId parameter" });
+  // Validate tvId strictly against numeric ID to prevent path traversal or injection
+  if (!id || !/^\d{1,9}$/.test(id)) {
+    return res.status(400).json({ error: "Invalid tvId parameter: must be numeric digits only" });
   }
+
+  // Clamp season number between 0 (specials) and 99
+  const seasonNum = clampInt(season, 0, 99, 1);
 
   try {
     const data = await tmdbFetch(`/tv/${id}/season/${seasonNum}`);
@@ -35,7 +43,6 @@ export default async function handler(req, res) {
       episodes,
     });
   } catch (err) {
-    console.error(`Season fetch error for tv/${id}/season/${seasonNum}:`, err.message);
-    return res.status(500).json({ error: err.message });
+    return handleApiError(res, err, "Failed to fetch season details");
   }
 }

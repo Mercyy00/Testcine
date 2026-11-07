@@ -72,6 +72,10 @@ export function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const { id } = params;
+  if (!id || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) {
+    return { notFound: true };
+  }
+
   let t = getTitle(id);
 
   if (!t || !t.cast || !t.videos) {
@@ -98,13 +102,17 @@ export async function getStaticProps({ params }) {
         if (altLive) t = altLive;
       }
     } catch (e) {
-      console.error("Live fetch error in getStaticProps:", e);
+      console.error("Live fetch error in getStaticProps:", e.message || e);
     }
+  }
+
+  if (!t) {
+    return { notFound: true };
   }
 
   return {
     props: {
-      initialTitle: t || null,
+      initialTitle: t,
       id,
     },
     revalidate: 1800,

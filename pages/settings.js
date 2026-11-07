@@ -225,7 +225,7 @@ export default function SettingsPage() {
       setSettings(DEFAULT_SETTINGS);
       showToast("All settings restored to defaults");
     } else if (dialogMode === "signout-all") {
-      setSettings((s) => ({ ...s, signedIn: false }));
+      setSettings((s) => ({ ...s, signedIn: false, name: "Guest", email: "guest@vivarium.internal" }));
       showToast("Signed out of all devices");
     }
     setDialogMode(null);

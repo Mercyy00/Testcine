@@ -461,7 +461,13 @@ export default function Header() {
             type="button"
             role="menuitem"
             className={`${styles.item} ${styles.danger}`}
-            onClick={() => setSettings((s) => ({ ...s, signedIn: !signedIn }))}
+            onClick={() =>
+              setSettings((s) => ({
+                ...s,
+                signedIn: !signedIn,
+                ...(signedIn ? { name: "Guest", email: "guest@vivarium.internal" } : {}),
+              }))
+            }
           >
             {signedIn ? <LogOut size={18} /> : <LogIn size={18} />}
             {signedIn ? "Log out" : "Sign in"}

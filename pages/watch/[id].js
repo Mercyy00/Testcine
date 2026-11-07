@@ -21,6 +21,10 @@ export function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const { id } = params;
+  if (!id || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) {
+    return { notFound: true };
+  }
+
   let t = getTitle(id);
 
   if (!t) {
@@ -41,13 +45,17 @@ export async function getStaticProps({ params }) {
         t = await fetchLiveTitle(fallbackType, tmdbId);
       }
     } catch (e) {
-      console.error("Watch live fetch error:", e);
+      console.error("Watch live fetch error:", e.message || e);
     }
+  }
+
+  if (!t) {
+    return { notFound: true };
   }
 
   return {
     props: {
-      initialTitle: t || null,
+      initialTitle: t,
       id,
     },
     revalidate: 1800,

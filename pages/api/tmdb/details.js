@@ -1,12 +1,18 @@
 import { getTitle } from "../../../lib/data";
 import { fetchLiveTitle } from "../../../lib/tmdb";
+import { applyApiGuard, handleApiError } from "../../../lib/api-guard";
 
 export default async function handler(req, res) {
+  if (!applyApiGuard(req, res, { cacheSeconds: 3600 })) {
+    return;
+  }
+
   const { id } = req.query;
   const targetId = typeof id === "string" ? id.trim() : "";
 
-  if (!targetId) {
-    return res.status(400).json({ error: "Missing id parameter" });
+  // Validate ID format (slug or alphanumeric with hyphens/underscores, max 64 chars)
+  if (!targetId || !/^[a-zA-Z0-9_-]{1,64}$/.test(targetId)) {
+    return res.status(400).json({ error: "Invalid or missing id parameter" });
   }
 
   // 1. Check local pre-seeded catalogue
@@ -42,7 +48,6 @@ export default async function handler(req, res) {
 
     return res.status(404).json({ error: "Title not found" });
   } catch (err) {
-    console.error("Details API error:", err);
-    return res.status(500).json({ error: err.message });
+    return handleApiError(res, err, "Failed to fetch title details");
   }
 }
