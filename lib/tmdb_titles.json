@@ -10,8 +10,8 @@
     "seasons": 1,
     "cert": "PG-13",
     "rating": 8.4,
-    "quality": "Cam",
-    "badge": "Cam",
+    "quality": "HD",
+    "badge": "HD",
     "overview": "An ancient epic follows a young prince and princess whose marriage and subsequent exile mark the beginning of a legendary journey. Their story of love, duty and destiny sets the stage for greater challenges ahead.",
     "genres": [
       "Action",
@@ -486,8 +486,8 @@
     "seasons": 1,
     "cert": "12A",
     "rating": 7.3,
-    "quality": "Cam",
-    "badge": "Cam",
+    "quality": "HD",
+    "badge": "HD",
     "overview": "After a harrowing plane crash, Special Forces officer James Belmont and his combat dog, Odin, find themselves stranded deep in the Alaskan wilderness. Together, they are forced into a brutal fight for survival against the elements.",
     "genres": [
       "Adventure",
@@ -17809,8 +17809,8 @@
     "seasons": 1,
     "cert": "18",
     "rating": 7.1,
-    "quality": "CAM",
-    "badge": "CAM",
+    "quality": "HD",
+    "badge": "HD",
     "overview": "A young sex worker from Brooklyn gets her chance at a Cinderella story when she meets and impulsively marries the son of an oligarch. Once the news reaches Russia, her fairytale is threatened as his parents set out to get the marriage annulled.",
     "genres": [
       "Drama",
@@ -41321,8 +41321,8 @@
     "type": "movie",
     "year": 2026,
     "rating": 8.1,
-    "quality": "Cam",
-    "badge": "Cam",
+    "quality": "HD",
+    "badge": "HD",
     "genres": [
       "Action",
       "Sci-Fi"

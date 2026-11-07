@@ -91,17 +91,15 @@ export default function SettingsPage() {
     return (
       (profiles || []).find((p) => p.id === activeProfileId) ||
       profiles?.[0] || {
-        id: "jayesh",
-        name: "Jayesh",
+        id: "guest",
+        name: "Guest",
         avatar: "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
       }
     );
   }, [profiles, activeProfileId]);
 
   // Form states
-  const [nameVal, setNameVal] = useState(activeProfile?.name || settings.name || "Jayesh");
-  const [cookieVal, setCookieVal] = useState(settings.febboxCookie || "");
-  const [showCookieGuide, setShowCookieGuide] = useState(false);
+  const [nameVal, setNameVal] = useState(activeProfile?.name || settings.name || "Guest");
 
   // Dropdown states
   const [openAudioMenu, setOpenAudioMenu] = useState(false);
@@ -121,13 +119,8 @@ export default function SettingsPage() {
 
   // Sync profile name
   useEffect(() => {
-    setNameVal(activeProfile?.name || settings.name || "Jayesh");
+    setNameVal(activeProfile?.name || settings.name || "Guest");
   }, [activeProfile, settings.name]);
-
-  // Sync cookie
-  useEffect(() => {
-    setCookieVal(settings.febboxCookie || "");
-  }, [settings.febboxCookie]);
 
   // Apply theme to document element
   useEffect(() => {
@@ -206,16 +199,6 @@ export default function SettingsPage() {
     showToast(`Avatar changed to ${PROFILE_AVATARS[nextIndex].name}`);
   };
 
-  // Febbox Cookie Save
-  const handleSaveCookie = (e) => {
-    e?.preventDefault();
-    setSettings((s) => ({
-      ...s,
-      febboxCookie: cookieVal.trim(),
-    }));
-    showToast("Febbox cookie saved");
-  };
-
   // Dialog actions
   const handleConfirmDialog = () => {
     if (dialogMode === "email") {
@@ -261,7 +244,7 @@ export default function SettingsPage() {
     if (!q) return;
     if (q.includes("email") || q.includes("pass") || q.includes("device") || q.includes("profile")) {
       setActiveTab("account");
-    } else if (q.includes("cookie") || q.includes("febbox") || q.includes("simkl") || q.includes("trakt") || q.includes("anilist")) {
+    } else if (q.includes("simkl") || q.includes("trakt") || q.includes("anilist")) {
       setActiveTab("integrations");
     } else if (q.includes("quality") || q.includes("audio") || q.includes("skip") || q.includes("player") || q.includes("hindi")) {
       setActiveTab("player");
@@ -465,14 +448,14 @@ export default function SettingsPage() {
                       <span className={styles.settingLabel}>Email</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span className={styles.settingSub}>
-                          {settings.email || "godlikejayesh@gmail.com"}
+                          {settings.email || "guest@vivarium.internal"}
                         </span>
                         <button
                           type="button"
                           className={styles.pillActionBtn}
                           onClick={() => {
                             setDialogMode("email");
-                            setDialogInput(settings.email || "godlikejayesh@gmail.com");
+                            setDialogInput(settings.email || "guest@vivarium.internal");
                           }}
                         >
                           Change
@@ -552,62 +535,6 @@ export default function SettingsPage() {
             {/* ---------------- TAB 2: INTEGRATIONS ---------------- */}
             {activeTab === "integrations" && (
               <>
-                {/* Section: Febbox */}
-                <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Febbox</h2>
-
-                  <form onSubmit={handleSaveCookie} className={styles.cookieRow}>
-                    <input
-                      type="text"
-                      placeholder="Paste your ui cookie"
-                      value={cookieVal}
-                      onChange={(e) => setCookieVal(e.target.value)}
-                      className={styles.cookieInput}
-                    />
-                    <button type="submit" className={styles.saveBtn}>
-                      Save
-                    </button>
-                  </form>
-
-                  <div className={styles.cookieHelpRow}>
-                    <button
-                      type="button"
-                      className={styles.helpLink}
-                      onClick={() => setShowCookieGuide((g) => !g)}
-                    >
-                      <span>How to get your cookie</span>
-                      <ChevronDown
-                        size={14}
-                        style={{
-                          transform: showCookieGuide ? "rotate(180deg)" : "none",
-                          transition: "transform 0.2s",
-                        }}
-                      />
-                    </button>
-
-                    <a
-                      href="https://www.febbox.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      className={styles.tutorialLink}
-                    >
-                      <span>► Video tutorial</span>
-                    </a>
-                  </div>
-
-                  {showCookieGuide && (
-                    <div className={styles.cookieGuideBox}>
-                      <ol>
-                        <li>Log in to your account at <b>febbox.com</b>.</li>
-                        <li>Open browser DevTools (press <b>F12</b> or Right-click → Inspect).</li>
-                        <li>Navigate to the <b>Application</b> tab → <b>Cookies</b> → <b>https://www.febbox.com</b>.</li>
-                        <li>Look for the cookie named <b>ui</b> and copy its value.</li>
-                        <li>Paste it in the box above and click <b>Save</b>.</li>
-                      </ol>
-                    </div>
-                  )}
-                </section>
-
                 {/* Section: Tracking */}
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>Tracking</h2>

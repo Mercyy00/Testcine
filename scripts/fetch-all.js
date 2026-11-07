@@ -1,7 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const API_KEY = process.env.TMDB_API_KEY || "2dca580c2a14b55200e784d157207b4d";
+const API_KEY = process.env.TMDB_API_KEY;
+if (!API_KEY) {
+  console.error("Error: TMDB_API_KEY environment variable is required.");
+  process.exit(1);
+}
 const BASE_URL = "https://api.themoviedb.org/3";
 
 const GENRE_MAP = {

@@ -1,5 +1,9 @@
 const fs = require("fs");
-const TMDB_KEY = "2dca580c2a14b55200e784d157207b4d";
+const TMDB_KEY = process.env.TMDB_API_KEY;
+if (!TMDB_KEY) {
+  console.error("Error: TMDB_API_KEY environment variable is required.");
+  process.exit(1);
+}
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -153,9 +157,6 @@ async function main() {
   }
 
   fs.writeFileSync(filePath, JSON.stringify(titles, null, 2), "utf-8");
-  if (fs.existsSync("./scripts/tmdb_titles.json")) {
-    fs.writeFileSync("./scripts/tmdb_titles.json", JSON.stringify(titles, null, 2), "utf-8");
-  }
   console.log("Episodes enrichment complete!");
 }
 

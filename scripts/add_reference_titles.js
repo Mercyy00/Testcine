@@ -252,7 +252,4 @@ for (const item of newTitles) {
 }
 
 fs.writeFileSync(filePath, JSON.stringify(titles, null, 2), "utf-8");
-if (fs.existsSync("./scripts/tmdb_titles.json")) {
-  fs.writeFileSync("./scripts/tmdb_titles.json", JSON.stringify(titles, null, 2), "utf-8");
-}
 console.log(`Added reference titles! Total titles now: ${titles.length}`);

@@ -33,8 +33,8 @@ export default function Profiles() {
 
   const profileList = profiles && profiles.length > 0 ? profiles : [
     {
-      id: "jayesh",
-      name: "Jayesh",
+      id: "guest",
+      name: "Guest",
       avatar: "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
       isKids: false,
     },
@@ -234,7 +234,7 @@ export default function Profiles() {
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Jayesh, Guest, Kids"
+                    placeholder="e.g. Alex, Guest, Kids"
                     className={styles.input}
                     autoFocus
                     maxLength={24}

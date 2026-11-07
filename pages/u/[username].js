@@ -85,15 +85,15 @@ export default function UserProfile() {
 
   // Find profile by username slug, or fallback to active/first profile
   const profile = useMemo(() => {
-    const rawUser = String(username || "jayesh").toLowerCase();
+    const rawUser = String(username || "guest").toLowerCase();
     const found = (profiles || []).find(
       (p) => p.name.toLowerCase().replace(/\s+/g, "") === rawUser || p.id === rawUser
     );
     if (found) return found;
 
     return {
-      id: "jayesh",
-      name: "Jayesh",
+      id: "guest",
+      name: "Guest",
       avatar: "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
       joined: "November 2026",
     };
@@ -101,7 +101,7 @@ export default function UserProfile() {
 
   // Sync edit form when modal opens
   const openEditModal = () => {
-    setEditName(profile.name || "Jayesh");
+    setEditName(profile.name || "Guest");
     setEditAvatar(profile.avatar || PROFILE_AVATARS[0].url);
     setEditHidden(settings.historyHidden !== false);
     setIsEditing(true);
@@ -135,7 +135,8 @@ export default function UserProfile() {
   };
 
   const handleShare = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : `https://vivarium.su/u/${profile.name.toLowerCase()}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const url = typeof window !== "undefined" ? window.location.href : `${siteUrl}/u/${profile.name.toLowerCase()}`;
     if (navigator?.clipboard) {
       await navigator.clipboard.writeText(url);
     }
@@ -144,7 +145,7 @@ export default function UserProfile() {
 
   // 1. Watched History Titles
   const watchedEntries = useMemo(() => {
-    const raw = history && history.length > 0 ? history : DEFAULT_HISTORY;
+    const raw = history || [];
     return raw
       .map((h) => {
         const t = getTitle(h.id);
@@ -202,7 +203,7 @@ export default function UserProfile() {
   // Heatmap Grid
   const heatmapData = useMemo(() => generateHeatmap(), []);
 
-  const displayName = profile.name || "Jayesh";
+  const displayName = profile.name || "Guest";
   const displayAvatar = profile.avatar || "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg";
   const watchedCount = watchedEntries.length;
   const likedCount = likedEntries.length;
@@ -210,7 +211,7 @@ export default function UserProfile() {
 
   return (
     <Layout
-      title={`${displayName} (@${displayName.toLowerCase().replace(/\s+/g, "")}) · Vivarium`}
+      title={`${displayName} (@${displayName.toLowerCase().replace(/\s+/g, "")})`}
       description={`View ${displayName}'s watch history, liked titles, and custom collections on Vivarium.`}
     >
       <div className={styles.pageWrap}>

@@ -52,7 +52,7 @@ export default function Lists() {
   // Active profile info
   const activeProfile = useMemo(() => {
     return (profiles || []).find((p) => p.id === activeProfileId) || profiles?.[0] || {
-      name: "Jayesh",
+      name: "Guest",
       avatar: "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
     };
   }, [profiles, activeProfileId]);
@@ -310,10 +310,10 @@ export default function Lists() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={activeProfile.avatar || "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg"}
-                    alt={activeProfile.name || "Jayesh"}
+                    alt={activeProfile.name || "Guest"}
                     className={styles.profileAvatar}
                   />
-                  <span className={styles.profileName}>{activeProfile.name || "Jayesh"}</span>
+                  <span className={styles.profileName}>{activeProfile.name || "Guest"}</span>
                 </div>
 
                 <p className={styles.sideSub}>

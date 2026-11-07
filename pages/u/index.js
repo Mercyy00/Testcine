@@ -9,7 +9,7 @@ export default function ProfileRedirect() {
 
   useEffect(() => {
     const active = (profiles || []).find((p) => p.id === activeProfileId) || profiles?.[0];
-    const username = (active?.name || "jayesh").toLowerCase().replace(/\s+/g, "");
+    const username = (active?.name || "guest").toLowerCase().replace(/\s+/g, "");
     router.replace(`/u/${username}`);
   }, [router, profiles, activeProfileId]);
 

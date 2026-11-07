@@ -122,12 +122,12 @@ export default function Header() {
     profiles?.[0] ||
     null;
 
-  const name = activeProfile?.name || settings.name || "Jayesh";
+  const name = activeProfile?.name || settings.name || "Guest";
   const avatarImage =
     activeProfile?.avatar ||
     settings.avatar ||
     "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg";
-  const email = settings.email || "godlikejayesh@gmail.com";
+  const email = settings.email || "guest@vivarium.internal";
 
   // Real Dynamic Behavior Pattern Notifications
   const notificationsData = useMemo(() => {
@@ -142,7 +142,7 @@ export default function Header() {
   const unread = notificationsData.unreadCount;
 
   const profileUsername = (activeProfile?.name || name).toLowerCase().replace(/\s+/g, "");
-  const profileHref = `/u/${profileUsername || "jayesh"}`;
+  const profileHref = `/u/${profileUsername || "guest"}`;
 
   const handleMarkAllRead = (e) => {
     e.stopPropagation();
