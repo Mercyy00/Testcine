@@ -2,17 +2,29 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Layout from "../components/Layout";
 import MediaCard from "../components/MediaCard";
-import { getTitle } from "../lib/data";
+import { getCardMap } from "../lib/data.server";
 import { useList } from "../lib/store";
 import styles from "../styles/Lists.module.css";
 
-export default function WatchlistPage() {
+export async function getStaticProps() {
+  const data = getCardMap();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
+
+export default function WatchlistPage({ cardMap = {} }) {
   const [watchlist] = useList();
   const [filter, setFilter] = useState("all");
 
   const titles = useMemo(() => {
-    return (watchlist || []).map(getTitle).filter(Boolean);
-  }, [watchlist]);
+    return (watchlist || [])
+      .map((id) => (typeof id === "object" && id?.id ? id : cardMap[String(id).toLowerCase()] || null))
+      .filter(Boolean);
+  }, [watchlist, cardMap]);
 
   const filteredTitles = useMemo(() => {
     if (filter === "all") return titles;

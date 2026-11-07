@@ -3,8 +3,18 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
-import { getTitle } from "../lib/data";
+import { getCardMap } from "../lib/data.server";
 import { useToast } from "../lib/useToast";
+
+export async function getStaticProps() {
+  const data = getCardMap();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 import {
   useList,
   useCustomLists,
@@ -40,7 +50,7 @@ import styles from "../styles/Lists.module.css";
 
 const DEFAULT_LIKED = [];
 
-export default function Lists() {
+export default function Lists({ cardMap = {} }) {
   const router = useRouter();
   const [watchlist, setWatchlist] = useList();
   const [customLists, setCustomLists] = useCustomLists();
@@ -48,6 +58,12 @@ export default function Lists() {
   const [, setHistory] = useHistory();
   const [profiles] = useProfiles();
   const [activeProfileId] = useActiveProfileId();
+
+  const resolveTitle = (id) => {
+    if (!id) return null;
+    if (typeof id === "object" && id.id) return id;
+    return cardMap[String(id).toLowerCase()] || null;
+  };
 
   // Active profile info
   const activeProfile = useMemo(() => {
@@ -121,7 +137,7 @@ export default function Lists() {
   const activeCollection = useMemo(() => {
     if (!selectedListId) return null;
     if (selectedListId === "watchlist") {
-      const items = (watchlist || []).map(getTitle).filter(Boolean);
+      const items = (watchlist || []).map(resolveTitle).filter(Boolean);
       return {
         id: "watchlist",
         title: "Watchlist",
@@ -131,7 +147,7 @@ export default function Lists() {
       };
     }
     if (selectedListId === "liked") {
-      const items = userLikedIds.map(getTitle).filter(Boolean);
+      const items = userLikedIds.map(resolveTitle).filter(Boolean);
       return {
         id: "liked",
         title: "Liked",
@@ -150,7 +166,7 @@ export default function Lists() {
     }
     const custom = (customLists || []).find((l) => l.id === selectedListId);
     if (custom) {
-      const items = (custom.items || []).map(getTitle).filter(Boolean);
+      const items = (custom.items || []).map(resolveTitle).filter(Boolean);
       return {
         id: custom.id,
         title: custom.name,
@@ -170,7 +186,7 @@ export default function Lists() {
   const getPreviewImage = (ids) => {
     if (!ids || ids.length === 0) return null;
     for (const id of ids) {
-      const t = getTitle(id);
+      const t = resolveTitle(id);
       if (t?.backdrop) return t.backdrop;
       if (t?.poster) return t.poster;
     }

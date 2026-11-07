@@ -2,18 +2,27 @@ import { useState, useRef, useEffect } from "react";
 import Layout from "../components/Layout";
 import { PageHead, Select } from "../components/Page";
 import { Copy, Check, Send } from "lucide-react";
-import { TITLES } from "../lib/data";
+import { getWatchPartyData } from "../lib/data.server";
 import { useSettings } from "../lib/store";
 import styles from "../styles/Party.module.css";
 
-const options = TITLES.filter((t) => t.status !== "upcoming").map((t) => ({ value: t.id, label: t.title }));
+export async function getStaticProps() {
+  const data = getWatchPartyData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
+
 const code = () => Math.random().toString(36).slice(2, 7).toUpperCase();
 
 // Local demo: rooms live in this tab. Connect a realtime service (WebSocket, Supabase Realtime) to share them.
-export default function WatchParty() {
+export default function WatchParty({ options = [] }) {
   const [settings] = useSettings();
   const me = settings.name || "Guest";
-  const [titleId, setTitleId] = useState(options[0].value);
+  const [titleId, setTitleId] = useState(options[0]?.value || "");
   const [room, setRoom] = useState(null);
   const [copied, setCopied] = useState(false);
   const [text, setText] = useState("");

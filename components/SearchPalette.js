@@ -2,9 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { Search, Clock, X } from "lucide-react";
 import Art from "./Art";
-import { searchTitles, TYPE_LABEL, TITLES } from "../lib/data";
+import { TYPE_LABEL } from "../lib/constants";
 import { useSearches } from "../lib/store";
 import styles from "./SearchPalette.module.css";
+
+const POPULAR_SUGGESTIONS = [
+  { id: "severance", title: "Severance", type: "series", year: 2022 },
+  { id: "the-bear", title: "The Bear", type: "series", year: 2022 },
+  { id: "spider-man-into-the-spider-verse", title: "Spider-Man: Into the Spider-Verse", type: "movie", year: 2018 },
+  { id: "top-gun-maverick", title: "Top Gun: Maverick", type: "movie", year: 2022 },
+  { id: "whiplash", title: "Whiplash", type: "movie", year: 2014 },
+];
 
 export default function SearchPalette({ autoFocus = false, wide = false }) {
   const router = useRouter();
@@ -15,8 +23,6 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   const [liveResults, setLiveResults] = useState([]);
   const wrap = useRef(null);
   const input = useRef(null);
-
-  const localResults = useMemo(() => searchTitles(q), [q]);
 
   useEffect(() => {
     if (!q.trim()) {
@@ -48,20 +54,11 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
 
   const results = useMemo(() => {
     if (!q.trim()) return [];
-    const seen = new Set();
-    const merged = [];
-    [...liveResults, ...localResults].forEach((t) => {
-      if (t && !seen.has(t.id) && !seen.has(t.title.toLowerCase())) {
-        seen.add(t.id);
-        seen.add(t.title.toLowerCase());
-        merged.push(t);
-      }
-    });
-    return merged.slice(0, 8);
-  }, [q, liveResults, localResults]);
+    return liveResults.slice(0, 8);
+  }, [q, liveResults]);
 
   const recents = searches.slice(0, 2);
-  const suggestions = useMemo(() => TITLES.filter((t) => t.status !== "upcoming").slice(0, 5), []);
+  const suggestions = POPULAR_SUGGESTIONS;
 
   // Flat list of rows so arrow keys can move across both sections.
   const rows = useMemo(() => {

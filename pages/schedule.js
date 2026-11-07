@@ -3,12 +3,23 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import { PageHead } from "../components/Page";
 import { CertBadge } from "../components/Meta";
-import { DAYS, airing, comingSoon, formatDate, getService, TYPE_LABEL } from "../lib/data";
+import { DAYS, formatDate, getService, TYPE_LABEL } from "../lib/constants";
+import { getSchedulePageData } from "../lib/data.server";
 import styles from "../styles/Schedule.module.css";
+
+export async function getStaticProps() {
+  const data = getSchedulePageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 
 const JS_DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function Schedule() {
+export default function Schedule({ airing = [], comingSoon = [] }) {
   const [today, setToday] = useState(null);
   useEffect(() => setToday(JS_DAY[new Date().getDay()]), []);
 
@@ -31,7 +42,7 @@ export default function Schedule() {
                     <Link key={t.id} href={`/title/${t.id}`} className={styles.item}>
                       <b>{t.title}</b>
                       <small>
-                        {TYPE_LABEL[t.type]} · {getService(t.service).name}
+                        {TYPE_LABEL[t.type] || "Title"} · {getService(t.service)?.name || "Vivarium"}
                       </small>
                     </Link>
                   ))

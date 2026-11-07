@@ -5,20 +5,18 @@ import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
-import {
-  MOVIE_HERO_IDS,
-  getTitle,
-  topMovies,
-  trendingMovies,
-  popularMovies,
-  STUDIOS,
-  SERVICES,
-  ofType,
-  BRAND,
-} from "../lib/data";
+import { STUDIOS, SERVICES, BRAND } from "../lib/constants";
+import { getMoviesPageData } from "../lib/data.server";
 
-const movieHeroItems = MOVIE_HERO_IDS.map(getTitle).filter(Boolean);
-const allMovies = ofType("movie");
+export async function getStaticProps() {
+  const data = getMoviesPageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 
 const CATEGORIES = [
   { value: "trending", label: "Trending" },
@@ -28,7 +26,13 @@ const CATEGORIES = [
   { value: "upcoming", label: "Upcoming" },
 ];
 
-export default function Movies() {
+export default function Movies({
+  allMovies = [],
+  heroItems = [],
+  top = [],
+  trending = [],
+  popular = [],
+}) {
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -115,11 +119,11 @@ export default function Movies() {
   const shown = useMemo(() => {
     let list = [];
     if (category === "trending") {
-      const rest = allMovies.filter((m) => !trendingMovies.some((t) => t.id === m.id));
-      list = [...trendingMovies, ...rest];
+      const rest = allMovies.filter((m) => !trending.some((t) => t.id === m.id));
+      list = [...trending, ...rest];
     } else if (category === "popular") {
-      const rest = allMovies.filter((m) => !popularMovies.some((t) => t.id === m.id));
-      list = [...popularMovies, ...rest];
+      const rest = allMovies.filter((m) => !popular.some((t) => t.id === m.id));
+      list = [...popular, ...rest];
     } else if (category === "top") {
       list = [...allMovies].sort((a, b) => b.rating - a.rating);
     } else if (category === "now_playing") {
@@ -166,7 +170,7 @@ export default function Movies() {
       title="Movies"
       description={`Movies on ${BRAND.name}: stream top rated, new releases and trending blockbusters.`}
     >
-      <HeroBanner items={movieHeroItems} />
+      <HeroBanner items={heroItems} />
 
       <section
         style={{
@@ -197,7 +201,7 @@ export default function Movies() {
       </section>
 
       <MediaRow title="Top 10 Movies">
-        {topMovies.map((t, i) => (
+        {top.map((t, i) => (
           <MediaCard key={t.id} title={t} rank={i + 1} />
         ))}
       </MediaRow>

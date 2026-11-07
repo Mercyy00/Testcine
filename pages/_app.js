@@ -1,6 +1,21 @@
 import { useEffect } from "react";
+import { Figtree, Bebas_Neue } from "next/font/google";
 import { useSettings } from "../lib/store";
 import "../styles/globals.css";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-figtree",
+  display: "swap",
+});
+
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-bebas",
+  display: "swap",
+});
 
 export default function App({ Component, pageProps }) {
   const [settings] = useSettings();
@@ -18,5 +33,9 @@ export default function App({ Component, pageProps }) {
     }
   }, [settings.theme, settings.bgIntensity, settings.showBackground]);
 
-  return <Component {...pageProps} />;
+  return (
+    <div className={`${figtree.variable} ${bebasNeue.variable} appRoot`}>
+      <Component {...pageProps} />
+    </div>
+  );
 }

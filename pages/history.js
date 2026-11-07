@@ -3,12 +3,22 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
 import Art from "../components/Art";
-import { getTitle } from "../lib/data";
+import { getCardMap } from "../lib/data.server";
 import { useHistory, removeFromHistory } from "../lib/store";
 import { Play, X, Trash2, Search, Film, Tv, Clock } from "lucide-react";
 import styles from "../styles/History.module.css";
 
-export default function History() {
+export async function getStaticProps() {
+  const data = getCardMap();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
+
+export default function History({ cardMap = {} }) {
   const [history, setHistory] = useHistory();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,7 +27,7 @@ export default function History() {
   const allEntries = useMemo(() => {
     return (history || [])
       .map((h) => {
-        const title = getTitle(h.id);
+        const title = (h && h.id && cardMap[String(h.id).toLowerCase()]) || (h && h.title ? h.title : null);
         if (!title) return null;
         return {
           ...h,
@@ -25,7 +35,7 @@ export default function History() {
         };
       })
       .filter(Boolean);
-  }, [history]);
+  }, [history, cardMap]);
 
   // Counts for filter pills
   const counts = useMemo(() => {
@@ -161,6 +171,7 @@ export default function History() {
               <input
                 type="text"
                 placeholder="Search history..."
+                aria-label="Search watch history"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={styles.searchInput}

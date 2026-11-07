@@ -116,7 +116,8 @@
   --ease-lift: cubic-bezier(0.34, 1.4, 0.64, 1);
   --spring-pop: 0.56s linear(0, 0.048, 0.1597, 0.2985, 0.441, 0.5729, 0.6872, 0.7811, 0.8549, 0.9106, 0.9508, 0.9785, 0.9965, 1.0073, 1.0129, 1.015, 1.0149, 1.0135, 1.0116, 1.0094, 1.0073, 1.0054, 1.0039, 1.0026, 1);
   --spring-island: 0.75s linear(0, 0.0663, 0.2105, 0.3763, 0.5332, 0.6669, 0.7733, 0.8533, 0.9107, 0.9499, 0.9754, 0.9911, 1, 1.0044, 1.0061, 1.0062, 1.0055, 1.0045, 1.0035, 1.0026, 1.0018, 1.0012, 1.0008, 1, 1);
-  --font-body: "NS Sans", "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-figtree), "NS Sans", "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-bebas: var(--font-bebas), "Bebas Neue", "Oswald", Impact, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --nav-h: 56px;
   --safe-b: env(safe-area-inset-bottom, 0px);

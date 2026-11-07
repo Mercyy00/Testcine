@@ -5,21 +5,19 @@ import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
-import {
-  ANIME_HERO_IDS,
-  getTitle,
-  topAnime,
-  trendingAnime,
-  popularAnime,
-  topAiringAnime,
-  SERVICES,
-  ofType,
-  BRAND,
-} from "../lib/data";
+import { BRAND } from "../lib/constants";
+import { getAnimePageData } from "../lib/data.server";
 import styles from "../styles/Anime.module.css";
 
-const animeHeroItems = ANIME_HERO_IDS.map(getTitle).filter(Boolean);
-const allAnime = ofType("anime");
+export async function getStaticProps() {
+  const data = getAnimePageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 
 const CATEGORIES = [
   { value: "trending", label: "Trending" },
@@ -28,7 +26,14 @@ const CATEGORIES = [
   { value: "simulcasts", label: "Simulcasts" },
 ];
 
-export default function Anime() {
+export default function Anime({
+  allAnime = [],
+  heroItems = [],
+  top = [],
+  trending = [],
+  popular = [],
+  topAiring = [],
+}) {
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -82,7 +87,7 @@ export default function Anime() {
         { value: "7", label: "★ 7.0+" },
       ],
     };
-  }, []);
+  }, [allAnime]);
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
@@ -95,11 +100,11 @@ export default function Anime() {
   const shown = useMemo(() => {
     let list = [];
     if (category === "trending") {
-      const rest = allAnime.filter((a) => !trendingAnime.some((t) => t.id === a.id));
-      list = [...trendingAnime, ...rest];
+      const rest = allAnime.filter((a) => !trending.some((t) => t.id === a.id));
+      list = [...trending, ...rest];
     } else if (category === "popular") {
-      const rest = allAnime.filter((a) => !popularAnime.some((t) => t.id === a.id));
-      list = [...popularAnime, ...rest];
+      const rest = allAnime.filter((a) => !popular.some((t) => t.id === a.id));
+      list = [...popular, ...rest];
     } else if (category === "top") {
       list = [...allAnime].sort((a, b) => b.rating - a.rating);
     } else {
@@ -124,7 +129,7 @@ export default function Anime() {
     }
 
     return list;
-  }, [category, filters, shuffleSeed]);
+  }, [allAnime, category, filters, popular, shuffleSeed, trending]);
 
   return (
     <Layout
@@ -132,14 +137,14 @@ export default function Anime() {
       title="Anime"
       description={`Anime on ${BRAND.name}: top rated series, movies and seasonal simulcasts.`}
     >
-      <HeroBanner items={animeHeroItems} />
+      <HeroBanner items={heroItems} />
 
       <div className={styles.animeLayout}>
         {/* Main Column */}
         <div className={styles.mainColumn}>
           {/* Top 10 Today matching Image 5 */}
           <MediaRow title="Top 10 Today">
-            {topAnime.map((t, i) => (
+            {top.map((t, i) => (
               <MediaCard
                 key={t.id}
                 title={t}
@@ -150,7 +155,7 @@ export default function Anime() {
 
           {/* Trending now matching Image 5 */}
           <MediaRow title="Trending now">
-            {trendingAnime.map((t, i) => (
+            {trending.map((t, i) => (
               <MediaCard
                 key={t.id}
                 title={t}
@@ -188,7 +193,7 @@ export default function Anime() {
           <div className={styles.topAiringPanel}>
             <h2 className={styles.panelTitle}>Top airing</h2>
             <div className={styles.airingList}>
-              {topAiringAnime.map((item) => (
+              {topAiring.map((item) => (
                 <Link
                   key={item.id}
                   href={`/title/${item.id}`}

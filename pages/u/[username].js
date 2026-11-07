@@ -4,8 +4,22 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Layout from "../../components/Layout";
 import MediaCard from "../../components/MediaCard";
-import { getTitle } from "../../lib/data";
+import { getCardMap } from "../../lib/data.server";
 import { useToast } from "../../lib/useToast";
+
+export async function getStaticPaths() {
+  return { paths: [], fallback: "blocking" };
+}
+
+export async function getStaticProps() {
+  const data = getCardMap();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 import {
   useProfiles,
   useActiveProfileId,
@@ -56,9 +70,15 @@ function generateHeatmap() {
   return grid;
 }
 
-export default function UserProfile() {
+export default function UserProfile({ cardMap = {} }) {
   const router = useRouter();
   const { username } = router.query;
+
+  const resolveTitle = (id) => {
+    if (!id) return null;
+    if (typeof id === "object" && id.id) return id;
+    return cardMap[String(id).toLowerCase()] || null;
+  };
 
   const [profiles, setProfiles] = useProfiles();
   const [activeProfileId] = useActiveProfileId();
@@ -144,12 +164,12 @@ export default function UserProfile() {
     const raw = history || [];
     return raw
       .map((h) => {
-        const t = getTitle(h.id);
+        const t = resolveTitle(h.id);
         if (!t) return null;
         return { ...h, title: t };
       })
       .filter(Boolean);
-  }, [history]);
+  }, [history, cardMap]);
 
   // 2. Liked Titles
   const likedEntries = useMemo(() => {
@@ -158,14 +178,14 @@ export default function UserProfile() {
       .filter(([_, r]) => r === "like" || r === "love")
       .map(([id]) => id);
 
-    return likedIds.map(getTitle).filter(Boolean);
-  }, [reactions]);
+    return likedIds.map(resolveTitle).filter(Boolean);
+  }, [reactions, cardMap]);
 
   // 3. Watchlist Titles
   const watchlistEntries = useMemo(() => {
     const sourceWatchlist = watchlist && watchlist.length > 0 ? watchlist : DEFAULT_WATCHLIST;
-    return sourceWatchlist.map(getTitle).filter(Boolean);
-  }, [watchlist]);
+    return sourceWatchlist.map(resolveTitle).filter(Boolean);
+  }, [watchlist, cardMap]);
 
   // Genre Analytics Calculation
   const genreStats = useMemo(() => {
@@ -215,8 +235,10 @@ export default function UserProfile() {
         <section className={styles.heroBanner}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://image.tmdb.org/t/p/original/or06FN3Dka5tukK1e9sl16pB3iy.jpg"
+            src="https://image.tmdb.org/t/p/w1280/or06FN3Dka5tukK1e9sl16pB3iy.jpg"
             alt="Hero Backdrop"
+            loading="lazy"
+            decoding="async"
             className={styles.heroBackdrop}
             onError={(e) => {
               e.currentTarget.style.display = "none";

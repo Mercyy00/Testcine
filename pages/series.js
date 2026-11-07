@@ -5,20 +5,18 @@ import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
-import {
-  SERIES_HERO_IDS,
-  getTitle,
-  topSeries,
-  trendingSeries,
-  popularSeries,
-  airing,
-  SERVICES,
-  ofType,
-  BRAND,
-} from "../lib/data";
+import { SERVICES, BRAND } from "../lib/constants";
+import { getSeriesPageData } from "../lib/data.server";
 
-const seriesHeroItems = SERIES_HERO_IDS.map(getTitle).filter(Boolean);
-const allSeries = ofType("series");
+export async function getStaticProps() {
+  const data = getSeriesPageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 
 const CATEGORIES = [
   { value: "trending", label: "Trending" },
@@ -28,7 +26,13 @@ const CATEGORIES = [
   { value: "on_air", label: "On Air" },
 ];
 
-export default function Series() {
+export default function Series({
+  allSeries = [],
+  heroItems = [],
+  top = [],
+  trending = [],
+  popular = [],
+}) {
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -109,7 +113,7 @@ export default function Series() {
         { value: "6", label: "★ 6.0+" },
       ],
     };
-  }, []);
+  }, [allSeries]);
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
@@ -122,11 +126,11 @@ export default function Series() {
   const shown = useMemo(() => {
     let list = [];
     if (category === "trending") {
-      const rest = allSeries.filter((s) => !trendingSeries.some((t) => t.id === s.id));
-      list = [...trendingSeries, ...rest];
+      const rest = allSeries.filter((s) => !trending.some((t) => t.id === s.id));
+      list = [...trending, ...rest];
     } else if (category === "popular") {
-      const rest = allSeries.filter((s) => !popularSeries.some((t) => t.id === s.id));
-      list = [...popularSeries, ...rest];
+      const rest = allSeries.filter((s) => !popular.some((t) => t.id === s.id));
+      list = [...popular, ...rest];
     } else if (category === "top") {
       list = [...allSeries].sort((a, b) => b.rating - a.rating);
     } else if (category === "airing_today") {
@@ -173,7 +177,7 @@ export default function Series() {
       title="Series"
       description={`TV Series on ${BRAND.name}: binge-worthy dramas, thrillers and comedy.`}
     >
-      <HeroBanner items={seriesHeroItems} />
+      <HeroBanner items={heroItems} />
 
       <section
         style={{
@@ -204,7 +208,7 @@ export default function Series() {
       </section>
 
       <MediaRow title="Top 10 Series">
-        {topSeries.map((t, i) => (
+        {top.map((t, i) => (
           <MediaCard key={t.id} title={t} rank={i + 1} />
         ))}
       </MediaRow>

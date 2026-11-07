@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import SearchPalette from "./SearchPalette";
 import Popover from "./Popover";
-import { BRAND } from "../lib/data";
+import { BRAND } from "../lib/constants";
 import {
   useSettings,
   useProfiles,

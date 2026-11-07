@@ -15,6 +15,7 @@ const csp = [
 
 module.exports = {
   distDir: process.env.VIVARIUM_TEST_BUILD === "1" ? ".next-test" : ".next",
+  output: process.env.STANDALONE === "1" ? "standalone" : undefined,
   reactStrictMode: true,
   poweredByHeader: false,
   images: {

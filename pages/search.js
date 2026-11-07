@@ -1,24 +1,25 @@
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import SearchPalette from "../components/SearchPalette";
 import { PageHead, TitleGrid, Empty } from "../components/Page";
-import { searchTitles, getTitle, TITLES } from "../lib/data";
+import { getSearchPageData } from "../lib/data.server";
 
-export default function SearchPage() {
+export async function getStaticProps() {
+  const data = getSearchPageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
+
+export default function SearchPage({ fallback = [] }) {
   const { query } = useRouter();
   const q = typeof query.q === "string" ? query.q : "";
   const [liveResults, setLiveResults] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const localResults = useMemo(() => searchTitles(q, 60), [q]);
-  const fallback = useMemo(
-    () =>
-      TITLES.filter((t) => t.status !== "upcoming")
-        .sort((a, b) => b.rating - a.rating)
-        .slice(0, 12),
-    []
-  );
 
   useEffect(() => {
     if (!q.trim()) {
@@ -34,37 +35,25 @@ export default function SearchPage() {
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (!active) return;
-        // Merge without duplicates and hydrate with local high-res metadata
-        const seen = new Set();
-        const merged = [];
-        [...data, ...localResults].forEach((item) => {
-          if (!item) return;
-          const key = `${item.type || ""}-${item.tmdbId || item.id}`;
-          if (seen.has(key) || seen.has(item.id)) return;
-          seen.add(key);
-          seen.add(item.id);
-
-          const localMatch = item.tmdbId ? getTitle(String(item.tmdbId)) : getTitle(item.id);
-          const fullItem = localMatch ? { ...item, ...localMatch } : item;
-          merged.push(fullItem);
-        });
-        setLiveResults(merged);
+        setLiveResults(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch((err) => {
         if (!active) return;
-        console.error("Search error:", err);
-        setLiveResults(localResults);
-        setLoading(false);
+        if (err.name !== "AbortError") {
+          console.error("Search error:", err);
+          setLiveResults([]);
+          setLoading(false);
+        }
       });
 
     return () => {
       active = false;
       controller.abort();
     };
-  }, [q, localResults]);
+  }, [q]);
 
-  const results = liveResults !== null ? liveResults : localResults;
+  const results = liveResults !== null ? liveResults : [];
 
   return (
     <Layout title={q ? `Search: ${q}` : "Search"} description="Search movies, series and anime.">

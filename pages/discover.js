@@ -2,7 +2,18 @@ import { useRouter } from "next/router";
 import { useMemo, useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { PageHead, Chips, TitleGrid, Empty } from "../components/Page";
-import { TITLES, SERVICES, STUDIOS, getService, getStudio } from "../lib/data";
+import { SERVICES, STUDIOS, getService, getStudio } from "../lib/constants";
+import { getDiscoverPageData } from "../lib/data.server";
+
+export async function getStaticProps() {
+  const data = getDiscoverPageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
 
 const TYPES = [
   { value: "all", label: "Everything" },
@@ -11,7 +22,7 @@ const TYPES = [
   { value: "anime", label: "Anime" },
 ];
 
-export default function Discover() {
+export default function Discover({ initialTitles = [] }) {
   const { query, replace } = useRouter();
   const [type, setType] = useState("all");
   const service = typeof query.service === "string" ? query.service : "all";
@@ -54,13 +65,13 @@ export default function Discover() {
 
   const shown = useMemo(
     () =>
-      TITLES.filter(
+      initialTitles.filter(
         (t) =>
           (type === "all" || t.type === type) &&
           (service === "all" || t.service === service) &&
           (studio === "all" || t.studio === studio)
-      ).sort((a, b) => b.rating - a.rating),
-    [type, service, studio]
+      ).sort((a, b) => (b.rating || 0) - (a.rating || 0)),
+    [initialTitles, type, service, studio]
   );
 
   const displayItems = liveItems || shown;

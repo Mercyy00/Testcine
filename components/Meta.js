@@ -1,4 +1,4 @@
-import { certVar } from "../lib/data";
+import { certVar } from "../lib/constants";
 import styles from "./Meta.module.css";
 
 export function RatingRing({ value, size = 56 }) {

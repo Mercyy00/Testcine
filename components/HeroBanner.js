@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Play, Pause, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
 import { RatingRing, CertBadge, Dot } from "./Meta";
-import { runtimeLabel } from "../lib/data";
+import { runtimeLabel } from "../lib/constants";
 import { useSettings } from "../lib/store";
 import styles from "./HeroBanner.module.css";
 

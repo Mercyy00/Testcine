@@ -4,24 +4,9 @@ import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
-import {
-  HERO_IDS,
-  getTitle,
-  topToday,
-  popular,
-  trending,
-  comingSoon,
-  airing,
-  SERVICES,
-  STUDIOS,
-  TITLES,
-  formatDate,
-  BRAND,
-} from "../lib/data";
+import { SERVICES, STUDIOS, BRAND, formatDate } from "../lib/constants";
 import { useHistory } from "../lib/store";
-
-// Top curated hero items for the homepage
-const heroItems = HERO_IDS.map(getTitle).filter(Boolean);
+import { getHomePageData } from "../lib/data.server";
 
 const PERIODS = [
   { value: "day", label: "Today" },
@@ -31,11 +16,31 @@ const PERIODS = [
 
 const rotate = (list, k) => [...list.slice(k), ...list.slice(0, k)];
 
-export default function Home() {
+export async function getStaticProps() {
+  const data = getHomePageData();
+  return {
+    props: {
+      ...data,
+    },
+    revalidate: 1800,
+  };
+}
+
+export default function Home({
+  heroItems = [],
+  topToday = [],
+  popular = [],
+  trending = [],
+  serviceItemsMap = {},
+  comingSoon = [],
+  airing = [],
+  titleCardMap = {},
+}) {
   const [history] = useHistory();
   const [period, setPeriod] = useState("all");
   const [serviceId, setServiceId] = useState(SERVICES[0].id);
 
+  // Deduplicate continue watching by title
   const cont = useMemo(() => {
     const seen = new Set();
     const unique = [];
@@ -50,13 +55,10 @@ export default function Home() {
 
   const popularItems = useMemo(
     () => rotate(popular, period === "all" ? 0 : period === "week" ? 3 : 6),
-    [period]
+    [popular, period]
   );
 
-  const serviceItems = useMemo(() => {
-    const list = TITLES.filter((t) => t.service === serviceId && t.status !== "upcoming");
-    return list.sort((a, b) => b.rating - a.rating);
-  }, [serviceId]);
+  const serviceItems = serviceItemsMap[serviceId] || [];
 
   return (
     <Layout flush description={`${BRAND.name}: movies, series and anime.`}>
@@ -65,7 +67,7 @@ export default function Home() {
       {cont.length > 0 && (
         <MediaRow title="Continue watching" href="/history">
           {cont.map((h) => {
-            const t = getTitle(h.id);
+            const t = titleCardMap[h.id];
             return t ? (
               <MediaCard
                 key={h.id}
@@ -121,7 +123,7 @@ export default function Home() {
 
       <MediaRow title="Airing" href="/schedule">
         {airing.map((t) => (
-          <MediaCard key={t.id} title={t} badge={`New on ${t.airDay}`} />
+          <MediaCard key={t.id} title={t} badge={`New on ${t.airDay || "weekly"}`} />
         ))}
       </MediaRow>
     </Layout>

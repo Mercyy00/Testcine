@@ -231,6 +231,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
@@ -248,6 +250,9 @@
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .cardHead {

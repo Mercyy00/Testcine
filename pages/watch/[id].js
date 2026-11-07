@@ -5,14 +5,14 @@ import { ArrowLeft, Tv, Film } from "lucide-react";
 import Layout from "../../components/Layout";
 import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
-import { TITLES, getTitle } from "../../lib/data";
+import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
 import { useHistory } from "../../lib/store";
 import styles from "../../styles/Watch.module.css";
 
 export function getStaticPaths() {
   return {
-    paths: TITLES.filter((t) => t.status !== "upcoming").map((t) => ({
+    paths: getAllCardTitles().filter((t) => t.status !== "upcoming").map((t) => ({
       params: { id: t.id },
     })),
     fallback: "blocking",
@@ -124,6 +124,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   }, [t.id, t.type, currentSeason, currentEpisode, setHistory]);
 
   const top = <>
+    <h1 className="visually-hidden">Watching {t.title}{t.type !== "movie" ? ` - Season ${season} Episode ${episode}` : ""}</h1>
     <Link href={`/title/${t.id}`} className={styles.back}><ArrowLeft size={20} /><span>{t.title}</span></Link>
     <div className={styles.topActions}>
       {t.trailerKey && <button type="button" className={`chip ${styles.trailerButton}`}
@@ -171,15 +172,25 @@ export default function Watch({ initialTitle, id }) {
     }
   }, [id, liveTitle]);
 
-  const t = liveTitle || initialTitle || getTitle(id);
+  const t = liveTitle || initialTitle;
   const season = router.query.season ?? "1";
   const episode = router.query.episode ?? router.query.ep ?? "1";
 
   if (router.isFallback || (!t && loading)) {
     return (
       <Layout title="Loading Stream · Vivarium" flush>
-        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-dim)" }}>
-          Loading title stream from TMDB...
+        <div className={styles.stage} style={{ minHeight: "85vh", position: "relative", overflow: "hidden", background: "#050505" }}>
+          <div className="skeleton" style={{ position: "absolute", inset: 0, opacity: 0.15 }} />
+          <div className={styles.top}>
+            <div className="skeleton" style={{ width: 140, height: 36, borderRadius: 20 }} />
+            <div className="skeleton" style={{ width: 100, height: 28, borderRadius: 14 }} />
+          </div>
+          <div className={styles.status} style={{ pointerEvents: "none" }}>
+            <div className="skeleton" style={{ width: 48, height: 48, borderRadius: "50%", margin: "0 auto 16px" }} />
+            <p style={{ color: "var(--text-dim)", fontSize: "14px", fontWeight: 500 }}>
+              Preparing stream…
+            </p>
+          </div>
         </div>
       </Layout>
     );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Plus, Pencil, Check, Trash2, X } from "lucide-react";
 import { Logo } from "../components/Header";
-import { BRAND } from "../lib/data";
+import { BRAND } from "../lib/constants";
 import {
   useProfiles,
   useActiveProfileId,

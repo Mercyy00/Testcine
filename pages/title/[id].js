@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from "react";
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -27,14 +28,13 @@ import {
 } from "lucide-react";
 import Layout from "../../components/Layout";
 import {
-  TITLES,
-  getTitle,
   getService,
   getStudio,
   runtimeLabel,
   TYPE_LABEL,
   formatDate,
-} from "../../lib/data";
+} from "../../lib/constants";
+import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
 import { useToast } from "../../lib/useToast";
 import {
@@ -66,7 +66,7 @@ function formatEpDate(airDate) {
 
 export function getStaticPaths() {
   return {
-    paths: TITLES.map((t) => ({ params: { id: t.id } })),
+    paths: getAllCardTitles().map((t) => ({ params: { id: t.id } })),
     fallback: "blocking",
   };
 }
@@ -111,6 +111,23 @@ export async function getStaticProps({ params }) {
     return { notFound: true };
   }
 
+  if (!t.recommendations || t.recommendations.length === 0) {
+    const all = getAllCardTitles();
+    t = {
+      ...t,
+      recommendations: all
+        .filter((x) => x.id !== t.id && x.type === t.type && x.status !== "upcoming")
+        .map((x) => ({
+          item: x,
+          score: (x.genres || []).filter((g) => (t.genres || []).includes(g)).length,
+        }))
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score || (b.item.rating || 0) - (a.item.rating || 0))
+        .map((entry) => entry.item)
+        .slice(0, 12),
+    };
+  }
+
   return {
     props: {
       initialTitle: t,
@@ -139,7 +156,7 @@ export default function TitlePage({ initialTitle, id }) {
     }
   }, [id, liveTitle]);
 
-  const t = liveTitle || initialTitle || getTitle(id);
+  const t = liveTitle || initialTitle;
 
   if (router.isFallback || (!t && !error)) {
     return (
@@ -394,26 +411,9 @@ export default function TitlePage({ initialTitle, id }) {
     }
   };
 
-  // Actual similar movies/series: first priority TMDB recommendations, second priority same-type genre overlap
+  // Actual similar movies/series: first priority TMDB recommendations
   const similar = useMemo(() => {
-    if (t.recommendations && t.recommendations.length > 0) {
-      return t.recommendations;
-    }
-    // Strictly match the same media type (movies only for movies, series only for series)
-    return TITLES.filter(
-      (x) =>
-        x.id !== t.id &&
-        x.type === t.type &&
-        x.status !== "upcoming"
-    )
-      .map((x) => {
-        const shared = (x.genres || []).filter((g) => (t.genres || []).includes(g)).length;
-        return { item: x, score: shared };
-      })
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score || b.item.rating - a.item.rating)
-      .map((entry) => entry.item)
-      .slice(0, 12);
+    return t?.recommendations || [];
   }, [t]);
 
   if (!t) {
@@ -433,15 +433,47 @@ export default function TitlePage({ initialTitle, id }) {
       ? overviewText.slice(0, 170) + "..."
       : overviewText;
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": t.type === "movie" ? "Movie" : "TVSeries",
+    name: t.title,
+    description: overviewText,
+    image: t.poster || t.backdrop || "",
+    datePublished: t.releaseDate || (t.year ? `${t.year}-01-01` : undefined),
+    ...(t.rating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: t.rating,
+            bestRating: 10,
+            worstRating: 1,
+            ratingCount: t.ratingCount || 100,
+          },
+        }
+      : {}),
+  };
+
   return (
-    <Layout title={t.title} description={t.overview} flush>
+    <Layout
+      title={t.title}
+      description={overviewText}
+      image={t.poster || t.backdrop}
+      type={t.type === "movie" ? "video.movie" : "video.tv_show"}
+      flush
+    >
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
+      </Head>
       {/* Hero Stage */}
       <section className={styles.hero}>
         {/* Isolated background layer with clipping */}
         <div className={styles.bgWrap}>
           {t.backdrop && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={t.backdrop} alt={t.title} className={styles.bg} />
+            <img src={t.backdrop} alt="" aria-hidden="true" decoding="async" loading="eager" className={styles.bg} />
           )}
           <div className={styles.fadeSide} />
           <div className={styles.fadeBottom} />
@@ -464,7 +496,7 @@ export default function TitlePage({ initialTitle, id }) {
           <div className={styles.posterWrap}>
             {t.poster ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={t.poster} alt={t.title} className={styles.posterImg} />
+              <img src={t.poster} alt={t.title} decoding="async" loading="eager" className={styles.posterImg} />
             ) : (
               <div style={{ width: "100%", height: "100%", background: "var(--surface-3)" }} />
             )}
@@ -474,11 +506,12 @@ export default function TitlePage({ initialTitle, id }) {
           <div className={styles.info}>
             {/* Logo or Wordmark Title */}
             <div className={styles.logoArea}>
-              {t.logo ? (
+              <h1 className={t.logo ? "visually-hidden" : styles.titleText}>
+                {t.title}
+              </h1>
+              {t.logo && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.logo} alt={t.title} className={styles.logoImg} />
-              ) : (
-                <h1 className={styles.titleText}>{t.title}</h1>
+                <img src={t.logo} alt="" aria-hidden="true" className={styles.logoImg} />
               )}
             </div>
 
@@ -859,6 +892,8 @@ export default function TitlePage({ initialTitle, id }) {
                         <img
                           src={ep.still}
                           alt={ep.title}
+                          loading="lazy"
+                          decoding="async"
                           className={styles.epImg}
                           onError={(e) => {
                             if (t.backdrop && e.currentTarget.src !== t.backdrop) {
@@ -1093,6 +1128,8 @@ export default function TitlePage({ initialTitle, id }) {
                         <img
                           src={t.collection.backdrop}
                           alt={t.collection.name}
+                          loading="lazy"
+                          decoding="async"
                           className={styles.wideImg}
                         />
                       )}
@@ -1120,6 +1157,8 @@ export default function TitlePage({ initialTitle, id }) {
                           <img
                             src={part.backdrop}
                             alt={part.title}
+                            loading="lazy"
+                            decoding="async"
                             className={styles.wideImg}
                           />
                         ) : (
@@ -1168,6 +1207,8 @@ export default function TitlePage({ initialTitle, id }) {
                         <img
                           src={sim.backdrop}
                           alt={sim.title}
+                          loading="lazy"
+                          decoding="async"
                           className={styles.wideImg}
                         />
                       ) : (
@@ -1206,6 +1247,8 @@ export default function TitlePage({ initialTitle, id }) {
                   <img
                     src={actor.profile}
                     alt={actor.name}
+                    loading="lazy"
+                    decoding="async"
                     className={styles.castAvatar}
                   />
                 ) : (
@@ -1231,7 +1274,7 @@ export default function TitlePage({ initialTitle, id }) {
               >
                 <div className={styles.trailerThumb}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={video.thumbnail} alt={video.name} />
+                  <img src={video.thumbnail} alt={video.name} loading="lazy" decoding="async" />
                   <div className={styles.trailerPlayIcon}>
                     <Play size={20} fill="currentColor" />
                   </div>
@@ -1258,6 +1301,8 @@ export default function TitlePage({ initialTitle, id }) {
                         <img
                           src={rev.avatar}
                           alt={rev.author}
+                          loading="lazy"
+                          decoding="async"
                           className={styles.authorAvatar}
                         />
                       ) : (

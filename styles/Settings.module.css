@@ -19,7 +19,7 @@
 .cinematicBackdrop {
   position: absolute;
   inset: -40px;
-  background-image: url("https://image.tmdb.org/t/p/original/or06FN3Dka5tukK1e9sl16pB3iy.jpg");
+  background-image: url("https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg");
   background-size: cover;
   background-position: center 35%;
   filter: blur(48px) brightness(0.28) saturate(1.2);

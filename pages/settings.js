@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   ExternalLink,
 } from "lucide-react";
-import { BRAND } from "../lib/data";
+import { BRAND } from "../lib/constants";
 import { useToast } from "../lib/useToast";
 import {
   useSettings,
@@ -300,6 +300,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 placeholder="Search"
+                aria-label="Search settings"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={styles.searchInput}
@@ -379,6 +380,7 @@ export default function SettingsPage() {
                       className={styles.profileAvatar}
                       onClick={handleCycleAvatar}
                       title="Click to change avatar"
+                      aria-label="Change profile avatar"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -393,6 +395,7 @@ export default function SettingsPage() {
                         onChange={(e) => setNameVal(e.target.value)}
                         className={styles.nameInput}
                         maxLength={28}
+                        aria-label="Profile display name"
                         required
                       />
                     </div>
@@ -408,6 +411,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.publicProfile)}
+                        aria-label="Public profile"
                         className={`${styles.toggleSwitch} ${
                           settings.publicProfile ? styles.toggleSwitchOn : ""
                         }`}
@@ -425,6 +429,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.showWatchHistory)}
+                        aria-label="Show watch history"
                         className={`${styles.toggleSwitch} ${
                           settings.showWatchHistory ? styles.toggleSwitchOn : ""
                         }`}
@@ -706,6 +711,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={settings.pauseScreen !== false}
+                        aria-label="Pause screen"
                         className={`${styles.toggleSwitch} ${
                           settings.pauseScreen !== false ? styles.toggleSwitchOn : ""
                         }`}
@@ -719,11 +725,15 @@ export default function SettingsPage() {
                   {/* Skip intros */}
                   {matchesSearch("Skip intros") && (
                     <div className={styles.settingRow}>
-                      <span className={styles.settingLabel}>Skip intros</span>
+                      <span className={styles.settingLabel}>
+                        Skip intros
+                        <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "var(--text-dim)", marginLeft: 6 }}>Preview</span>
+                      </span>
                       <button
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.skipIntros)}
+                        aria-label="Skip intros"
                         className={`${styles.toggleSwitch} ${
                           settings.skipIntros ? styles.toggleSwitchOn : ""
                         }`}
@@ -737,11 +747,15 @@ export default function SettingsPage() {
                   {/* Skip credits */}
                   {matchesSearch("Skip credits") && (
                     <div className={styles.settingRow}>
-                      <span className={styles.settingLabel}>Skip credits</span>
+                      <span className={styles.settingLabel}>
+                        Skip credits
+                        <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "var(--text-dim)", marginLeft: 6 }}>Preview</span>
+                      </span>
                       <button
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.skipCredits)}
+                        aria-label="Skip credits"
                         className={`${styles.toggleSwitch} ${
                           settings.skipCredits ? styles.toggleSwitchOn : ""
                         }`}
@@ -755,11 +769,15 @@ export default function SettingsPage() {
                   {/* Skip filler */}
                   {matchesSearch("Skip filler") && (
                     <div className={styles.settingRow}>
-                      <span className={styles.settingLabel}>Skip filler</span>
+                      <span className={styles.settingLabel}>
+                        Skip filler
+                        <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "var(--text-dim)", marginLeft: 6 }}>Preview</span>
+                      </span>
                       <button
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.skipFiller)}
+                        aria-label="Skip filler"
                         className={`${styles.toggleSwitch} ${
                           settings.skipFiller ? styles.toggleSwitchOn : ""
                         }`}
@@ -778,6 +796,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={settings.resumePlayback !== false}
+                        aria-label="Resume playback"
                         className={`${styles.toggleSwitch} ${
                           settings.resumePlayback !== false ? styles.toggleSwitchOn : ""
                         }`}
@@ -796,6 +815,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.rememberLastSource)}
+                        aria-label="Remember last source"
                         className={`${styles.toggleSwitch} ${
                           settings.rememberLastSource ? styles.toggleSwitchOn : ""
                         }`}
@@ -814,6 +834,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.dataSaver)}
+                        aria-label="Data saver"
                         className={`${styles.toggleSwitch} ${
                           settings.dataSaver ? styles.toggleSwitchOn : ""
                         }`}
@@ -879,6 +900,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={settings.showBackground !== false}
+                        aria-label="Show background"
                         className={`${styles.toggleSwitch} ${
                           settings.showBackground !== false ? styles.toggleSwitchOn : ""
                         }`}
@@ -898,6 +920,7 @@ export default function SettingsPage() {
                           type="range"
                           min="10"
                           max="100"
+                          aria-label="Background intensity"
                           value={settings.bgIntensity ?? 85}
                           onChange={(e) =>
                             setSettings((s) => ({
@@ -923,6 +946,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={settings.autoplayPreviews !== false}
+                        aria-label="Autoplay previews"
                         className={`${styles.toggleSwitch} ${
                           settings.autoplayPreviews !== false ? styles.toggleSwitchOn : ""
                         }`}
@@ -941,6 +965,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.bannerTrailersOnHover)}
+                        aria-label="Play banner trailers on hover"
                         className={`${styles.toggleSwitch} ${
                           settings.bannerTrailersOnHover ? styles.toggleSwitchOn : ""
                         }`}
@@ -1011,6 +1036,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.adultContent)}
+                        aria-label="Adult content"
                         className={`${styles.toggleSwitch} ${
                           settings.adultContent ? styles.toggleSwitchOn : ""
                         }`}
@@ -1029,6 +1055,7 @@ export default function SettingsPage() {
                         type="button"
                         role="switch"
                         aria-checked={Boolean(settings.hideWatched)}
+                        aria-label="Hide watched"
                         className={`${styles.toggleSwitch} ${
                           settings.hideWatched ? styles.toggleSwitchOn : ""
                         }`}
@@ -1206,6 +1233,7 @@ export default function SettingsPage() {
                   value={dialogInput}
                   onChange={(e) => setDialogInput(e.target.value)}
                   placeholder="Enter email address"
+                  aria-label="Email address"
                   className={styles.miniDialogInput}
                   autoFocus
                 />
@@ -1217,6 +1245,7 @@ export default function SettingsPage() {
                   value={dialogInput}
                   onChange={(e) => setDialogInput(e.target.value)}
                   placeholder="Enter new password (min. 6 chars)"
+                  aria-label="New password"
                   className={styles.miniDialogInput}
                   autoFocus
                 />

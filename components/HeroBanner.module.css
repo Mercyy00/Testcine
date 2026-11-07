@@ -75,7 +75,7 @@
 .markStack {
   display: flex;
   flex-direction: column;
-  font-family: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
+  font-family: var(--font-bebas), "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
   font-weight: 400;
   font-size: clamp(56px, min(9.4vw, 15vh), 140px);
   line-height: 0.88;
