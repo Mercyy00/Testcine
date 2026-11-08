@@ -15,10 +15,14 @@ const PERIODS = [
   { value: "all", label: "All time" },
 ];
 
-const rotate = (list, k) => [...list.slice(k), ...list.slice(0, k)];
+const rotate = (list, k) => {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  const shift = k % list.length;
+  return [...list.slice(shift), ...list.slice(0, shift)];
+};
 
 export async function getStaticProps() {
-  const data = getHomePageData();
+  const data = await getHomePageData();
   return {
     props: {
       initialData: data,
@@ -30,29 +34,142 @@ export async function getStaticProps() {
 export default function Home({ initialData }) {
   const [history] = useHistory();
   const [period, setPeriod] = useState("all");
-  const [serviceId, setServiceId] = useState(SERVICES[0].id);
+  const [trendingType, setTrendingType] = useState("movie");
+  const [trendingYear, setTrendingYear] = useState("all");
+  const [discoverSort, setDiscoverSort] = useState("primary_release_date.desc");
+  const [discoverItems, setDiscoverItems] = useState([]);
+  const [discoverPage, setDiscoverPage] = useState(1);
+  const [discoverLoading, setDiscoverLoading] = useState(true);
+  const [discoverHasMore, setDiscoverHasMore] = useState(true);
 
-  // Use pre-fetched server data as initial state, then optionally enhance client-side
+  // Initial state hydrated from server data
   const [heroItems, setHeroItems] = useState(initialData?.heroItems || []);
   const [heroLoading, setHeroLoading] = useState(!initialData?.heroItems?.length);
 
   const [topToday, setTopToday] = useState(initialData?.topToday || []);
   const [topLoading, setTopLoading] = useState(!initialData?.topToday?.length);
 
+  const [trendingMovies, setTrendingMovies] = useState(initialData?.trendingMovies || []);
+  const [trendingMoviesLoading, setTrendingMoviesLoading] = useState(!initialData?.trendingMovies?.length);
+
+  const [trendingSeries, setTrendingSeries] = useState(initialData?.trendingSeries || []);
+  const [trendingSeriesLoading, setTrendingSeriesLoading] = useState(!initialData?.trendingSeries?.length);
+
   const [popular, setPopular] = useState(initialData?.popular || []);
   const [popularLoading, setPopularLoading] = useState(!initialData?.popular?.length);
-
-  const [trending, setTrending] = useState(initialData?.trending || []);
-  const [trendingLoading, setTrendingLoading] = useState(!initialData?.trending?.length);
-
-  const [serviceItems, setServiceItems] = useState(initialData?.serviceItemsMap?.[serviceId] || []);
-  const [serviceLoading, setServiceLoading] = useState(!initialData?.serviceItemsMap?.[serviceId]?.length);
 
   const [comingSoon, setComingSoon] = useState(initialData?.comingSoon || []);
   const [comingSoonLoading, setComingSoonLoading] = useState(!initialData?.comingSoon?.length);
 
   const [airing, setAiring] = useState(initialData?.airing || []);
   const [airingLoading, setAiringLoading] = useState(!initialData?.airing?.length);
+
+  // Client-side dynamic refresh from live TMDB
+  useEffect(() => {
+    let active = true;
+
+    // 1. Top 10 Today: overall platform top 10 (movies and series combined)
+    fetch("/api/tmdb/discover?category=trending&type=all")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          const topSlice = data.slice(0, 10);
+          setTopToday(topSlice);
+          setTopLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Hero Spotlight & Trending Movies (weekly trending, deduplicated against Top 10)
+    fetch("/api/tmdb/discover?category=trending&type=movie&time_window=week")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setHeroItems(data.slice(0, 6));
+          setHeroLoading(false);
+
+          setTopToday((currentTop) => {
+            const topIds = new Set((currentTop || []).map((t) => String(t.id || t.tmdbId)));
+            const distinct = data.filter((t) => !topIds.has(String(t.id || t.tmdbId)));
+            setTrendingMovies(distinct.length >= 8 ? distinct.slice(0, 16) : data.slice(0, 16));
+            setTrendingMoviesLoading(false);
+            return currentTop;
+          });
+        }
+      })
+      .catch(() => {});
+
+    // 3. Trending TV Series (strictly television series)
+    fetch("/api/tmdb/discover?category=trending&type=tv")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setTrendingSeries(data.slice(0, 16));
+          setTrendingSeriesLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 4. Popular movies (for Popular on Vivarium)
+    fetch("/api/tmdb/discover?category=popular&type=movie")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setPopular(data.slice(0, 16));
+          setPopularLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 5. Coming soon (upcoming theatrical/digital movies)
+    fetch("/api/tmdb/discover?category=upcoming&type=movie")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setComingSoon(data.slice(0, 12));
+          setComingSoonLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 6. Airing (airing TV series)
+    fetch("/api/tmdb/discover?category=airing_today&type=tv")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setAiring(data.slice(0, 12));
+          setAiringLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setDiscoverLoading(true);
+    fetch(`/api/tmdb/discover?type=movie&sort_by=${encodeURIComponent(discoverSort)}&page=${discoverPage}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active) {
+          const titles = Array.isArray(data) ? data : [];
+          setDiscoverItems(titles.slice(0, 12));
+          setDiscoverHasMore(titles.length > 12);
+          setDiscoverLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setDiscoverItems([]);
+          setDiscoverHasMore(false);
+          setDiscoverLoading(false);
+        }
+      });
+    return () => { active = false; };
+  }, [discoverSort, discoverPage]);
 
   // Deduplicate continue watching by title
   const cont = useMemo(() => {
@@ -62,10 +179,21 @@ export default function Home({ initialData }) {
       const id = typeof h === "object" ? h?.id : h;
       if (!id || seen.has(id)) continue;
       const card = entryCard(h);
-      // Skip entries that cannot render (no snapshot and not in cardMap)
       if (!card) continue;
       seen.add(id);
-      unique.push({ ...h, title: card });
+      const titleStr =
+        typeof card.title === "string"
+          ? card.title
+          : typeof card.name === "string"
+          ? card.name
+          : typeof h?.title === "string"
+          ? h.title
+          : String(id);
+      unique.push({
+        ...card,
+        ...h,
+        title: titleStr,
+      });
     }
     return unique;
   }, [history]);
@@ -74,6 +202,18 @@ export default function Home({ initialData }) {
     () => rotate(popular, period === "all" ? 0 : period === "week" ? 3 : 6),
     [popular, period]
   );
+
+  const trendingPool = trendingType === "tv" ? trendingSeries : trendingMovies;
+  const trendingItems = useMemo(() => {
+    if (trendingYear === "all") return trendingPool;
+    return trendingPool.filter((title) => String(title.year || "") === trendingYear);
+  }, [trendingPool, trendingYear]);
+  const trendingYears = useMemo(() => {
+    const years = [...new Set([...trendingMovies, ...trendingSeries]
+      .map((title) => String(title.year || ""))
+      .filter((year) => /^\d{4}$/.test(year)))].sort((a, b) => Number(b) - Number(a));
+    return [{ value: "all", label: "Year" }, ...years.map((year) => ({ value: year, label: year }))];
+  }, [trendingMovies, trendingSeries]);
 
   return (
     <Layout flush description={`${BRAND.name}: movies, series and anime streaming directly from TMDB.`}>
@@ -112,6 +252,7 @@ export default function Home({ initialData }) {
       ) : popularItems.length > 0 ? (
         <MediaRow
           title="Popular on Vivarium"
+          href="/browse/movie"
           menu={{ value: period, options: PERIODS, onChange: setPeriod }}
         >
           {popularItems.map((t) => (
@@ -120,11 +261,32 @@ export default function Home({ initialData }) {
         </MediaRow>
       ) : null}
 
-      {trendingLoading ? (
+      {(trendingType === "tv" ? trendingSeriesLoading : trendingMoviesLoading) ? (
         <SkeletonRow title="Trending" count={6} />
-      ) : trending.length > 0 ? (
-        <MediaRow title="Trending">
-          {trending.map((t) => (
+      ) : trendingItems.length > 0 ? (
+        <MediaRow
+          title="Trending"
+          href={trendingType === "tv" ? "/browse/tv" : "/browse/movie"}
+          menus={[
+            {
+              value: trendingType,
+              options: [
+                { value: "movie", label: "Movies" },
+                { value: "tv", label: "Series" },
+              ],
+              onChange: (value) => {
+                setTrendingType(value);
+                setTrendingYear("all");
+              },
+            },
+            {
+              value: trendingYear,
+              options: trendingYears,
+              onChange: setTrendingYear,
+            },
+          ]}
+        >
+          {trendingItems.map((t) => (
             <MediaCard key={t.id || t.tmdbId} title={t} />
           ))}
         </MediaRow>
@@ -132,23 +294,6 @@ export default function Home({ initialData }) {
 
       <TileRow title="Browse by service" items={SERVICES} param="service" />
       <TileRow title="Browse by studio" items={STUDIOS} param="studio" />
-
-      {serviceLoading ? (
-        <SkeletonRow title="Popular on" count={6} />
-      ) : serviceItems.length > 0 ? (
-        <MediaRow
-          title="Popular on"
-          menu={{
-            value: serviceId,
-            options: SERVICES.map((s) => ({ value: s.id, label: s.name })),
-            onChange: setServiceId,
-          }}
-        >
-          {serviceItems.map((t) => (
-            <MediaCard key={t.id || t.tmdbId} title={t} />
-          ))}
-        </MediaRow>
-      ) : null}
 
       {comingSoonLoading ? (
         <SkeletonRow title="Coming soon" count={6} />
@@ -158,6 +303,31 @@ export default function Home({ initialData }) {
             <MediaCard key={t.id || t.tmdbId} title={t} badge={formatDate(t.releaseDate)} />
           ))}
         </MediaRow>
+      ) : null}
+
+      {discoverLoading ? (
+        <SkeletonRow title="Discover" count={6} />
+      ) : discoverItems.length > 0 ? (
+        <>
+          <MediaRow
+            title="Discover"
+            href="/discover"
+            tabs={[
+              { value: "primary_release_date.desc", label: "Newest", selected: discoverSort === "primary_release_date.desc", onClick: () => { setDiscoverSort("primary_release_date.desc"); setDiscoverPage(1); } },
+              { value: "popularity.desc", label: "Popular", selected: discoverSort === "popularity.desc", onClick: () => { setDiscoverSort("popularity.desc"); setDiscoverPage(1); } },
+              { value: "vote_average.desc", label: "Top rated", selected: discoverSort === "vote_average.desc", onClick: () => { setDiscoverSort("vote_average.desc"); setDiscoverPage(1); } },
+            ]}
+            pager={{
+              page: discoverPage,
+              hasMore: discoverHasMore,
+              loading: discoverLoading,
+              previous: () => setDiscoverPage((page) => Math.max(1, page - 1)),
+              next: () => setDiscoverPage((page) => page + 1),
+            }}
+          >
+            {discoverItems.map((t) => <MediaCard key={t.id || t.tmdbId} title={t} />)}
+          </MediaRow>
+        </>
       ) : null}
 
       {airingLoading ? (

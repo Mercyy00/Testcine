@@ -3,8 +3,28 @@ import { useId, useState } from "react";
 // Real TMDB image with graceful SVG fallback.
 const hsl = (h, s, l, a = 1) => `hsla(${((h % 360) + 360) % 360}, ${s}%, ${l}%, ${a})`;
 
+function getTitleString(input) {
+  if (!input) return "";
+  if (typeof input === "string") return input;
+  if (typeof input.title === "string") return input.title;
+  if (typeof input.name === "string") return input.name;
+  if (input.title && typeof input.title === "object") return getTitleString(input.title);
+  return "";
+}
+
+function getCardObject(input) {
+  if (!input) return null;
+  if (typeof input === "string") return { title: input };
+  if (input.title && typeof input.title === "object") {
+    return { ...input.title, ...input };
+  }
+  return input;
+}
+
 function lines(title = "") {
-  const words = title.toUpperCase().split(" ");
+  const str = getTitleString(title);
+  if (!str) return [];
+  const words = str.toUpperCase().split(" ");
   const out = [];
   let cur = "";
   for (const w of words) {
@@ -81,18 +101,21 @@ function Motif({ kind, w, h, h1, h2 }) {
   }
 }
 
-export default function Art({ title, variant = "poster", showTitle = true, className, style, priority = false }) {
+export default function Art({ title: rawTitle, variant = "poster", showTitle = true, className, style, priority = false }) {
   const uid = useId().replace(/:/g, "");
   const [triedAlt, setTriedAlt] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  if (!title) return null;
+  if (!rawTitle) return null;
+
+  const card = getCardObject(rawTitle);
+  const titleText = getTitleString(card);
 
   const poster = variant === "poster";
   const primaryUrl = poster
-    ? title.poster || title.backdrop
-    : title.backdrop || title.poster;
-  const altUrl = poster ? title.backdrop : title.poster;
+    ? card.poster || card.backdrop
+    : card.backdrop || card.poster;
+  const altUrl = poster ? card.backdrop : card.poster;
   const activeUrl = triedAlt ? altUrl : primaryUrl;
 
   if (activeUrl && !failed) {
@@ -100,7 +123,7 @@ export default function Art({ title, variant = "poster", showTitle = true, class
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={activeUrl}
-        alt={title.title || "Media title"}
+        alt={titleText || "Media title"}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         onError={() => {
@@ -122,10 +145,10 @@ export default function Art({ title, variant = "poster", showTitle = true, class
     );
   }
 
-  const [h1, h2] = title.hues || [210, 260];
+  const [h1, h2] = card.hues || [210, 260];
   const w = poster ? 200 : 1600;
   const h = poster ? 300 : 900;
-  const ls = lines(title.title || "");
+  const ls = lines(titleText);
   const longest = Math.max(1, ...ls.map((l) => l.length));
   const fs = poster ? Math.min(30, Math.floor(172 / (longest * 0.64))) : 80;
 
@@ -136,7 +159,7 @@ export default function Art({ title, variant = "poster", showTitle = true, class
       viewBox={`0 0 ${w} ${h}`}
       preserveAspectRatio="xMidYMid slice"
       role="img"
-      aria-label={title.title}
+      aria-label={titleText || "Media title"}
     >
       <defs>
         <linearGradient id={`g${uid}`} x1="0" y1="0" x2="0.2" y2="1">
@@ -150,7 +173,7 @@ export default function Art({ title, variant = "poster", showTitle = true, class
         </linearGradient>
       </defs>
       <rect width={w} height={h} fill={`url(#g${uid})`} />
-      <Motif kind={title.motif ?? 0} w={w} h={h} h1={h1} h2={h2} />
+      <Motif kind={card?.motif ?? 0} w={w} h={h} h1={h1} h2={h2} />
       {poster && <rect width={w} height={h} fill={`url(#s${uid})`} />}
       {poster && showTitle && (
         <g fontFamily="var(--font-body)" fontWeight="800" fill="#fff" letterSpacing="-0.5">

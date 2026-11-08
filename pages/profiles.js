@@ -3,7 +3,6 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Plus, Pencil, Check, Trash2, X } from "lucide-react";
-import { Logo } from "../components/Header";
 import { BRAND } from "../lib/constants";
 import {
   useProfiles,
@@ -112,8 +111,8 @@ export default function Profiles() {
       <main className={styles.pageWrap}>
         {/* Top brand logo */}
         <div className={styles.topBar}>
-          <Link href="/" aria-label="Home">
-            <Logo />
+          <Link href="/" aria-label="Home" style={{ textDecoration: "none", color: "inherit", fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px" }}>
+            {BRAND?.name || "Vivarium"}
           </Link>
         </div>
 

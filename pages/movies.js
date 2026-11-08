@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
@@ -81,6 +82,9 @@ const YEARS = [
 ];
 
 export default function Movies() {
+  const router = useRouter();
+  const gridRef = useRef(null);
+
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -91,6 +95,23 @@ export default function Movies() {
     rating: "all",
   });
   const [shuffleSeed, setShuffleSeed] = useState(0);
+
+  // Sync state from URL query on initial load or back/forward navigation
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query;
+    if (q.category && typeof q.category === "string") {
+      setCategory(q.category);
+    }
+    setFilters((prev) => ({
+      genre: typeof q.genre === "string" ? q.genre : prev.genre,
+      country: typeof q.country === "string" ? q.country : prev.country,
+      year: typeof q.year === "string" ? q.year : prev.year,
+      service: typeof q.service === "string" ? q.service : prev.service,
+      language: typeof q.language === "string" ? q.language : prev.language,
+      rating: typeof q.rating === "string" ? q.rating : prev.rating,
+    }));
+  }, [router.isReady, router.query]);
 
   // Dynamic state loaded strictly from TMDB API
   const [heroItems, setHeroItems] = useState([]);
@@ -195,8 +216,25 @@ export default function Movies() {
     };
   }, []);
 
+  const updateUrl = (newCat, newFilters) => {
+    const next = {};
+    if (newCat && newCat !== "trending") next.category = newCat;
+    for (const [k, v] of Object.entries(newFilters)) {
+      if (v && v !== "all") next[k] = v;
+    }
+    router.replace({ pathname: "/movies", query: next }, undefined, { shallow: true });
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleCategoryChange = (val) => {
+    setCategory(val);
+    updateUrl(val, filters);
+  };
+
   const handleFilterChange = (key, val) => {
-    setFilters((prev) => ({ ...prev, [key]: val }));
+    const nextFilters = { ...filters, [key]: val };
+    setFilters(nextFilters);
+    updateUrl(category, nextFilters);
   };
 
   const handleShuffle = () => {
@@ -224,6 +262,7 @@ export default function Movies() {
       ) : null}
 
       <section
+        ref={gridRef}
         style={{
           padding: "36px var(--page-pad) 64px",
           maxWidth: "var(--page-max)",
@@ -233,7 +272,7 @@ export default function Movies() {
         <CatalogFilterBar
           title="Movies"
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           categories={CATEGORIES}
           filters={filters}
           onFilterChange={handleFilterChange}

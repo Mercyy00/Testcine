@@ -101,13 +101,11 @@ export default function SettingsPage() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
-  const deleteAccount = async () => {
-    const password = window.prompt("Enter your password to permanently delete your account (leave empty for social-login accounts):") ;
-    if (password === null) return;
-    const r = await fetch("/api/user/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
-    if (!r.ok) { const d = await r.json().catch(() => ({})); showToast(d.error || "Could not delete account"); return; }
-    Object.keys(localStorage).filter((k) => k.startsWith("viv:")).forEach((k) => localStorage.removeItem(k));
-    signOut({ callbackUrl: "/" });
+  const deleteAccount = () => {
+    setDialogMode("delete-account");
+    setDialogInput("");
+    setDialogCurrentPassword("");
+    setDeleteConfirmText("");
   };
   const [activeTab, setActiveTab] = useState("account");
   const [device, setDevice] = useState({ label: "This browser", sub: "Active now" });
@@ -141,8 +139,10 @@ export default function SettingsPage() {
   const [openRegionMenu, setOpenRegionMenu] = useState(false);
 
   // Modals / Dialogs
-  const [dialogMode, setDialogMode] = useState(null); // "email" | "password" | "clear-history" | "clear-watchlist" | "reset-all" | "signout-all"
+  const [dialogMode, setDialogMode] = useState(null); // "email" | "password" | "clear-history" | "clear-watchlist" | "reset-all" | "signout-all" | "delete-account"
   const [dialogInput, setDialogInput] = useState("");
+  const [dialogCurrentPassword, setDialogCurrentPassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // Toast with auto-cleanup
   const [toast, showToast] = useToast(2500);
@@ -231,19 +231,55 @@ export default function SettingsPage() {
   };
 
   // Dialog actions
-  const handleConfirmDialog = () => {
+  const handleConfirmDialog = async () => {
     if (dialogMode === "email") {
       const trimmed = dialogInput.trim();
-      if (trimmed) {
-        setSettings((s) => ({ ...s, email: trimmed }));
-        showToast("Email updated");
+      if (!trimmed || !trimmed.includes("@")) {
+        showToast("Please enter a valid email address");
+        return;
+      }
+      try {
+        const r = await fetch("/api/user/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmed }),
+        });
+        if (r.ok) {
+          setSettings((s) => ({ ...s, email: trimmed }));
+          showToast("Email updated successfully");
+        } else {
+          const d = await r.json().catch(() => ({}));
+          showToast(d.error || "Failed to update email");
+          return;
+        }
+      } catch {
+        showToast("Network error updating email");
+        return;
       }
     } else if (dialogMode === "password") {
-      if (dialogInput.trim().length >= 6) {
-        setSettings((s) => ({ ...s, passwordSet: true }));
-        showToast("Password updated");
-      } else {
+      if (dialogInput.trim().length < 6) {
         showToast("Password must be at least 6 characters");
+        return;
+      }
+      try {
+        const r = await fetch("/api/user/password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: dialogCurrentPassword,
+            newPassword: dialogInput.trim(),
+          }),
+        });
+        if (r.ok) {
+          setSettings((s) => ({ ...s, passwordSet: true }));
+          showToast("Password updated successfully");
+        } else {
+          const d = await r.json().catch(() => ({}));
+          showToast(d.error || "Failed to update password");
+          return;
+        }
+      } catch {
+        showToast("Network error updating password");
         return;
       }
     } else if (dialogMode === "clear-history") {
@@ -256,11 +292,45 @@ export default function SettingsPage() {
       setSettings(DEFAULT_SETTINGS);
       showToast("All settings restored to defaults");
     } else if (dialogMode === "signout-all") {
-      setSettings((s) => ({ ...s, signedIn: false, name: "Guest", email: "guest@vivarium.internal" }));
+      try {
+        await fetch("/api/user/signout-all", { method: "POST" });
+      } catch {}
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("viv:"))
+        .forEach((k) => localStorage.removeItem(k));
       showToast("Signed out of all devices");
+      signOut({ callbackUrl: "/" });
+      return;
+    } else if (dialogMode === "delete-account") {
+      if (deleteConfirmText !== "DELETE") {
+        showToast('Please type "DELETE" to confirm');
+        return;
+      }
+      try {
+        const r = await fetch("/api/user/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: dialogCurrentPassword }),
+        });
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          showToast(d.error || "Could not delete account");
+          return;
+        }
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("viv:"))
+          .forEach((k) => localStorage.removeItem(k));
+        signOut({ callbackUrl: "/" });
+        return;
+      } catch {
+        showToast("Network error deleting account");
+        return;
+      }
     }
     setDialogMode(null);
     setDialogInput("");
+    setDialogCurrentPassword("");
+    setDeleteConfirmText("");
   };
 
   // Search filter matching
@@ -1269,6 +1339,7 @@ export default function SettingsPage() {
                 {dialogMode === "clear-watchlist" && "Clear Watchlist?"}
                 {dialogMode === "reset-all" && "Reset All Settings?"}
                 {dialogMode === "signout-all" && "Sign Out of All Devices?"}
+                {dialogMode === "delete-account" && "Delete Account Permanently"}
               </h3>
 
               {dialogMode === "email" && (
@@ -1276,7 +1347,7 @@ export default function SettingsPage() {
                   type="email"
                   value={dialogInput}
                   onChange={(e) => setDialogInput(e.target.value)}
-                  placeholder="Enter email address"
+                  placeholder="Enter new email address"
                   aria-label="Email address"
                   className={styles.miniDialogInput}
                   autoFocus
@@ -1284,15 +1355,55 @@ export default function SettingsPage() {
               )}
 
               {dialogMode === "password" && (
-                <input
-                  type="password"
-                  value={dialogInput}
-                  onChange={(e) => setDialogInput(e.target.value)}
-                  placeholder="Enter new password (min. 6 chars)"
-                  aria-label="New password"
-                  className={styles.miniDialogInput}
-                  autoFocus
-                />
+                <div style={{ display: "grid", gap: 10 }}>
+                  <input
+                    type="password"
+                    value={dialogCurrentPassword}
+                    onChange={(e) => setDialogCurrentPassword(e.target.value)}
+                    placeholder="Current password (leave blank if not set)"
+                    aria-label="Current password"
+                    className={styles.miniDialogInput}
+                  />
+                  <input
+                    type="password"
+                    value={dialogInput}
+                    onChange={(e) => setDialogInput(e.target.value)}
+                    placeholder="New password (min. 6 chars)"
+                    aria-label="New password"
+                    className={styles.miniDialogInput}
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {dialogMode === "delete-account" && (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <p style={{ color: "rgba(255,100,100,0.9)", fontSize: 13, margin: 0, lineHeight: 1.4 }}>
+                    Warning: This action is permanent and cannot be undone. All your history, watchlist, lists, and ratings will be erased.
+                  </p>
+                  <input
+                    type="password"
+                    value={dialogCurrentPassword}
+                    onChange={(e) => setDialogCurrentPassword(e.target.value)}
+                    placeholder="Your password (leave blank for social sign-in)"
+                    aria-label="Password"
+                    className={styles.miniDialogInput}
+                  />
+                  <div>
+                    <label style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 4 }}>
+                      Type <strong>DELETE</strong> to confirm:
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="DELETE"
+                      aria-label="Type DELETE to confirm"
+                      className={styles.miniDialogInput}
+                      autoFocus
+                    />
+                  </div>
+                </div>
               )}
 
               {dialogMode === "clear-history" && (
@@ -1330,13 +1441,13 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   className={`${styles.dialogConfirm} ${
-                    dialogMode.includes("clear") || dialogMode.includes("reset") || dialogMode.includes("signout")
+                    dialogMode.includes("clear") || dialogMode.includes("reset") || dialogMode.includes("signout") || dialogMode === "delete-account"
                       ? styles.dialogConfirmDanger
                       : ""
                   }`}
                   onClick={handleConfirmDialog}
                 >
-                  Confirm
+                  {dialogMode === "delete-account" ? "Permanently Delete" : "Confirm"}
                 </button>
               </div>
             </div>

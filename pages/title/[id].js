@@ -38,11 +38,12 @@ import {
 } from "../../lib/constants";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
+import { fetchAniListDetails, extractAniListId } from "../../lib/anilist";
+import { resolveMediaIdentifiers } from "../../lib/servers";
 import { useToast } from "../../lib/useToast";
 import {
   useList,
   useHistory,
-  touchHistory,
   useCustomLists,
   useReactions,
   toggleCustomListItem,
@@ -83,31 +84,77 @@ export async function getStaticProps({ params }) {
 
   let t = getTitle(id);
 
-  if (!t || !t.cast || !t.videos) {
-    let type = null;
-    let tmdbId = id;
-    if (id.startsWith("movie-")) {
-      type = "movie";
-      tmdbId = id.replace("movie-", "");
-    } else if (id.startsWith("tv-") || id.startsWith("series-") || id.startsWith("anime-")) {
-      type = "tv";
-      tmdbId = id.replace(/^(tv|series|anime)-/, "");
-    } else if (t?.type) {
-      type = t.type === "series" || t.type === "anime" ? "tv" : "movie";
-      tmdbId = t.tmdbId || id;
-    }
+  const anilistId = extractAniListId(id);
+  const isAnime =
+    Boolean(anilistId) ||
+    id.startsWith("anilist-") ||
+    id.startsWith("anime-") ||
+    (t?.type === "anime" && (!t?.cast || !t?.videos));
 
-    try {
-      const live = await fetchLiveTitle(type || "any", id);
-      if (live) {
-        t = { ...(t || {}), ...live };
-      } else if (!t) {
-        const fallbackType = type === "movie" ? "tv" : "movie";
-        const altLive = await fetchLiveTitle(fallbackType, id);
-        if (altLive) t = altLive;
+  if (isAnime) {
+    const isAnimeSeries = t ? t.format !== "MOVIE" : !id.includes("movie");
+    const needsFullAnimeSeasons = isAnimeSeries && (!t?.seasonsList || t.seasonsList.length <= 1);
+    if (!t || !t.cast || !t.episodes || t.episodes.length === 0 || needsFullAnimeSeasons) {
+      try {
+        const liveAnime = await fetchAniListDetails(id);
+        if (liveAnime) {
+          const preservedTmdbId = t?.tmdbId || liveAnime?.tmdbId || null;
+          const maxSeasons = Math.max(
+            typeof t?.seasons === "number" ? t.seasons : 0,
+            typeof t?.numberOfSeasons === "number" ? t.numberOfSeasons : 0,
+            typeof liveAnime?.seasons === "number" ? liveAnime.seasons : 0,
+            typeof liveAnime?.numberOfSeasons === "number" ? liveAnime.numberOfSeasons : 0,
+            Array.isArray(t?.seasonsList) ? t.seasonsList.length : 0,
+            Array.isArray(liveAnime?.seasonsList) ? liveAnime.seasonsList.length : 0,
+            1
+          );
+
+          t = {
+            ...(t || {}),
+            ...liveAnime,
+            tmdbId: preservedTmdbId,
+            seasons: maxSeasons,
+            numberOfSeasons: maxSeasons,
+            seasonsList:
+              liveAnime.seasonsList && liveAnime.seasonsList.length >= (t?.seasonsList?.length || 0)
+                ? liveAnime.seasonsList
+                : t?.seasonsList || null,
+          };
+        }
+      } catch (e) {
+        console.error("AniList live fetch error in getStaticProps:", e.message || e);
       }
-    } catch (e) {
-      console.error("Live fetch error in getStaticProps:", e.message || e);
+    }
+  } else {
+    const isSeries = t ? t.type === "series" : id.startsWith("tv-") || id.startsWith("series-");
+    const needsFullSeasons = isSeries && (!t?.seasonsList || t.seasonsList.length <= 1);
+
+    if (!t || !t.cast || !t.videos || needsFullSeasons) {
+      let type = isSeries ? "tv" : "movie";
+      let tmdbId = id;
+      if (id.startsWith("movie-")) {
+        type = "movie";
+        tmdbId = id.replace("movie-", "");
+      } else if (id.startsWith("tv-") || id.startsWith("series-")) {
+        type = "tv";
+        tmdbId = id.replace(/^(tv|series)-/, "");
+      } else if (t?.type) {
+        type = t.type === "series" ? "tv" : "movie";
+        tmdbId = t.tmdbId || id;
+      }
+
+      try {
+        const live = await fetchLiveTitle(type || "any", tmdbId);
+        if (live) {
+          t = { ...(t || {}), ...live };
+        } else if (!t) {
+          const fallbackType = type === "movie" ? "tv" : "movie";
+          const altLive = await fetchLiveTitle(fallbackType, tmdbId);
+          if (altLive) t = altLive;
+        }
+      } catch (e) {
+        console.error("Live fetch error in getStaticProps:", e.message || e);
+      }
     }
   }
 
@@ -141,14 +188,23 @@ export async function getStaticProps({ params }) {
   };
 }
 
-export default function TitlePage({ initialTitle, id }) {
+export default function TitlePage(props) {
+  return <TitlePageForRoute key={props.id} {...props} />;
+}
+
+function TitlePageForRoute({ initialTitle, id }) {
   const router = useRouter();
   const [liveTitle, setLiveTitle] = useState(initialTitle);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!liveTitle && id) {
-      fetch(`/api/tmdb/details?id=${encodeURIComponent(id)}`)
+      const isAnime = /^\d+$/.test(id) || id.startsWith("anilist-") || id.startsWith("anime-");
+      const url = isAnime
+        ? `/api/anilist/details?id=${encodeURIComponent(id)}`
+        : `/api/tmdb/details?id=${encodeURIComponent(id)}`;
+
+      fetch(url)
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
           if (data && data.title) setLiveTitle(data);
@@ -191,6 +247,7 @@ export default function TitlePage({ initialTitle, id }) {
 }
 
 function TitleContent({ t, id }) {
+  const router = useRouter();
   const [list, setList] = useList();
   const [, setHistory] = useHistory();
   const [customLists, setCustomLists] = useCustomLists();
@@ -201,6 +258,7 @@ function TitleContent({ t, id }) {
   const hasEpisodes = Boolean(
     (t?.episodes && t.episodes.length > 0) || t?.type === "series" || t?.type === "anime"
   );
+  const isSeries = t?.type === "series" || t?.type === "tv" || t?.type === "anime";
 
   const [activeTab, setActiveTab] = useState(hasEpisodes ? "episodes" : "related");
   const [selectedSeason, setSelectedSeason] = useState(1);
@@ -228,7 +286,71 @@ function TitleContent({ t, id }) {
   const seasonPickerRef = useRef(null);
   const seasonCardsRowRef = useRef(null);
 
-  // Close season modal popover on outside click or escape
+  const seasonOptions = useMemo(() => {
+    if (!t) return [];
+    const totalSeasons = Math.max(
+      typeof t.seasons === "number" ? t.seasons : 0,
+      typeof t.numberOfSeasons === "number" ? t.numberOfSeasons : 0,
+      Array.isArray(t.seasonsList) ? t.seasonsList.length : 0,
+      1
+    );
+
+    const existingList = Array.isArray(t.seasonsList) ? t.seasonsList : [];
+    const listMap = new Map();
+    existingList.forEach((s, idx) => {
+      const sNum = s.seasonNumber || idx + 1;
+      listMap.set(sNum, {
+        seasonNumber: sNum,
+        name: s.name || `Season ${sNum}`,
+        episodeCount: s.episodeCount || (Array.isArray(s.episodes) ? s.episodes.length : 0),
+        year: s.year || (s.airDate ? s.airDate.slice(0, 4) : t.year) || null,
+        poster: s.poster || t.poster,
+      });
+    });
+
+    const options = [];
+    for (let i = 1; i <= totalSeasons; i++) {
+      if (listMap.has(i)) {
+        options.push(listMap.get(i));
+      } else {
+        options.push({
+          seasonNumber: i,
+          name: t.status === "upcoming" && totalSeasons === 1 ? "Miniseries" : `Season ${i}`,
+          episodeCount: 0,
+          year: t.year || null,
+          poster: t.poster,
+        });
+      }
+    }
+    return options;
+  }, [t]);
+
+  const currentSeasonObj = useMemo(() => {
+    return (
+      seasonOptions.find((s) => s.seasonNumber === selectedSeason) ||
+      seasonOptions[0] || {
+        seasonNumber: selectedSeason,
+        name: `Season ${selectedSeason}`,
+        episodeCount: 0,
+        year: t?.year,
+        poster: t?.poster,
+      }
+    );
+  }, [seasonOptions, selectedSeason, t?.year, t?.poster]);
+
+  const activeSeasonIndex = useMemo(() => {
+    const idx = seasonOptions.findIndex((s) => s.seasonNumber === selectedSeason);
+    return idx >= 0 ? idx : 0;
+  }, [seasonOptions, selectedSeason]);
+
+  const navigateSeason = (dir) => {
+    const newIndex = activeSeasonIndex + dir;
+    if (newIndex >= 0 && newIndex < seasonOptions.length) {
+      setSelectedSeason(seasonOptions[newIndex].seasonNumber);
+    }
+  };
+
+  // Close season modal popover on outside click, or keyboard controls
   useEffect(() => {
     if (!showSeasonModal) return;
     const handleDown = (e) => {
@@ -237,7 +359,21 @@ function TitleContent({ t, id }) {
       }
     };
     const handleKey = (e) => {
-      if (e.key === "Escape") setShowSeasonModal(false);
+      if (e.key === "Escape" || e.key === "Enter") {
+        setShowSeasonModal(false);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const prevIdx = activeSeasonIndex - 1;
+        if (prevIdx >= 0 && seasonOptions[prevIdx]) {
+          setSelectedSeason(seasonOptions[prevIdx].seasonNumber);
+        }
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const nextIdx = activeSeasonIndex + 1;
+        if (nextIdx < seasonOptions.length && seasonOptions[nextIdx]) {
+          setSelectedSeason(seasonOptions[nextIdx].seasonNumber);
+        }
+      }
     };
     window.addEventListener("mousedown", handleDown);
     window.addEventListener("keydown", handleKey);
@@ -245,17 +381,25 @@ function TitleContent({ t, id }) {
       window.removeEventListener("mousedown", handleDown);
       window.removeEventListener("keydown", handleKey);
     };
-  }, [showSeasonModal]);
+  }, [showSeasonModal, activeSeasonIndex, seasonOptions]);
 
   // Dynamically load episodes when season changes
   useEffect(() => {
-    if (!t || (t.type !== "series" && t.type !== "anime") || !t.tmdbId) return;
+    if (!t || (t.type !== "series" && t.type !== "anime")) return;
     if (selectedSeason === 1 && t.episodes && t.episodes.length > 0) return;
     if (seasonEpisodesMap[selectedSeason]) return;
 
+    const { numericTmdbId } = resolveMediaIdentifiers({
+      id: t.id,
+      tmdbId: t.tmdbId,
+      anilistId: t.anilistId,
+      type: t.type,
+    });
+    if (!numericTmdbId) return;
+
     let active = true;
     setLoadingSeason(true);
-    fetch(`/api/tmdb/season?tvId=${t.tmdbId}&season=${selectedSeason}`)
+    fetch(`/api/tmdb/season?tvId=${numericTmdbId}&season=${selectedSeason}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!active || !data?.episodes) return;
@@ -281,63 +425,41 @@ function TitleContent({ t, id }) {
       ? watchedEpisodes[t.id]
       : [];
 
-  const seasonOptions = useMemo(() => {
-    if (!t) return [{ seasonNumber: 1, name: "Season 1", episodeCount: 10, year: 2026, poster: null }];
-    if (Array.isArray(t.seasonsList) && t.seasonsList.length > 0) {
-      return t.seasonsList.map((s, idx) => ({
-        seasonNumber: s.seasonNumber || idx + 1,
-        name: s.name || `Season ${s.seasonNumber || idx + 1}`,
-        episodeCount: s.episodeCount || 10,
-        year: s.year || (s.airDate ? s.airDate.slice(0, 4) : t.year) || 2026,
-        poster: s.poster || t.poster,
-      }));
-    }
-    const count = typeof t.seasons === "number" ? t.seasons : 1;
-    return Array.from({ length: Math.max(1, count) }, (_, i) => ({
-      seasonNumber: i + 1,
-      name: t.status === "upcoming" && count === 1 ? "Miniseries" : `Season ${i + 1}`,
-      episodeCount: 10,
-      year: t.year || 2026,
-      poster: t.poster,
-    }));
-  }, [t]);
-
-  const currentSeasonObj = useMemo(() => {
-    return (
-      seasonOptions.find((s) => s.seasonNumber === selectedSeason) ||
-      seasonOptions[0] || {
-        seasonNumber: selectedSeason,
-        name: `Season ${selectedSeason}`,
-        episodeCount: 10,
-        year: t?.year,
-        poster: t?.poster,
-      }
-    );
-  }, [seasonOptions, selectedSeason, t?.year, t?.poster]);
-
-  const activeSeasonIndex = useMemo(() => {
-    const idx = seasonOptions.findIndex((s) => s.seasonNumber === selectedSeason);
-    return idx >= 0 ? idx : 0;
-  }, [seasonOptions, selectedSeason]);
-
-  const navigateSeason = (dir) => {
-    const newIndex = activeSeasonIndex + dir;
-    if (newIndex >= 0 && newIndex < seasonOptions.length) {
-      setSelectedSeason(seasonOptions[newIndex].seasonNumber);
-    }
+  const isEpWatched = (seasonNum, epNum) => {
+    const num = Number(epNum);
+    const key = `s${seasonNum}_e${num}`;
+    return (watchedList || []).some((item) => {
+      const s = String(item);
+      if (seasonNum === 1 && (Number(item) === num || s === String(num) || s === key)) return true;
+      return s === key || (seasonOptions.length === 1 && (Number(item) === num || s === String(num)));
+    });
   };
 
   const allEpisodes = useMemo(() => {
     if (!t) return [];
-    if (seasonEpisodesMap[selectedSeason]) {
+    if (seasonEpisodesMap[selectedSeason] && seasonEpisodesMap[selectedSeason].length > 0) {
       return seasonEpisodesMap[selectedSeason];
     }
     if (selectedSeason === 1) {
       if (t.episodes && t.episodes.length > 0) return t.episodes;
       if (t.seasons?.[0]?.episodes) return t.seasons[0].episodes;
     }
-    return t.episodes || [];
-  }, [t, selectedSeason, seasonEpisodesMap]);
+    // If season > 1 and no specific episodes were returned from API, generate season episodes
+    // using the season's episodeCount or a sensible default so user can browse and watch
+    const targetSeasonObj = seasonOptions.find((s) => s.seasonNumber === selectedSeason);
+    const count = targetSeasonObj?.episodeCount > 0 ? targetSeasonObj.episodeCount : (t.episodes?.length || 12);
+    const fallbackEps = [];
+    for (let i = 1; i <= count; i++) {
+      fallbackEps.push({
+        episodeNumber: i,
+        title: `Episode ${i}`,
+        overview: `Season ${selectedSeason}, Episode ${i}`,
+        still: targetSeasonObj?.poster || t.backdrop || t.poster,
+        runtime: t.runtime || 24,
+      });
+    }
+    return fallbackEps;
+  }, [t, selectedSeason, seasonEpisodesMap, seasonOptions]);
 
   const displayedEpisodes = useMemo(() => {
     let list = [...allEpisodes];
@@ -346,26 +468,82 @@ function TitleContent({ t, id }) {
       list = list.filter(
         (ep) =>
           (ep.title && ep.title.toLowerCase().includes(q)) ||
-          String(ep.episodeNumber).includes(q) ||
+          String(ep.episodeNumber ?? ep.episode_number ?? "").includes(q) ||
           (ep.overview && ep.overview.toLowerCase().includes(q))
       );
     }
-    if (epSort === "newest") {
-      list.reverse();
-    }
+
+    const getEpNum = (ep) => {
+      if (typeof ep?.episodeNumber === "number" && !isNaN(ep.episodeNumber)) return ep.episodeNumber;
+      if (typeof ep?.episode_number === "number" && !isNaN(ep.episode_number)) return ep.episode_number;
+      if (ep?.episodeNumber) {
+        const n = parseInt(String(ep.episodeNumber).replace(/\D+/g, ""), 10);
+        if (!isNaN(n)) return n;
+      }
+      if (ep?.episode_number) {
+        const n = parseInt(String(ep.episode_number).replace(/\D+/g, ""), 10);
+        if (!isNaN(n)) return n;
+      }
+      if (ep?.title) {
+        const m = String(ep.title).match(/Episode\s*(\d+)/i) || String(ep.title).match(/^(\d+)/);
+        if (m && m[1]) return parseInt(m[1], 10);
+      }
+      return 0;
+    };
+
+    // Always sort numerically by episode number:
+    // "oldest": Episode 1 is 1st (1, 2, 3... N)
+    // "newest": That season's last episode is 1st (N, N-1, ... 2, 1)
+    list.sort((a, b) => {
+      const aNum = getEpNum(a);
+      const bNum = getEpNum(b);
+      return epSort === "newest" ? bNum - aNum : aNum - bNum;
+    });
+
     return list;
   }, [allEpisodes, epSearch, epSort]);
 
   const watchedCount = allEpisodes.filter((ep) =>
-    watchedList.includes(ep.episodeNumber)
+    isEpWatched(selectedSeason, ep.episodeNumber)
   ).length;
 
-  // Track to history when viewed/clicked
-  useEffect(() => {
-    if (t?.id) {
-      touchHistory(setHistory, t.id, 0.15, undefined, t);
+  const [history] = useHistory();
+  const historyEntry = useMemo(() => {
+    if (!t?.id || !history) return null;
+    const normalizeId = (id) => String(id || "").toLowerCase().replace(/^(movie|series|tv|anime)-/, "");
+    const ids = new Set([t.id, normalizeId(t.id), t.tmdbId && String(t.tmdbId)].filter(Boolean).map(String));
+    return (history || []).find((entry) => {
+      const card = entry?.title && typeof entry.title === "object" ? entry.title : null;
+      return [entry?.id, card?.id, card?.tmdbId]
+        .filter(Boolean)
+        .some((id) => ids.has(String(id)) || ids.has(normalizeId(id)));
+    });
+  }, [t?.id, t?.tmdbId, history]);
+
+  const resumeInfo = useMemo(() => {
+    if (!historyEntry || !historyEntry.progress || historyEntry.progress <= 0 || historyEntry.progress >= 1) {
+      return null;
     }
-  }, [t?.id, setHistory]);
+    const prog = historyEntry.progress;
+    const isSeries = t?.type === "series" || t?.type === "tv" || t?.type === "anime";
+    const sNum = historyEntry.season || selectedSeason || 1;
+    const epNum = historyEntry.episode || 1;
+    const remMins = t?.runtime ? Math.max(1, Math.round(t.runtime * (1 - prog))) : null;
+    const remStr = remMins
+      ? remMins >= 60
+        ? `${Math.floor(remMins / 60)}h ${remMins % 60}m left`
+        : `${remMins} min left`
+      : null;
+
+    return {
+      progress: prog,
+      season: sNum,
+      episode: epNum,
+      label: isSeries ? `Continue S${sNum} E${epNum}` : "Resume",
+      remainingLabel: remStr,
+      watchUrl: isSeries ? `/watch/${t.id}?season=${sNum}&episode=${epNum}` : `/watch/${t.id}`,
+    };
+  }, [historyEntry, t, selectedSeason]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -475,7 +653,7 @@ function TitleContent({ t, id }) {
             ratingValue: t.rating,
             bestRating: 10,
             worstRating: 1,
-            ratingCount: t.ratingCount || 100,
+            ...(t.ratingCount > 0 ? { ratingCount: t.ratingCount } : {}),
           },
         }
       : {}),
@@ -567,6 +745,12 @@ function TitleContent({ t, id }) {
                   <span className={styles.certBadge}>{t.cert}</span>
                 </>
               )}
+              {t.anilistId && (
+                <>
+                  <span className={styles.dot} />
+                  <span className={styles.certBadge}>AniList #{t.anilistId}</span>
+                </>
+              )}
             </div>
 
             {/* Overview / Synopsis with "more" button */}
@@ -583,20 +767,6 @@ function TitleContent({ t, id }) {
               )}
             </p>
 
-            {/* Badges / Info Pills Row */}
-            <div className={styles.pillsRow}>
-              {/* Genre Pills */}
-              {(t.genres || []).slice(0, 3).map((g) => (
-                <Link
-                  key={g}
-                  href={`/search?q=${encodeURIComponent(g)}`}
-                  className={styles.genrePill}
-                >
-                  {g}
-                </Link>
-              ))}
-            </div>
-
             {/* Upcoming Release Date Pill Banner matching user screenshot */}
             {comingLabel && (
               <div className={styles.comingBannerRow}>
@@ -607,13 +777,36 @@ function TitleContent({ t, id }) {
               </div>
             )}
 
+            {resumeInfo && (
+              <div className={styles.resumeInfo}>
+                <div className={styles.resumeTrack} aria-label={`${Math.round(resumeInfo.progress * 100)}% watched`}>
+                  <span style={{ width: `${Math.round(resumeInfo.progress * 100)}%` }} />
+                </div>
+                <span>Continue watching{resumeInfo.remainingLabel ? ` ${resumeInfo.remainingLabel}` : ""}</span>
+              </div>
+            )}
+
             {/* Action Buttons Row */}
             <div className={styles.actionsRow}>
-              {/* Play Button */}
-              <Link href={`/watch/${t.id}`} className={styles.playBtn}>
-                <Play size={18} fill="currentColor" />
-                Play
-              </Link>
+              {/* Play or Resume Button */}
+              {resumeInfo ? (
+                <Link
+                  href={resumeInfo.watchUrl}
+                  className={styles.playBtn}
+                  style={{ position: "relative", overflow: "hidden" }}
+                >
+                  <Play size={18} fill="currentColor" />
+                  <span>{resumeInfo.label}</span>
+                </Link>
+              ) : (
+                <Link
+                  href={isSeries ? `/watch/${t.id}?season=${selectedSeason || 1}&episode=${selectedEp || 1}` : `/watch/${t.id}`}
+                  className={styles.playBtn}
+                >
+                  <Play size={18} fill="currentColor" />
+                  Play
+                </Link>
+              )}
 
               {/* Trailer Button */}
               {t.trailerKey && (
@@ -793,13 +986,24 @@ function TitleContent({ t, id }) {
             Episodes
           </button>
         )}
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === "ratings" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("ratings")}
-        >
-          Ratings
-        </button>
+        {hasEpisodes && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "ratings" ? styles.tabActive : ""}`}
+            onClick={() => setActiveTab("ratings")}
+          >
+            Ratings
+          </button>
+        )}
+        {!hasEpisodes && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "related" ? styles.tabActive : ""}`}
+            onClick={() => setActiveTab("related")}
+          >
+            Related
+          </button>
+        )}
         <button
           type="button"
           className={`${styles.tabBtn} ${activeTab === "cast" ? styles.tabActive : ""}`}
@@ -807,13 +1011,15 @@ function TitleContent({ t, id }) {
         >
           Cast
         </button>
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === "related" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("related")}
-        >
-          Related
-        </button>
+        {hasEpisodes && (
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "related" ? styles.tabActive : ""}`}
+            onClick={() => setActiveTab("related")}
+          >
+            Related
+          </button>
+        )}
         <button
           type="button"
           className={`${styles.tabBtn} ${activeTab === "trailers" ? styles.tabActive : ""}`}
@@ -834,15 +1040,6 @@ function TitleContent({ t, id }) {
           onClick={() => setActiveTab("about")}
         >
           About
-        </button>
-        <button
-          type="button"
-          className={styles.tabMuteBtn}
-          onClick={() => setMuted((m) => !m)}
-          aria-label={muted ? "Unmute audio" : "Mute audio"}
-          title={muted ? "Unmute audio" : "Mute audio"}
-        >
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
         </button>
       </nav>
 
@@ -883,7 +1080,13 @@ function TitleContent({ t, id }) {
                           </button>
                         )}
 
-                        <div className={styles.seasonCardsRow} ref={seasonCardsRowRef}>
+                        <div
+                          className={styles.seasonCardsRow}
+                          ref={seasonCardsRowRef}
+                          style={{
+                            transform: `translateX(-${activeSeasonIndex * 140 + 62}px)`,
+                          }}
+                        >
                           {seasonOptions.map((s) => {
                             const isActive = s.seasonNumber === selectedSeason;
                             return (
@@ -895,6 +1098,7 @@ function TitleContent({ t, id }) {
                                 onClick={() => {
                                   setSelectedSeason(s.seasonNumber);
                                 }}
+                                aria-label={`Select ${s.name}`}
                               >
                                 <div className={styles.seasonPosterWrap}>
                                   {s.poster ? (
@@ -929,7 +1133,7 @@ function TitleContent({ t, id }) {
                         )}
                       </div>
 
-                      {/* Active Season Meta Info below matching user screenshot */}
+                      {/* Active Season Meta Info below matching user reference */}
                       <div className={styles.seasonMetaInfo}>
                         <h4 className={styles.seasonMetaTitle}>
                           {currentSeasonObj?.name || `Season ${selectedSeason}`}
@@ -940,6 +1144,13 @@ function TitleContent({ t, id }) {
                             : "10 episodes"}
                           {currentSeasonObj?.year ? ` · ${currentSeasonObj.year}` : ""}
                         </p>
+                        <button
+                          type="button"
+                          className={styles.openSeasonBtn}
+                          onClick={() => setShowSeasonModal(false)}
+                        >
+                          Open
+                        </button>
                       </div>
                     </div>
                   )}
@@ -974,7 +1185,9 @@ function TitleContent({ t, id }) {
             {/* Episodes Grid matching reference screenshot (multi-row wrap, no horizontal scroll) */}
             <div className={styles.episodesGrid}>
               {displayedEpisodes.map((ep) => {
-                const isWatched = watchedList.includes(ep.episodeNumber);
+                const isWatched = isEpWatched(selectedSeason, ep.episodeNumber);
+                const epKey = selectedSeason > 1 ? `s${selectedSeason}_e${ep.episodeNumber}` : ep.episodeNumber;
+                const altKey = selectedSeason === 1 ? `s1_e${ep.episodeNumber}` : null;
                 const progress = null;
                 const isSelected = selectedEp === ep.episodeNumber || Boolean(progress);
                 const dateStr = formatEpDate(ep.airDate);
@@ -988,7 +1201,8 @@ function TitleContent({ t, id }) {
                     className={`${styles.epCard} ${isWatched ? styles.epCardWatched : ""} ${
                       isSelected ? styles.epCardSelected : ""
                     }`}
-                    onClick={() => setSelectedEp(ep.episodeNumber)}
+                    onClick={() => router.push(`/watch/${t.id}?season=${selectedSeason}&episode=${ep.episodeNumber}`)}
+                    style={{ cursor: "pointer" }}
                   >
                     <div className={styles.epThumbnail}>
                       {ep.still ? (
@@ -1013,38 +1227,22 @@ function TitleContent({ t, id }) {
                       {/* Episode number in top left */}
                       <span className={styles.epNumberBadge}>{ep.episodeNumber}</span>
 
-                      {/* Top right: Watched checkmark, progress badge, or unwatched round button */}
-                      {isWatched ? (
-                        <button
-                          type="button"
-                          className={styles.watchedRoundBtnActive}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleWatchedEpisode(setWatchedEpisodes, t.id, ep.episodeNumber);
-                          }}
-                          aria-label="Mark as unwatched"
-                          title="Mark as unwatched"
-                        >
-                          <Check size={14} strokeWidth={3.5} />
-                        </button>
-                      ) : progress ? (
-                        <span className={styles.epProgressBadge}>
-                          {Math.round(progress * 100)}%
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.watchedRoundBtn}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleWatchedEpisode(setWatchedEpisodes, t.id, ep.episodeNumber);
-                          }}
-                          aria-label="Mark as watched"
-                          title="Mark as watched"
-                        />
-                      )}
+                      {/* Top right: Watched checkmark button */}
+                      <button
+                        type="button"
+                        className={`${styles.watchedRoundBtn} ${
+                          isWatched ? styles.watchedRoundBtnActive : ""
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleWatchedEpisode(setWatchedEpisodes, t.id, epKey, altKey);
+                        }}
+                        aria-label={isWatched ? "Mark as unwatched" : "Mark as watched"}
+                        title={isWatched ? "Mark as unwatched" : "Mark as watched"}
+                      >
+                        {isWatched && <Check size={14} strokeWidth={3.5} color="#000000" />}
+                      </button>
 
                       {/* Progress bar line along bottom of thumbnail */}
                       {progress > 0 && (
@@ -1058,7 +1256,7 @@ function TitleContent({ t, id }) {
 
                       {/* Hover play button */}
                       <Link
-                        href={`/watch/${t.id}?ep=${ep.episodeNumber}`}
+                        href={`/watch/${t.id}?season=${selectedSeason || 1}&episode=${ep.episodeNumber}`}
                         className={styles.epPlayOverlay}
                         aria-label={`Play episode ${ep.episodeNumber}: ${ep.title}`}
                       >
@@ -1198,7 +1396,7 @@ function TitleContent({ t, id }) {
                       <div className={styles.cardTitleBottom}>
                         {t.collection.name}
                         <span className={styles.cardSubBottom}>
-                          {t.collection.parts?.length || 3} films
+                          {t.collection.parts?.length || 0} films
                         </span>
                       </div>
                     </div>
@@ -1252,7 +1450,7 @@ function TitleContent({ t, id }) {
             {/* Similar titles row */}
             <div id="more-like-this">
               <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>More Like This</h2>
+                <h2 className={styles.sectionTitle}>More like this</h2>
               </div>
               <div className={styles.cardsRow}>
                 {similar.map((sim) => (
@@ -1392,6 +1590,12 @@ function TitleContent({ t, id }) {
         {/* ABOUT TAB */}
         {activeTab === "about" && (
           <div className={styles.aboutGrid}>
+            {t.anilistId && (
+              <div className={styles.aboutItem}>
+                <dt>AniList ID</dt>
+                <dd>#{t.anilistId}</dd>
+              </div>
+            )}
             {t.about?.tagline && (
               <div className={styles.aboutItem}>
                 <dt>Tagline</dt>
@@ -1422,12 +1626,21 @@ function TitleContent({ t, id }) {
                 <dd>{studio.name}</dd>
               </div>
             )}
-            {service && (
+            {t.director && (
               <div className={styles.aboutItem}>
-                <dt>Streaming On</dt>
-                <dd>{service.name}</dd>
+                <dt>{t.type === "movie" ? "Director" : "Creator"}</dt>
+                <dd>{t.director}</dd>
               </div>
             )}
+            <div className={styles.aboutItem}>
+              <dt>Where to watch</dt>
+              <dd>
+                {service ? `Stream on ${service.name}` : "Digital & Theatrical"}
+                <span style={{ display: "block", fontSize: 11, opacity: 0.6, marginTop: 4 }}>
+                  Streaming availability provided by JustWatch
+                </span>
+              </dd>
+            </div>
           </div>
         )}
       </div>

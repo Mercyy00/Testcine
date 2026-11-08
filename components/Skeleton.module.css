@@ -78,7 +78,7 @@
 }
 
 .gridWide {
-  grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 20vw, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 16.667vw, 320px), 1fr));
 }
 
 /* Row Skeleton */

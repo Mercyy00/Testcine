@@ -48,6 +48,8 @@ export default function Layout({
           <Link href="/schedule">Schedule</Link>
           <Link href="/watch-party">Watch party</Link>
           <Link href="/settings">Settings</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
         </div>
         <p>
           {BRAND.name} is a curated streaming interface for movies, series, and anime.

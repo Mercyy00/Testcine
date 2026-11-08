@@ -30,7 +30,13 @@
 }
 
 .gridWide {
-  grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 20vw, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 16.667vw, 320px), 1fr));
+}
+
+@media (max-width: 700px) {
+  .gridWide {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
 }
 
 .empty {
@@ -120,7 +126,7 @@
 
 /* Catalog Filter Bar matching Image 3 & 4 */
 .catalogHeader {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .catalogTitle {
@@ -135,16 +141,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 28px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 20px;
+}
+
+.filterBar::-webkit-scrollbar {
+  display: none;
 }
 
 .filterLeftPills {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
 }
 
 .categoryPill {
@@ -184,8 +197,9 @@
 .filterRightSelects {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
 }
 
 .dropdownPill {
@@ -204,12 +218,21 @@
   transition: all 0.18s ease;
 }
 
+.dropdownPill[data-filter="genre"] { width: 86px; }
+.dropdownPill[data-filter="country"] { width: 98px; }
+.dropdownPill[data-filter="year"] { width: 74px; }
+.dropdownPill[data-filter="service"] { width: 92px; }
+.dropdownPill[data-filter="language"] { width: 98px; }
+.dropdownPill[data-filter="rating"] { width: 82px; }
+
 .dropdownPill:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .dropdownSelect {
+  width: 100%;
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;

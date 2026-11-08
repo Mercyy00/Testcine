@@ -4,11 +4,12 @@ import { ChevronLeft, ChevronRight, ChevronDown, Check } from "lucide-react";
 import styles from "./MediaRow.module.css";
 
 // Section wrapper with a heading, an optional filter chip and a snapping scroller.
-export default function MediaRow({ title, href, menu, children, className = "" }) {
+export default function MediaRow({ title, href, menu, menus, tabs, pager, children, className = "" }) {
   const scroller = useRef(null);
   const [edge, setEdge] = useState({ start: true, end: false });
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [openMenu, setOpenMenu] = useState(null);
+  const menuRefs = useRef([]);
+  const rowMenus = Array.isArray(menus) ? menus : menu ? [menu] : [];
 
   const measure = () => {
     const el = scroller.current;
@@ -26,18 +27,18 @@ export default function MediaRow({ title, href, menu, children, className = "" }
   }, [children]);
 
   useEffect(() => {
-    if (!open) return;
+    if (openMenu === null) return;
     const close = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+      if (!menuRefs.current.some((element) => element?.contains(e.target))) setOpenMenu(null);
     };
-    const esc = (e) => e.key === "Escape" && setOpen(false);
+    const esc = (e) => e.key === "Escape" && setOpenMenu(null);
     document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", esc);
     return () => {
       document.removeEventListener("pointerdown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, [open]);
+  }, [openMenu]);
 
   const page = (dir) => {
     const el = scroller.current;
@@ -57,19 +58,19 @@ export default function MediaRow({ title, href, menu, children, className = "" }
             title
           )}
         </h2>
-        {menu && (
-          <div className={styles.menuWrap} ref={menuRef}>
+        {rowMenus.map((menu, index) => (
+          <div className={styles.menuWrap} key={index} ref={(element) => { menuRefs.current[index] = element; }}>
             <button
               type="button"
               className={`${styles.menuTrigger} chip`}
               aria-haspopup="listbox"
-              aria-expanded={open}
-              onClick={() => setOpen((o) => !o)}
+              aria-expanded={openMenu === index}
+              onClick={() => setOpenMenu((current) => current === index ? null : index)}
             >
-              {menu.options.find((o) => o.value === menu.value)?.label}
+              {menu.label || menu.options.find((o) => o.value === menu.value)?.label}
               <ChevronDown size={16} strokeWidth={2.6} />
             </button>
-            {open && (
+            {openMenu === index && (
               <ul className={styles.menu} role="listbox">
                 {menu.options.map((o) => (
                   <li key={o.value} role="option" aria-selected={o.value === menu.value}>
@@ -77,7 +78,7 @@ export default function MediaRow({ title, href, menu, children, className = "" }
                       type="button"
                       onClick={() => {
                         menu.onChange(o.value);
-                        setOpen(false);
+                        setOpenMenu(null);
                       }}
                     >
                       {o.label}
@@ -88,15 +89,42 @@ export default function MediaRow({ title, href, menu, children, className = "" }
               </ul>
             )}
           </div>
+        ))}
+        {tabs?.length > 0 && (
+          <div className={styles.tabs} role="tablist" aria-label={`${title} sort`}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={tab.selected}
+                className={tab.selected ? styles.activeTab : ""}
+                onClick={tab.onClick}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         )}
-        <div className={styles.arrows}>
-          <button type="button" onClick={() => page(-1)} disabled={edge.start} aria-label="Scroll left">
-            <ChevronLeft size={18} strokeWidth={2.6} />
-          </button>
-          <button type="button" onClick={() => page(1)} disabled={edge.end} aria-label="Scroll right">
-            <ChevronRight size={18} strokeWidth={2.6} />
-          </button>
-        </div>
+        {pager ? (
+          <div className={styles.arrows}>
+            <button type="button" onClick={pager.previous} disabled={pager.page <= 1 || pager.loading} aria-label="Previous page">
+              <ChevronLeft size={18} strokeWidth={2.6} />
+            </button>
+            <button type="button" onClick={pager.next} disabled={!pager.hasMore || pager.loading} aria-label="Next page">
+              <ChevronRight size={18} strokeWidth={2.6} />
+            </button>
+          </div>
+        ) : (
+          <div className={styles.arrows}>
+            <button type="button" onClick={() => page(-1)} disabled={edge.start} aria-label="Scroll left">
+              <ChevronLeft size={18} strokeWidth={2.6} />
+            </button>
+            <button type="button" onClick={() => page(1)} disabled={edge.end} aria-label="Scroll right">
+              <ChevronRight size={18} strokeWidth={2.6} />
+            </button>
+          </div>
+        )}
       </header>
       <div className={styles.scroller} ref={scroller} onScroll={measure}>
         {children}

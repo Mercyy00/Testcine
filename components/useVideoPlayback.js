@@ -159,6 +159,7 @@ export default function useVideoPlayback({ streamUrl, retry, initialProgress = 0
   };
   return { videoRef, playing, ready, buffering, duration, currentTime, volume, muted, error, notice,
     qualities, quality, currentHeight, togglePlay, seek, chooseQuality,
+    setSpeed: (rate) => { if (videoRef.current) videoRef.current.playbackRate = rate; },
     toggleMute: () => { videoRef.current.muted = !videoRef.current.muted; },
     changeVolume: (value) => { videoRef.current.volume = value; videoRef.current.muted = value === 0; } };
 }

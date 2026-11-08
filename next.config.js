@@ -56,6 +56,11 @@ module.exports = {
         destination: "/watchlist",
         permanent: true,
       },
+      {
+        source: "/downloads",
+        destination: "/settings?tab=downloads",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {

@@ -44,7 +44,13 @@ export default function SignIn() {
           <label className={styles.field}>Email
             <input className={styles.input} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
-          <label className={styles.field}>Password
+          <label className={styles.field}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>Password</span>
+              <Link href="/auth/forgot" style={{ fontSize: "12px", color: "var(--text-soft)", textDecoration: "none" }}>
+                Forgot password?
+              </Link>
+            </div>
             <input className={styles.input} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           <button className={styles.btn} disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>

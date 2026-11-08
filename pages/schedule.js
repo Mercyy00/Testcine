@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Calendar } from "lucide-react";
 import Layout from "../components/Layout";
 import { PageHead } from "../components/Page";
 import { CertBadge } from "../components/Meta";
 import { DAYS, formatDate, getService, TYPE_LABEL } from "../lib/constants";
+import { useToast } from "../lib/useToast";
 import styles from "../styles/Schedule.module.css";
 
 export async function getStaticProps() {
@@ -13,9 +15,28 @@ export async function getStaticProps() {
   };
 }
 
-const JS_DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function generateIcs(title, dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return null;
+  const start = d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const end = new Date(d.getTime() + 3600000).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Vivarium//Air Schedule//EN",
+    "BEGIN:VEVENT",
+    `SUMMARY:Vivarium: ${title} New Episode`,
+    `DESCRIPTION:Stream the latest episode of ${title} on Vivarium.`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
 
 export default function Schedule() {
+  const [toast, showToast] = useToast(2500);
   const [today, setToday] = useState(null);
   const [airing, setAiring] = useState([]);
   const [comingSoon, setComingSoon] = useState([]);
@@ -33,20 +54,8 @@ export default function Schedule() {
     ])
       .then(([airingData, upcomingData]) => {
         if (active) {
-          const mappedAiring = (Array.isArray(airingData) ? airingData : []).map((t, idx) => {
-            if (t.airDay) return t;
-            let day = null;
-            if (t.releaseDate || t.firstAirDate) {
-              const dt = new Date(t.releaseDate || t.firstAirDate);
-              if (!Number.isNaN(dt.getTime())) {
-                day = JS_DAY[dt.getDay()];
-              }
-            }
-            if (!day || !DAYS.includes(day)) {
-              day = DAYS[idx % DAYS.length];
-            }
-            return { ...t, airDay: day };
-          });
+          const mappedAiring = (Array.isArray(airingData) ? airingData : [])
+            .filter((title) => title.airDay && DAYS.includes(title.airDay));
           setAiring(mappedAiring);
           setComingSoon(Array.isArray(upcomingData) ? upcomingData : []);
           setLoading(false);
@@ -61,29 +70,73 @@ export default function Schedule() {
     };
   }, []);
 
+  const handleDownloadReminder = (e, t) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const icsContent = generateIcs(t.title, t.nextEpisodeToAir?.airDate);
+    if (!icsContent) return;
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${t.title.toLowerCase().replace(/\s+/g, "-")}-airing.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Calendar reminder downloaded for ${t.title}`);
+  };
+
   return (
-    <Layout title="Schedule" description="What airs this week and what is coming soon dynamically from TMDB.">
+    <Layout
+      title="Schedule · Vivarium"
+      description="What airs this week and upcoming blockbuster releases dynamically from TMDB."
+    >
       <div className="pageInner">
-        <PageHead title="Schedule" sub="Weekly episodes and upcoming releases fetched directly from TMDB." />
+        <PageHead
+          title="Schedule"
+          sub="Weekly episodes and upcoming releases fetched directly from TMDB in your local timezone."
+        />
 
         <div className={styles.week}>
           {DAYS.map((d) => {
             const items = airing.filter((t) => t.airDay === d);
+            const isToday = today === d;
             return (
-              <section key={d} className={`${styles.day} ${today === d ? styles.today : ""}`}>
+              <section key={d} className={`${styles.day} ${isToday ? styles.today : ""}`}>
                 <h2>
                   {d}
-                  {today === d && <span>Today</span>}
+                  {isToday && <span>Today</span>}
                 </h2>
                 {loading ? (
-                  <p className={styles.none}>Loading...</p>
+                  <p className={styles.none}>Loading…</p>
                 ) : items.length ? (
                   items.map((t) => (
                     <Link key={t.id || t.tmdbId} href={`/title/${t.id}`} className={styles.item}>
-                      <b>{t.title}</b>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
+                        <b>{t.title}</b>
+                      </div>
                       <small>
-                        {TYPE_LABEL[t.type] || "Title"} · {getService(t.service)?.name || "Vivarium"}
+                        {[TYPE_LABEL[t.type], getService(t.service)?.name].filter(Boolean).join(" · ")}
                       </small>
+                      {t.nextEpisodeToAir?.airDate && <button
+                        type="button"
+                        onClick={(e) => handleDownloadReminder(e, t)}
+                        style={{
+                          marginTop: 6,
+                          background: "none",
+                          border: "none",
+                          color: "var(--text-soft)",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: "11px",
+                          padding: 0,
+                        }}
+                        title="Add to Calendar (.ics)"
+                      >
+                        <Calendar size={12} />
+                        <span>Remind me (.ics)</span>
+                      </button>}
                     </Link>
                   ))
                 ) : (
@@ -94,20 +147,23 @@ export default function Schedule() {
           })}
         </div>
 
-        <h2 className={styles.h2}>Coming soon</h2>
+        {/* Upcoming Movies Row */}
+        <h2 className={styles.h2}>Upcoming Blockbusters</h2>
         <ul className={styles.soon}>
           {comingSoon.map((t) => (
             <li key={t.id || t.tmdbId}>
               <Link href={`/title/${t.id}`}>
-                <span className={styles.date}>{formatDate(t.releaseDate)}</span>
-                <span className={styles.title}>{t.title}</span>
-                <CertBadge cert={t.cert} />
-                <span className={styles.type}>{TYPE_LABEL[t.type]}</span>
+                <b>{t.title}</b>
+                <small>
+                  {formatDate(t.releaseDate)} · {t.cert ? <CertBadge cert={t.cert} /> : null}
+                </small>
               </Link>
             </li>
           ))}
         </ul>
       </div>
+
+      {toast && <div className={styles.toastNotice}>{toast}</div>}
     </Layout>
   );
 }

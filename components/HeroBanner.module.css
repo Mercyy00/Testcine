@@ -40,29 +40,33 @@
   width: 100%;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0 var(--page-pad) clamp(44px, 7vh, 86px);
+  padding: 0 var(--page-pad) clamp(28px, 5vh, 64px);
 }
 
 .copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 22px;
+  gap: 20px;
   max-width: min(720px, 100%);
 }
 
 .logoWrap {
-  max-width: min(440px, 80vw);
-  max-height: 140px;
+  max-width: min(700px, 85vw);
+  width: min(700px, 85vw);
+  max-height: 190px;
   display: flex;
   align-items: flex-end;
-  margin-bottom: 2px;
+  margin: 0 0 57px;
 }
 
 .logoImg {
+  width: 100%;
   max-width: 100%;
-  max-height: 125px;
+  max-height: 170px;
   object-fit: contain;
+  transform: translateX(-12px) scaleX(1.2);
+  transform-origin: center bottom;
   filter: drop-shadow(0 6px 26px rgba(0, 0, 0, 0.7));
 }
 
@@ -77,7 +81,7 @@
   flex-direction: column;
   font-family: var(--font-bebas), "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
   font-weight: 400;
-  font-size: clamp(56px, min(9.4vw, 15vh), 140px);
+  font-size: clamp(64px, min(14vw, 22vh), 220px);
   line-height: 0.88;
   letter-spacing: 0.005em;
   background: linear-gradient(180deg, #fff 30%, #d4d4d4);
@@ -88,11 +92,11 @@
 }
 
 .markWide {
-  font-weight: 600;
-  font-size: clamp(36px, 6vw, 86px);
-  line-height: 1;
-  letter-spacing: 0.22em;
-  color: #d9d3cc;
+  font-weight: 700;
+  font-size: clamp(42px, 6.8vw, 96px);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: #fff;
   text-transform: uppercase;
 }
 
@@ -100,19 +104,20 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .overview {
   margin: 0;
-  max-width: 62ch;
-  font-size: 19px;
-  font-weight: 600;
+  max-width: 700px;
+  font-size: 22px;
+  font-weight: 400;
   line-height: 1.45;
-  color: var(--text-soft);
+  color: rgba(255, 255, 255, 0.85);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -123,6 +128,7 @@
 .actions {
   display: flex;
   gap: 12px;
+  margin-top: 6px;
 }
 
 .infoIcon {
@@ -132,7 +138,7 @@
 .pager {
   position: absolute;
   right: var(--page-pad);
-  bottom: clamp(44px, 7vh, 86px);
+  bottom: clamp(28px, 5vh, 64px);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -201,6 +207,14 @@
     text-align: center;
     max-width: 100%;
     gap: 16px;
+  }
+  .logoWrap {
+    width: min(440px, 80vw);
+    margin: 0;
+  }
+  .logoImg {
+    max-height: 125px;
+    transform: none;
   }
   .markStack {
     align-items: center;

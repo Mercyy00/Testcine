@@ -1,6 +1,7 @@
-import { getTitle } from "../../../lib/data";
-import { fetchLiveTitle } from "../../../lib/tmdb";
-import { applyApiGuard, handleApiError } from "../../../lib/api-guard";
+import { getTitle } from "../../../lib/data.js";
+import { fetchLiveTitle } from "../../../lib/tmdb.js";
+import { fetchAniListDetails, extractAniListId } from "../../../lib/anilist.js";
+import { applyApiGuard, handleApiError } from "../../../lib/api-guard.js";
 
 export default async function handler(req, res) {
   if (!applyApiGuard(req, res, { cacheSeconds: 3600 })) {
@@ -15,18 +16,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid or missing id parameter" });
   }
 
-  // 1. Check local pre-seeded catalogue only if rich details and logo exist
+  // Check if target is an anime (AniList)
+  const isAnimeTarget =
+    /^\d+$/.test(targetId) ||
+    targetId.startsWith("anilist-") ||
+    targetId.startsWith("anime-");
+
+  if (isAnimeTarget) {
+    try {
+      const anime = await fetchAniListDetails(targetId);
+      if (anime) return res.status(200).json(anime);
+      return res.status(404).json({ error: "Anime not found on AniList" });
+    } catch (err) {
+      return handleApiError(res, err, "Failed to fetch anime details");
+    }
+  }
+
+  // 1. Check local pre-seeded catalogue only if rich details, logo, and (if series) full seasons exist
   const local = getTitle(targetId);
-  if (local && local.cast && local.cast.length > 0 && local.videos && local.logo) {
+  const isSeries = local ? local.type === "series" : false;
+  if (
+    local &&
+    local.type !== "anime" &&
+    local.cast &&
+    local.cast.length > 0 &&
+    local.videos &&
+    local.logo &&
+    (!isSeries || (local.seasonsList && local.seasonsList.length > 1))
+  ) {
     return res.status(200).json(local);
   }
 
-  // 2. Fetch live from TMDB
+  // 2. Fetch live from TMDB (for movies and series only)
   try {
     let type = null;
     if (targetId.startsWith("movie-")) {
       type = "movie";
-    } else if (targetId.startsWith("tv-") || targetId.startsWith("series-") || targetId.startsWith("anime-")) {
+    } else if (targetId.startsWith("tv-") || targetId.startsWith("series-")) {
       type = "tv";
     }
 

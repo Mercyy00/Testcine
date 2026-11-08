@@ -36,7 +36,7 @@ export function CatalogFilterBar({
         {/* Right Select Dropdowns */}
         <div className={styles.filterRightSelects}>
           {Object.entries(filterOptions).map(([key, options]) => (
-            <div key={key} className={styles.dropdownPill}>
+            <div key={key} className={styles.dropdownPill} data-filter={key}>
               <select
                 value={filters[key] || "all"}
                 onChange={(e) => onFilterChange(key, e.target.value)}

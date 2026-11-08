@@ -248,7 +248,7 @@
 }
 
 .name {
-  font-size: 14.5px;
+  font-size: clamp(14.5px, 0.84vw, 16px);
   font-weight: 700;
   letter-spacing: -0.15px;
   color: #ffffff;
@@ -261,7 +261,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12.5px;
+  font-size: clamp(12.5px, 0.72vw, 14px);
   color: #9aa0a6;
   font-weight: 500;
 }
@@ -366,14 +366,14 @@
 .contextMenu {
   position: fixed;
   z-index: 99999;
-  background: rgba(20, 24, 34, 0.95);
-  backdrop-filter: blur(28px) saturate(190%) brightness(112%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(112%);
+  background: rgba(26, 26, 28, 0.78);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
-  padding: 8px;
-  width: 230px;
+  border-radius: 12px;
+  padding: 6px;
+  width: 200px;
   animation: menuPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
@@ -414,12 +414,12 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 9px 12px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   background: none;
   border: none;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -446,11 +446,11 @@
   top: 0;
   left: 100%;
   margin-left: 6px;
-  background: rgba(20, 24, 34, 0.96);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  background: rgba(26, 26, 28, 0.82);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 8px;
   width: 190px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72);

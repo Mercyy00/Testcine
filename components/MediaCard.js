@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useToast } from "../lib/useToast";
 import {
@@ -19,7 +19,6 @@ import Art from "./Art";
 import {
   useList,
   useHistory,
-  touchHistory,
   useCustomLists,
   useReactions,
   useSchedule,
@@ -33,7 +32,7 @@ import {
 import styles from "./MediaCard.module.css";
 
 export default function MediaCard({
-  title,
+  title: inputTitle,
   rank,
   progress,
   timeLeft,
@@ -42,6 +41,30 @@ export default function MediaCard({
   badge,
   fluid = false,
 }) {
+  const title = useMemo(() => {
+    if (!inputTitle) return {};
+    if (typeof inputTitle === "string") return { id: inputTitle, title: inputTitle };
+    if (inputTitle.title && typeof inputTitle.title === "object") {
+      const inner = inputTitle.title;
+      const titleStr =
+        typeof inner.title === "string"
+          ? inner.title
+          : typeof inner.name === "string"
+          ? inner.name
+          : typeof inputTitle.name === "string"
+          ? inputTitle.name
+          : String(inputTitle.id || "");
+      return { ...inner, ...inputTitle, title: titleStr };
+    }
+    const titleStr =
+      typeof inputTitle.title === "string"
+        ? inputTitle.title
+        : typeof inputTitle.name === "string"
+        ? inputTitle.name
+        : String(inputTitle.id || "");
+    return { ...inputTitle, title: titleStr };
+  }, [inputTitle]);
+
   const [list, setList] = useList();
   const [, setHistory] = useHistory();
   const [customLists, setCustomLists] = useCustomLists();
@@ -130,10 +153,6 @@ export default function MediaCard({
     e.stopPropagation();
     toggleListEntry(setList, title.id, title);
     showToast(saved ? "Removed from watchlist" : "Added to watchlist");
-  };
-
-  const handleCardClick = () => {
-    touchHistory(setHistory, title.id, 0.15, undefined, title);
   };
 
   // Open context menu on right click
@@ -251,9 +270,33 @@ export default function MediaCard({
     }
   };
 
-  // Badge logic matching user screenshot:
+  // Badge logic matching user screenshot & spec:
+  const isAnime = title?.type === "anime";
+  const isSeries = title?.type === "series" || title?.type === "tv";
+  const seasonCount = (() => {
+    if (Array.isArray(title?.seasons)) {
+      return title.seasons.filter((s) => s && s.season_number !== 0).length || title.seasons.length || null;
+    }
+    if (typeof title?.seasons === "number") return title.seasons;
+    if (typeof title?.numberOfSeasons === "number") return title.numberOfSeasons;
+    if (typeof title?.number_of_seasons === "number") return title.number_of_seasons;
+    if (typeof title?.seasons === "string" && !isNaN(parseInt(title.seasons, 10))) {
+      return parseInt(title.seasons, 10);
+    }
+    return null;
+  })();
+
   const activeBadge = !rank
-    ? badge || title.badge || (title.status === "airing" && title.type === "series" ? "New episode" : null)
+    ? badge ||
+      title?.badge ||
+      (title?.type === "movie" ? title?.quality : null) ||
+      (isAnime
+        ? title?.status === "airing"
+          ? "SIMULCAST"
+          : "JP"
+        : title?.status === "airing" && isSeries
+        ? "New episode"
+        : null)
     : null;
 
   // Format rating: 1 decimal place (e.g. 7.3, 7.0, 8.5)
@@ -261,9 +304,6 @@ export default function MediaCard({
     typeof title.rating === "number"
       ? Number(title.rating).toFixed(1)
       : title.rating || null;
-
-  // Quality label (HD)
-  const displayQuality = title.quality || (title.type === "movie" ? "HD" : null);
 
   // Remaining time
   const formatTimeLeft = (val) => {
@@ -280,7 +320,8 @@ export default function MediaCard({
     formatTimeLeft(timeLeft) ||
     (isContinueWatching && progress > 0
       ? (() => {
-          const rem = Math.round((title.runtime || 120) * (1 - progress));
+          if (!title.runtime) return null;
+          const rem = Math.round(title.runtime * (1 - progress));
           const h = Math.floor(rem / 60);
           const m = rem % 60;
           return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
@@ -299,7 +340,6 @@ export default function MediaCard({
       <Link
         href={`/title/${title.id}`}
         className={styles.link}
-        onClick={handleCardClick}
         aria-label={title.title}
       >
         <span className={styles.art}>
@@ -366,7 +406,7 @@ export default function MediaCard({
             <span className={styles.sub}>
               {isContinueWatching ? (
                 <>
-                  <span className={styles.year}>{title.year || 2026}</span>
+                  {title.year && <span className={styles.year}>{title.year}</span>}
                   {remainingTime && (
                     <>
                       <span className={styles.dot}>·</span>
@@ -383,11 +423,13 @@ export default function MediaCard({
                       <span className={styles.dot}>·</span>
                     </>
                   ) : null}
-                  <span className={styles.year}>{title.year || 2026}</span>
-                  {displayQuality ? (
+                  {title.year && <span className={styles.year}>{title.year}</span>}
+                  {(isSeries || isAnime) && seasonCount ? (
                     <>
                       <span className={styles.dot}>·</span>
-                      <span className={styles.quality}>{displayQuality}</span>
+                      <span className={styles.quality}>
+                        {seasonCount} {Number(seasonCount) === 1 ? "Season" : "Seasons"}
+                      </span>
                     </>
                   ) : null}
                 </>

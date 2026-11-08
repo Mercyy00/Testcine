@@ -27,12 +27,12 @@ export default async function handler(req, res) {
       id: ep.id,
       seasonNumber: ep.season_number,
       episodeNumber: ep.episode_number,
-      title: ep.name || `Episode ${ep.episode_number}`,
-      overview: ep.overview || "No episode summary available.",
+      title: ep.name || "",
+      overview: ep.overview || "",
       still: ep.still_path
         ? `https://image.tmdb.org/t/p/w500${ep.still_path}`
         : null,
-      runtime: ep.runtime || 45,
+      runtime: ep.runtime || null,
       airDate: ep.air_date || "",
       rating: Number((ep.vote_average || 0).toFixed(1)),
     }));

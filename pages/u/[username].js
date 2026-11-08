@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import Layout from "../../components/Layout";
 import MediaCard from "../../components/MediaCard";
 import { getCardMap } from "../../lib/data.server";
@@ -101,10 +102,36 @@ export default function UserProfile({ cardMap = {} }) {
 
   const [profiles, setProfiles] = useProfiles();
   const [activeProfileId] = useActiveProfileId();
+  const { data: session } = useSession();
   const [settings, setSettings] = useSettings();
   const [history] = useHistory();
   const [watchlist] = useList();
   const [reactions] = useReactions();
+
+  // Remote user state from DB
+  const [remoteUser, setRemoteUser] = useState(null);
+  const [remoteLoading, setRemoteLoading] = useState(true);
+
+  useEffect(() => {
+    if (!router.isReady || !username) return;
+    let active = true;
+    setRemoteLoading(true);
+    fetch(`/api/user/profile?username=${encodeURIComponent(username)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active) {
+          setRemoteUser(d);
+          setRemoteLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setRemoteLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [router.isReady, username]);
 
   // Active Tab: "history" | "liked" | "watchlist"
   const [activeTab, setActiveTab] = useState("history");
@@ -113,13 +140,25 @@ export default function UserProfile({ cardMap = {} }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
-  const [editHidden, setEditHidden] = useState(true);
+  const [editBio, setEditBio] = useState("");
+  const [editPublic, setEditPublic] = useState(true);
+  const [editHidden, setEditHidden] = useState(false);
 
   // Toast with auto-cleanup
   const [toast, showToast] = useToast(2500);
 
   // Find profile by username slug, or fallback to active/first profile
   const profile = useMemo(() => {
+    if (remoteUser && !remoteUser.locked) {
+      return {
+        id: remoteUser.id,
+        name: remoteUser.name || remoteUser.username || "User",
+        avatar: remoteUser.image || DEFAULT_AVATAR,
+        bio: remoteUser.bio || "",
+        createdAt: remoteUser.createdAt,
+        isPublic: remoteUser.isPublic !== false,
+      };
+    }
     const rawUser = String(username || "guest").toLowerCase();
     const found = (profiles || []).find(
       (p) => p.name.toLowerCase().replace(/\s+/g, "") === rawUser || p.id === rawUser
@@ -130,22 +169,33 @@ export default function UserProfile({ cardMap = {} }) {
       id: "guest",
       name: "Guest",
       avatar: DEFAULT_AVATAR,
+      bio: "",
+      isPublic: true,
     };
-  }, [profiles, username]);
+  }, [remoteUser, profiles, username]);
+
+  const isOwner = useMemo(() => {
+    if (session?.user?.id && remoteUser?.id) return session.user.id === remoteUser.id;
+    if (session?.user?.name && profile.name) return session.user.name.toLowerCase() === profile.name.toLowerCase();
+    return true; // Local guest mode allows editing local profile
+  }, [session, remoteUser, profile.name]);
 
   // Sync edit form when modal opens
   const openEditModal = () => {
     setEditName(profile.name || "Guest");
     setEditAvatar(profile.avatar || PROFILE_AVATARS[0].url);
+    setEditBio(profile.bio || "");
+    setEditPublic(profile.isPublic !== false);
     setEditHidden(settings.historyHidden !== false);
     setIsEditing(true);
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     const trimmed = (editName || "").trim();
     if (!trimmed) return;
 
+    // 1. Update local state
     updateProfile(setProfiles, profile.id, {
       name: trimmed,
       avatar: editAvatar,
@@ -155,8 +205,23 @@ export default function UserProfile({ cardMap = {} }) {
       ...s,
       name: trimmed,
       avatar: editAvatar,
+      bio: editBio,
       historyHidden: editHidden,
     }));
+
+    // 2. Persist to DB via API if logged in
+    try {
+      await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmed,
+          image: editAvatar,
+          bio: editBio.slice(0, 160),
+          isPublic: editPublic,
+        }),
+      });
+    } catch {}
 
     setIsEditing(false);
     showToast("Profile updated");
@@ -209,16 +274,23 @@ export default function UserProfile({ cardMap = {} }) {
   const genreStats = useMemo(() => {
     const counts = {};
     const minutes = {};
+    const timedTitles = {};
     let totalMinutes = 0;
+    let totalTitles = 0;
 
     for (const item of watchedEntries) {
       const t = item.title;
       if (!t) continue;
-      const itemMinutes = (t.runtime || 90) * (item.progress || 0.5);
-      totalMinutes += itemMinutes;
+      const progress = Number(item.progress);
+      const itemMinutes = t.runtime && Number.isFinite(progress) ? t.runtime * progress : null;
+      totalTitles += 1;
+      if (itemMinutes !== null) totalMinutes += itemMinutes;
       for (const g of t.genres || []) {
         counts[g] = (counts[g] || 0) + 1;
-        minutes[g] = (minutes[g] || 0) + itemMinutes;
+        if (itemMinutes !== null) {
+          minutes[g] = (minutes[g] || 0) + itemMinutes;
+          timedTitles[g] = (timedTitles[g] || 0) + 1;
+        }
       }
     }
 
@@ -227,8 +299,12 @@ export default function UserProfile({ cardMap = {} }) {
 
     return sorted.slice(0, 5).map(([name, count]) => {
       const mins = minutes[name] || 0;
-      const hours = mins >= 60 ? `${(mins / 60).toFixed(1)}h` : `${Math.round(mins)}m`;
-      const percent = totalMinutes > 0 ? Math.min(100, Math.round((mins / totalMinutes) * 100)) : 0;
+      const hours = timedTitles[name]
+        ? mins >= 60 ? `${(mins / 60).toFixed(1)}h` : `${Math.round(mins)}m`
+        : "—";
+      const percent = totalMinutes > 0
+        ? Math.min(100, Math.round((mins / totalMinutes) * 100))
+        : Math.round((count / totalTitles) * 100);
       return { name, count, hours, percent };
     });
   }, [watchedEntries]);
@@ -248,7 +324,9 @@ export default function UserProfile({ cardMap = {} }) {
 
   const genreSummary = useMemo(() => {
     if (!watchedEntries.length) return "Watch something to see your genres";
-    const mins = watchedEntries.reduce((a, i) => a + (i.title?.runtime || 90) * (i.progress || 0.5), 0);
+    const knownEntries = watchedEntries.filter((item) => item.title?.runtime && Number.isFinite(Number(item.progress)));
+    const mins = knownEntries.reduce((total, item) => total + item.title.runtime * Number(item.progress), 0);
+    if (!knownEntries.length) return `${watchedEntries.length} ${watchedEntries.length === 1 ? "title" : "titles"} watched`;
     return `${Math.round(mins / 60)}h across ${watchedEntries.length} ${watchedEntries.length === 1 ? "title" : "titles"}`;
   }, [watchedEntries]);
 
@@ -260,6 +338,16 @@ export default function UserProfile({ cardMap = {} }) {
   const watchedCount = watchedEntries.length;
   const likedCount = likedEntries.length;
   const watchlistCount = watchlistEntries.length;
+
+  const joinedDateStr = useMemo(() => {
+    const d = remoteUser?.createdAt || profile?.createdAt;
+    if (!d) return "Join date unavailable";
+    try {
+      return `Joined ${new Date(d).toLocaleDateString("en-US", { month: "long", year: "numeric" })}`;
+    } catch {
+      return "Join date unavailable";
+    }
+  }, [remoteUser?.createdAt, profile?.createdAt]);
 
   const activitySummary = useMemo(() => {
     const totalWatched = watchedEntries.length;
@@ -333,31 +421,51 @@ export default function UserProfile({ cardMap = {} }) {
               </div>
 
               <div className={styles.metaInfo}>
-                <h1 className={styles.profileName}>{displayName}</h1>
-                <div className={styles.statsRow}>
-                  <span>{watchedCount} watched</span>
-                  <span>·</span>
-                  <span>{likedCount} liked</span>
-                  <span>·</span>
-                  <span>{watchlistCount} in watchlist</span>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+                  <h1 className={styles.profileName}>{displayName}</h1>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+                    {joinedDateStr}
+                  </span>
                 </div>
+                {profile.bio && (
+                  <p style={{ margin: "4px 0 8px", color: "rgba(255,255,255,0.8)", fontSize: 14, maxWidth: 500 }}>
+                    {profile.bio}
+                  </p>
+                )}
+                {!remoteUser?.locked && (
+                  <div className={styles.statsRow}>
+                    <span>{watchedCount} watched</span>
+                    <span>·</span>
+                    <span>{likedCount} liked</span>
+                    <span>·</span>
+                    <span>{watchlistCount} in watchlist</span>
+                  </div>
+                )}
                 <div className={styles.privacyPill}>
                   <Lock size={13} />
-                  <span>History hidden from others</span>
+                  <span>
+                    {remoteUser?.locked
+                      ? "Private Profile"
+                      : profile.isPublic
+                      ? "Public Profile"
+                      : "Private Profile"}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className={styles.heroActions}>
-              <button
-                type="button"
-                className={styles.actionBtn}
-                onClick={openEditModal}
-                aria-label="Edit profile"
-              >
-                <Pencil size={15} />
-                <span>Edit</span>
-              </button>
+              {isOwner && (
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  onClick={openEditModal}
+                  aria-label="Edit profile"
+                >
+                  <Pencil size={15} />
+                  <span>Edit</span>
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.actionBtn}
@@ -371,8 +479,33 @@ export default function UserProfile({ cardMap = {} }) {
           </div>
         </section>
 
-        {/* 2. Horizontal Tabs */}
-        <nav className={styles.navTabs} aria-label="Profile navigation">
+        {/* 2. Horizontal Tabs & Analytics (Hidden if Private) */}
+        {remoteUser?.locked ? (
+          <div style={{ textAlign: "center", padding: "100px 24px 140px", color: "rgba(255,255,255,0.7)" }}>
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.06)",
+                display: "grid",
+                placeItems: "center",
+                margin: "0 auto 20px",
+              }}
+            >
+              <Lock size={32} opacity={0.6} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px", color: "#fff" }}>
+              This profile is private
+            </h2>
+            <p style={{ fontSize: 14, margin: 0, maxWidth: 360, marginInline: "auto", lineHeight: 1.5 }}>
+              Only @{displayName} can view their watched titles, lists, and activity history.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* 2. Horizontal Tabs */}
+            <nav className={styles.navTabs} aria-label="Profile navigation">
           <button
             type="button"
             className={`${styles.tabBtn} ${activeTab === "history" ? styles.tabBtnActive : ""}`}
@@ -547,6 +680,8 @@ export default function UserProfile({ cardMap = {} }) {
             </div>
           )}
         </section>
+        </>
+        )}
 
         {/* 6. Edit Profile Modal */}
         {isEditing && (
@@ -599,15 +734,35 @@ export default function UserProfile({ cardMap = {} }) {
                   />
                 </div>
 
+                <div className={styles.inputGroup}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <label htmlFor="edit-bio" className={styles.inputLabel}>
+                      Bio
+                    </label>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                      {editBio.length}/160
+                    </span>
+                  </div>
+                  <textarea
+                    id="edit-bio"
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value.slice(0, 160))}
+                    rows={3}
+                    placeholder="Tell the community what movies or anime you like..."
+                    className={styles.textInput}
+                    style={{ resize: "none", fontFamily: "inherit" }}
+                  />
+                </div>
+
                 <label className={styles.checkboxRow}>
                   <input
                     type="checkbox"
-                    checked={editHidden}
-                    onChange={(e) => setEditHidden(e.target.checked)}
+                    checked={editPublic}
+                    onChange={(e) => setEditPublic(e.target.checked)}
                     className={styles.checkbox}
                   />
                   <span className={styles.checkboxText}>
-                    Keep history hidden from others
+                    Public Profile (allow visitors to view your profile)
                   </span>
                 </label>
 

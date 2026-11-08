@@ -4,8 +4,8 @@ import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
 import Art from "../components/Art";
 import { getCardMap } from "../lib/data.server";
-import { useHistory, removeFromHistory, entryCard, entryId } from "../lib/store";
-import { Play, X, Trash2, Search, Film, Tv, Clock } from "lucide-react";
+import { useHistory, removeFromHistory, entryCard } from "../lib/store";
+import { Play, X, Trash2, Film, Tv, Clock } from "lucide-react";
 import styles from "../styles/History.module.css";
 
 export async function getStaticProps() {
@@ -18,6 +18,33 @@ export async function getStaticProps() {
   };
 }
 
+function groupEntriesByDate(entries = []) {
+  const today = [];
+  const yesterday = [];
+  const thisWeek = [];
+  const earlier = [];
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const startOfThisWeek = startOfToday - 6 * 86400000;
+
+  entries.forEach((item) => {
+    const at = item.at || (item.watchedAt ? new Date(item.watchedAt).getTime() : 0);
+    if (at >= startOfToday) today.push(item);
+    else if (at >= startOfYesterday) yesterday.push(item);
+    else if (at >= startOfThisWeek) thisWeek.push(item);
+    else earlier.push(item);
+  });
+
+  return [
+    { title: "Today", items: today },
+    { title: "Yesterday", items: yesterday },
+    { title: "This week", items: thisWeek },
+    { title: "Earlier", items: earlier },
+  ].filter((g) => g.items.length > 0);
+}
+
 export default function History({ cardMap = {} }) {
   const [history, setHistory] = useHistory();
   const [activeFilter, setActiveFilter] = useState("all");
@@ -28,14 +55,26 @@ export default function History({ cardMap = {} }) {
   const allEntries = useMemo(() => {
     return (history || [])
       .map((h) => {
-        const title =
+        const rawCard =
           entryCard(h) ||
           (h && h.id && cardMap[String(h.id).toLowerCase()]) ||
           null;
-        if (!title) return null;
+        if (!rawCard) return null;
+        const titleStr =
+          typeof rawCard.title === "string"
+            ? rawCard.title
+            : typeof rawCard.name === "string"
+            ? rawCard.name
+            : typeof h?.title === "string"
+            ? h.title
+            : String(h?.id || "");
         return {
           ...h,
-          title,
+          ...rawCard,
+          title: {
+            ...rawCard,
+            title: titleStr,
+          },
         };
       })
       .filter(Boolean);
@@ -45,8 +84,8 @@ export default function History({ cardMap = {} }) {
   const counts = useMemo(() => {
     const movies = allEntries.filter((e) => e.title.type === "movie").length;
     const series = allEntries.filter((e) => e.title.type === "series" || e.title.type === "anime").length;
-    const inProgress = allEntries.filter((e) => (e.progress || 0) < 0.9).length;
-    const completed = allEntries.filter((e) => (e.progress || 0) >= 0.9).length;
+    const inProgress = allEntries.filter((e) => (e.progress || 0) < 1).length;
+    const completed = allEntries.filter((e) => (e.progress || 0) >= 1).length;
     return {
       all: allEntries.length,
       movies,
@@ -65,9 +104,9 @@ export default function History({ cardMap = {} }) {
     } else if (activeFilter === "series") {
       list = list.filter((e) => e.title.type === "series" || e.title.type === "anime");
     } else if (activeFilter === "in_progress") {
-      list = list.filter((e) => (e.progress || 0) < 0.9);
+      list = list.filter((e) => (e.progress || 0) < 1);
     } else if (activeFilter === "completed") {
-      list = list.filter((e) => (e.progress || 0) >= 0.9);
+      list = list.filter((e) => (e.progress || 0) >= 1);
     }
 
     if (searchQuery.trim()) {
@@ -81,6 +120,11 @@ export default function History({ cardMap = {} }) {
 
     return list;
   }, [allEntries, activeFilter, searchQuery]);
+
+  // Group entries by Today / Yesterday / This week / Earlier
+  const groupedSections = useMemo(() => {
+    return groupEntriesByDate(displayedEntries);
+  }, [displayedEntries]);
 
   const handleRemoveItem = (e, id) => {
     e.preventDefault();
@@ -99,7 +143,7 @@ export default function History({ cardMap = {} }) {
 
   return (
     <Layout
-      title="Watch History"
+      title="Watch History · Vivarium"
       description="Pick up where you left off across all your movies and series."
     >
       <div className={`pageInner ${styles.pageWrap}`}>
@@ -197,82 +241,125 @@ export default function History({ cardMap = {} }) {
           </div>
         )}
 
-        {/* History Items Grid */}
-        {displayedEntries.length > 0 ? (
-          <div className={styles.historyGrid}>
-            {displayedEntries.map((item) => {
-              const progressVal = item.progress || 0.1;
-              const isCompleted = progressVal >= 0.9;
-              const progressPct = Math.min(100, Math.round(progressVal * 100));
-
-              // Compute remaining time
-              const remMinutes = Math.round(
-                (item.title.runtime || 115) * (1 - progressVal)
-              );
-              const remHours = Math.floor(remMinutes / 60);
-              const remMins = remMinutes % 60;
-              const timeRemaining = isCompleted
-                ? "Completed"
-                : item.timeLeft ||
-                  (remHours > 0
-                    ? `${remHours}h ${remMins}m left`
-                    : `${remMins}m left`);
-
-              return (
-                <Link
-                  key={item.id}
-                  href={`/watch/${item.id}`}
-                  className={styles.historyCard}
+        {/* Grouped History Items */}
+        {groupedSections.length > 0 ? (
+          <div>
+            {groupedSections.map((group) => (
+              <div key={group.title} style={{ marginBottom: 40 }}>
+                <h2
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "#fff",
+                    margin: "0 0 16px",
+                  }}
                 >
-                  <div className={styles.artWrap}>
-                    <Art
-                      title={item.title}
-                      variant="backdrop"
-                      showTitle={false}
-                      className={styles.cardImg}
-                    />
+                  {group.title}
+                </h2>
+                <div className={styles.historyGrid}>
+                  {group.items.map((item) => {
+                    const progressVal = Number.isFinite(item.progress) ? item.progress : 0;
+                    const isCompleted = progressVal >= 1;
+                    const progressPct = Math.min(100, Math.round(progressVal * 100));
 
-                    {/* Hover Play Button */}
-                    <div className={styles.playOverlay}>
-                      <div className={styles.playIconCircle}>
-                        <Play size={18} fill="currentColor" />
-                      </div>
-                    </div>
+                    const isSeries = item.title.type === "series" || item.title.type === "anime";
+                    const seriesLabel = isSeries
+                      ? `S${item.season || 1} · E${item.episode || 1}`
+                      : null;
 
-                    {/* Individual Remove (X) Button */}
-                    <button
-                      type="button"
-                      className={styles.removeBtn}
-                      onClick={(e) => handleRemoveItem(e, item.id)}
-                      title="Remove from history"
-                      aria-label="Remove from history"
-                    >
-                      <X size={15} />
-                    </button>
+                    // Compute remaining time
+                    const remMinutes = item.title.runtime
+                      ? Math.round(item.title.runtime * (1 - progressVal))
+                      : null;
+                    const remHours = remMinutes === null ? null : Math.floor(remMinutes / 60);
+                    const remMins = remMinutes === null ? null : remMinutes % 60;
+                    const timeRemaining = isCompleted
+                      ? "Completed"
+                      : item.timeLeft || (remMinutes !== null
+                        ? remHours > 0
+                          ? `${remHours}h ${remMins}m left`
+                          : `${remMins}m left`
+                        : null);
 
-                    {/* Progress Bar */}
-                    <div className={styles.progressBar}>
-                      <div
-                        className={styles.progressFill}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-                  </div>
+                    const watchHref = isSeries
+                      ? `/watch/${item.id}?season=${item.season || 1}&episode=${item.episode || 1}`
+                      : `/watch/${item.id}`;
 
-                  <div className={styles.meta}>
-                    <h3 className={styles.cardTitle}>{item.title.title}</h3>
-                    <p className={styles.cardSub}>
-                      <span>{item.title.year}</span>
-                      <span className={styles.dot}>•</span>
-                      <span className={styles.timeLeft}>
-                        <Clock size={11} style={{ display: "inline", marginRight: 4 }} />
-                        {timeRemaining}
-                      </span>
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
+                    return (
+                      <Link
+                        key={`${item.id}:${item.season || 0}:${item.episode || 0}`}
+                        href={watchHref}
+                        className={styles.historyCard}
+                      >
+                        <div className={styles.artWrap}>
+                          <Art
+                            title={item.title}
+                            variant="backdrop"
+                            showTitle={false}
+                            className={styles.cardImg}
+                          />
+
+                          {/* Hover Play Button */}
+                          <div className={styles.playOverlay}>
+                            <div className={styles.playIconCircle}>
+                              <Play size={18} fill="currentColor" />
+                            </div>
+                          </div>
+
+                          {/* Individual Remove (X) Button */}
+                          <button
+                            type="button"
+                            className={styles.removeBtn}
+                            onClick={(e) => handleRemoveItem(e, item.id)}
+                            title="Remove from history"
+                            aria-label="Remove from history"
+                          >
+                            <X size={15} />
+                          </button>
+
+                          {/* Progress Bar */}
+                          <div className={styles.progressBar}>
+                            <div
+                              className={styles.progressFill}
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className={styles.meta}>
+                          <h3 className={styles.cardTitle}>
+                            {typeof item.title?.title === "string"
+                              ? item.title.title
+                              : typeof item.title?.name === "string"
+                              ? item.title.name
+                              : String(item.title || item.id || "")}
+                          </h3>
+                          <p className={styles.cardSub}>
+                            {seriesLabel ? (
+                              <>
+                                <span style={{ color: "var(--primary, #8fe388)", fontWeight: 600 }}>
+                                  {seriesLabel}
+                                </span>
+                                <span className={styles.dot}>•</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>{item.title.year}</span>
+                                <span className={styles.dot}>•</span>
+                              </>
+                            )}
+                            <span className={styles.timeLeft}>
+                              <Clock size={11} style={{ display: "inline", marginRight: 4 }} />
+                              {timeRemaining}
+                            </span>
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <Empty

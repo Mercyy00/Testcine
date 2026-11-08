@@ -44,6 +44,35 @@
   height: 32px;
 }
 
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.tabs button {
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.tabs button:hover {
+  color: var(--text-primary);
+}
+
+.tabs .activeTab {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.13);
+}
+
 .menu {
   position: absolute;
   z-index: var(--z-raised);
@@ -116,7 +145,7 @@
 
 .scroller {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   margin: -12px calc(var(--page-pad) * -1) 0;
   padding: 12px var(--page-pad) 18px;
   overflow-x: auto;
@@ -141,5 +170,12 @@
   }
   .title {
     font-size: 20px;
+  }
+  .tabs {
+    gap: 0;
+  }
+  .tabs button {
+    padding: 6px 8px;
+    font-size: 12px;
   }
 }

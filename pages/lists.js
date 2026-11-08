@@ -65,8 +65,19 @@ export default function Lists({ cardMap = {} }) {
 
   const resolveTitle = (id) => {
     if (!id) return null;
-    if (typeof id === "object" && id.id) return entryCard(id) || id;
-    return cardMap[String(id).toLowerCase()] || null;
+    let card = null;
+    if (typeof id === "object" && id.id) card = entryCard(id) || id;
+    else card = cardMap[String(id).toLowerCase()] || null;
+    if (!card) return null;
+    const titleStr =
+      typeof card.title === "string"
+        ? card.title
+        : typeof card.name === "string"
+        ? card.name
+        : typeof card.title?.title === "string"
+        ? card.title.title
+        : String(card.id || "");
+    return { ...card, title: titleStr };
   };
 
   // Active profile info
@@ -81,6 +92,7 @@ export default function Lists({ cardMap = {} }) {
   const [selectedListId, setSelectedListId] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all"); // "all" | "movie" | "series" | "anime"
 
   // Sync selectedListId from router query (?id=liked or ?tab=liked or ?list=liked)
   useEffect(() => {
@@ -185,6 +197,16 @@ export default function Lists({ cardMap = {} }) {
     }
     return null;
   }, [selectedListId, watchlist, userLikedIds, customLists, setWatchlist, setCustomLists, setReactions]);
+
+  // Filter items by type (All, Movies, Series, Anime)
+  const filteredCollectionItems = useMemo(() => {
+    if (!activeCollection?.items) return [];
+    if (typeFilter === "all") return activeCollection.items;
+    if (typeFilter === "movie") return activeCollection.items.filter((i) => i.type === "movie");
+    if (typeFilter === "series") return activeCollection.items.filter((i) => i.type === "series" || i.type === "tv");
+    if (typeFilter === "anime") return activeCollection.items.filter((i) => i.type === "anime");
+    return activeCollection.items;
+  }, [activeCollection?.items, typeFilter]);
 
   // First title preview image helper
   const getPreviewImage = (ids) => {
@@ -352,6 +374,22 @@ export default function Lists({ cardMap = {} }) {
                   {activeCollection.isCustom && (
                     <button
                       type="button"
+                      className={styles.actionBtn}
+                      onClick={() => {
+                        const url = `${window.location.origin}/lists/${activeCollection.id}`;
+                        if (navigator?.clipboard) navigator.clipboard.writeText(url);
+                        showToast("List link copied to clipboard");
+                      }}
+                      title="Share this list"
+                    >
+                      <Share2 size={13} />
+                      <span>Share</span>
+                    </button>
+                  )}
+
+                  {activeCollection.isCustom && (
+                    <button
+                      type="button"
                       className={styles.dangerBtn}
                       onClick={activeCollection.onDelete}
                       title="Delete this list"
@@ -365,8 +403,36 @@ export default function Lists({ cardMap = {} }) {
 
               {/* Right Side: Numbered Tracklist of Items */}
               <div className={styles.listTrackList}>
-                {activeCollection.items.length > 0 ? (
-                  activeCollection.items.map((item, index) => {
+                {/* Partition Type Tabs */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                  {[
+                    { value: "all", label: "All" },
+                    { value: "movie", label: "Movies" },
+                    { value: "series", label: "Series" },
+                    { value: "anime", label: "Anime" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setTypeFilter(tab.value)}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: 20,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        background: typeFilter === tab.value ? "#ffffff" : "var(--surface-2, #14171d)",
+                        color: typeFilter === tab.value ? "#000000" : "rgba(255,255,255,0.7)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredCollectionItems.length > 0 ? (
+                  filteredCollectionItems.map((item, index) => {
                     const typeLabel =
                       item.type === "series" || item.type === "anime"
                         ? "Series"
@@ -401,7 +467,7 @@ export default function Lists({ cardMap = {} }) {
                         <div className={styles.itemInfo}>
                           <h4 className={styles.itemTitle}>{item.title}</h4>
                           <p className={styles.itemSub}>
-                            {typeLabel} · {item.year || 2026}
+                            {item.year ? `${typeLabel} · ${item.year}` : typeLabel}
                           </p>
                         </div>
                       </div>
@@ -422,7 +488,12 @@ export default function Lists({ cardMap = {} }) {
           /* Main Overview - Folder Collections Grid (Matches Image 2) */
           <>
             <div className={styles.topRow}>
-              <h1 className={styles.pageTitle}>Lists</h1>
+              <div>
+                <h1 className={styles.pageTitle}>My list</h1>
+                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, margin: "6px 0 0" }}>
+                  Save anything with the plus button
+                </p>
+              </div>
 
               <div className={styles.topActions}>
                 <button
@@ -553,7 +624,31 @@ export default function Lists({ cardMap = {} }) {
                       </div>
                     </div>
                     <div className={styles.folderMeta}>
-                      <h3 className={styles.folderTitle}>{list.name}</h3>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h3 className={styles.folderTitle}>{list.name}</h3>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const url = `${window.location.origin}/lists/${list.id}`;
+                            if (navigator?.clipboard) navigator.clipboard.writeText(url);
+                            showToast("List link copied to clipboard");
+                          }}
+                          title="Share list"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 6,
+                            borderRadius: 6,
+                            color: "rgba(255,255,255,0.6)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Share2 size={13} />
+                        </span>
+                      </div>
                       <p className={styles.folderSub}>
                         {count} {count === 1 ? "title" : "titles"}
                       </p>

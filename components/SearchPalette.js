@@ -6,14 +6,6 @@ import { TYPE_LABEL } from "../lib/constants";
 import { useSearches } from "../lib/store";
 import styles from "./SearchPalette.module.css";
 
-const POPULAR_SUGGESTIONS = [
-  { id: "severance", title: "Severance", type: "series", year: 2022 },
-  { id: "the-bear", title: "The Bear", type: "series", year: 2022 },
-  { id: "spider-man-into-the-spider-verse", title: "Spider-Man: Into the Spider-Verse", type: "movie", year: 2018 },
-  { id: "top-gun-maverick", title: "Top Gun: Maverick", type: "movie", year: 2022 },
-  { id: "whiplash", title: "Whiplash", type: "movie", year: 2014 },
-];
-
 export default function SearchPalette({ autoFocus = false, wide = false }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -59,17 +51,12 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
     return liveResults.slice(0, 8);
   }, [q, liveResults]);
 
-  const recents = searches.slice(0, 2);
-  const suggestions = POPULAR_SUGGESTIONS;
-
+  const recents = searches.slice(0, 10);
   // Flat list of rows so arrow keys can move across both sections.
   const rows = useMemo(() => {
     if (q.trim()) return results.map((t) => ({ kind: "title", t }));
-    return [
-      ...recents.map((text) => ({ kind: "recent", text })),
-      ...suggestions.map((t) => ({ kind: "title", t })),
-    ];
-  }, [q, results, recents, suggestions]);
+    return recents.map((text) => ({ kind: "recent", text }));
+  }, [q, results, recents]);
 
   useEffect(() => {
     setTimeout(() => setActive(-1), 0);
@@ -103,7 +90,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   const remember = (text) => {
     const v = text.trim();
     if (!v) return;
-    setSearches((s) => [v, ...s.filter((x) => x.toLowerCase() !== v.toLowerCase())].slice(0, 8));
+    setSearches((s) => [v, ...s.filter((x) => x.toLowerCase() !== v.toLowerCase())].slice(0, 10));
   };
 
   const go = (row) => {
@@ -156,7 +143,13 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           placeholder="Search"
           value={q}
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           spellCheck={false}
+          data-1p-ignore="true"
+          data-lpignore="true"
+          data-bwignore="true"
+          data-form-type="other"
           role="combobox"
           aria-expanded={open}
           aria-controls="search-listbox"
@@ -186,9 +179,26 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           type="button"
           className={styles.go}
           onClick={submit}
+          tabIndex={-1}
           aria-label="Search"
         >
-          <Search size={20} strokeWidth={2.2} />
+          <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              width="20"
+              height="20"
+              style={{ transform: "none" }}
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+          </span>
         </button>
       </div>
 

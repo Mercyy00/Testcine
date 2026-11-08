@@ -1,10 +1,11 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
 import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
-import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
+import { CatalogFilterBar, TitleGrid, Empty, Chips } from "../components/Page";
 import { SkeletonHero, SkeletonGrid, SkeletonRow } from "../components/Skeleton";
 import { SERVICES, BRAND } from "../lib/constants";
 
@@ -21,6 +22,17 @@ const CATEGORIES = [
   { value: "top", label: "Top Rated" },
   { value: "airing_today", label: "Airing Today" },
   { value: "on_air", label: "On Air" },
+];
+
+const NETWORKS = [
+  { value: "all", label: "All Networks" },
+  { value: "49", label: "HBO" },
+  { value: "213", label: "Netflix" },
+  { value: "174", label: "AMC" },
+  { value: "2552", label: "Apple TV+" },
+  { value: "67", label: "Showtime" },
+  { value: "88", label: "FX" },
+  { value: "3353", label: "Peacock" },
 ];
 
 const STANDARD_GENRES = [
@@ -72,7 +84,11 @@ const YEARS = [
 ];
 
 export default function Series() {
+  const router = useRouter();
+  const gridRef = useRef(null);
+
   const [category, setCategory] = useState("trending");
+  const [network, setNetwork] = useState("all");
   const [filters, setFilters] = useState({
     genre: "all",
     country: "all",
@@ -92,6 +108,26 @@ export default function Series() {
 
   const [topSeries, setTopSeries] = useState([]);
   const [topLoading, setTopLoading] = useState(true);
+
+  // Sync state from URL query on initial load or back/forward navigation
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query;
+    if (q.category && typeof q.category === "string") {
+      setCategory(q.category);
+    }
+    if (q.network && typeof q.network === "string") {
+      setNetwork(q.network);
+    }
+    setFilters((prev) => ({
+      genre: typeof q.genre === "string" ? q.genre : prev.genre,
+      country: typeof q.country === "string" ? q.country : prev.country,
+      year: typeof q.year === "string" ? q.year : prev.year,
+      service: typeof q.service === "string" ? q.service : prev.service,
+      language: typeof q.language === "string" ? q.language : prev.language,
+      rating: typeof q.rating === "string" ? q.rating : prev.rating,
+    }));
+  }, [router.isReady, router.query]);
 
   // 1. Fetch featured hero banner series from TMDB API
   useEffect(() => {
@@ -133,7 +169,7 @@ export default function Series() {
     };
   }, []);
 
-  // 3. Fetch catalog series from TMDB API based on category & filters
+  // 3. Fetch catalog series from TMDB API based on category & filters & network
   useEffect(() => {
     let active = true;
     setSeriesLoading(true);
@@ -156,6 +192,9 @@ export default function Series() {
       language: filters.language,
       rating: filters.rating,
     });
+    if (network && network !== "all") {
+      params.set("network", network);
+    }
 
     fetch(`/api/tmdb/discover?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : []))
@@ -175,7 +214,7 @@ export default function Series() {
     return () => {
       active = false;
     };
-  }, [category, filters]);
+  }, [category, network, filters]);
 
   const filterOptions = useMemo(() => {
     const services = SERVICES.map((s) => ({ value: s.id, label: s.name }));
@@ -194,8 +233,31 @@ export default function Series() {
     };
   }, []);
 
+  const updateUrl = (newCat, newNet, newFilters) => {
+    const next = {};
+    if (newCat && newCat !== "trending") next.category = newCat;
+    if (newNet && newNet !== "all") next.network = newNet;
+    for (const [k, v] of Object.entries(newFilters)) {
+      if (v && v !== "all") next[k] = v;
+    }
+    router.replace({ pathname: "/series", query: next }, undefined, { shallow: true });
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleCategoryChange = (val) => {
+    setCategory(val);
+    updateUrl(val, network, filters);
+  };
+
+  const handleNetworkChange = (val) => {
+    setNetwork(val);
+    updateUrl(category, val, filters);
+  };
+
   const handleFilterChange = (key, val) => {
-    setFilters((prev) => ({ ...prev, [key]: val }));
+    const nextFilters = { ...filters, [key]: val };
+    setFilters(nextFilters);
+    updateUrl(category, network, nextFilters);
   };
 
   const handleShuffle = () => {
@@ -223,6 +285,7 @@ export default function Series() {
       ) : null}
 
       <section
+        ref={gridRef}
         style={{
           padding: "36px var(--page-pad) 64px",
           maxWidth: "var(--page-max)",
@@ -232,13 +295,22 @@ export default function Series() {
         <CatalogFilterBar
           title="Series"
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           categories={CATEGORIES}
           filters={filters}
           onFilterChange={handleFilterChange}
           filterOptions={filterOptions}
           onShuffle={handleShuffle}
         />
+
+        <div style={{ marginBottom: 24, marginTop: 16 }}>
+          <Chips
+            label="Network"
+            options={NETWORKS}
+            value={network}
+            onChange={handleNetworkChange}
+          />
+        </div>
 
         {seriesLoading ? (
           <SkeletonGrid count={12} wide={true} />

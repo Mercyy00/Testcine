@@ -30,13 +30,16 @@ export default function WatchParty({ options = [] }) {
   const conn = useRef(null);
 
   const enter = (code, tid) => {
+    if (!partyEnabled) return;
     conn.current?.leave();
-    setMsgs([{ id: 1, who: "System", text: `${me} joined room ${code}.` }]);
-    setRoom({ code, titleId: tid });
-    conn.current = joinRoom(code, me, {
+    const connection = joinRoom(code, me, {
       onChat: (m) => setMsgs((list) => [...list, m]),
       onPresence: setPeople,
     });
+    if (!connection) return;
+    setMsgs([]);
+    setRoom({ code, titleId: tid });
+    conn.current = connection;
   };
   const create = () => enter(newRoomCode(), titleId);
   const join = (e) => {
@@ -70,7 +73,7 @@ export default function WatchParty({ options = [] }) {
   const send = (e) => {
     e.preventDefault();
     const v = text.trim();
-    if (!v) return;
+    if (!v || !conn.current) return;
     setMsgs((m) => [...m, { id: Date.now(), who: me, text: v }]);
     conn.current?.sendChat(v);
     setText("");
@@ -84,18 +87,18 @@ export default function WatchParty({ options = [] }) {
           <section className={styles.panel}>
             <h2>Start a room</h2>
             <Select id="party-title" label="Title" value={titleId} onChange={setTitleId} options={options} />
-            <button type="button" className="btnHero" onClick={create}>
+            <button type="button" className="btnHero" onClick={create} disabled={!partyEnabled}>
               Open room
             </button>
             <form onSubmit={join} style={{ display: "flex", gap: 8 }}>
               <input value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="Room code" aria-label="Room code" maxLength={5}
                 style={{ flex: 1, height: 40, padding: "0 12px", borderRadius: 12, background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", color: "#fff", textTransform: "uppercase" }} />
-              <button type="submit" className="chip">Join</button>
+              <button type="submit" className="chip" disabled={!partyEnabled}>Join</button>
             </form>
             {!partyEnabled && <p className={styles.hint}>Realtime is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to share rooms.</p>}
             {room && (
               <div className={styles.invite}>
-                <small>Room code · {people.length || 1} watching</small>
+                <small>Room code · {people.length} watching</small>
                 <b>{room.code}</b>
                 <button type="button" className="chip" onClick={copy}>
                   {copied ? <Check size={16} /> : <Copy size={16} />}

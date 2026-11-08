@@ -1,3 +1,35 @@
+@font-face {
+  font-family: "NS Sans";
+  src: url("/fonts/NS-Sans-Light.woff2") format("woff2");
+  font-weight: 100 399;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NS Sans";
+  src: url("/fonts/NS-Sans-Medium.woff2") format("woff2");
+  font-weight: 400 599;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NS Sans";
+  src: url("/fonts/NS-Sans-Bold.woff2") format("woff2");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Creato Display";
+  src: url("/fonts/Creato-Regular.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Tokens measured from the reference page. Keep names verbatim. */
 :root {
   --bg: #080808;
@@ -10,7 +42,8 @@
   --bar-glass-hover: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, .18), rgba(255, 255, 255, .18)) #0c0c0e38;
   --bar-fill: var(--bar-glass);
   --bar-fill-hover: var(--bar-glass-hover);
-  --bar-glass-blur: blur(20px) saturate(1.6);
+  --glass-control-blur: blur(30px) saturate(1.8);
+  --bar-glass-blur: var(--glass-control-blur);
   --glass-button-ring: inset 0 0 0 1px rgba(255, 255, 255, .19);
   --bar-ring: inset 0 0 0 1px rgba(255, 255, 255, .19), 0 12px 32px -12px #0009;
   --bar-shadow: 0 3px 12px #0000008c, 0 1px 3px #00000073;
@@ -116,7 +149,8 @@
   --ease-lift: cubic-bezier(0.34, 1.4, 0.64, 1);
   --spring-pop: 0.56s linear(0, 0.048, 0.1597, 0.2985, 0.441, 0.5729, 0.6872, 0.7811, 0.8549, 0.9106, 0.9508, 0.9785, 0.9965, 1.0073, 1.0129, 1.015, 1.0149, 1.0135, 1.0116, 1.0094, 1.0073, 1.0054, 1.0039, 1.0026, 1);
   --spring-island: 0.75s linear(0, 0.0663, 0.2105, 0.3763, 0.5332, 0.6669, 0.7733, 0.8533, 0.9107, 0.9499, 0.9754, 0.9911, 1, 1.0044, 1.0061, 1.0062, 1.0055, 1.0045, 1.0035, 1.0026, 1.0018, 1.0012, 1.0008, 1, 1);
-  --font-body: var(--font-figtree), "NS Sans", "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-body: "NS Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-label: "Creato Display", var(--font-body);
   --font-bebas: var(--font-bebas), "Bebas Neue", "Oswald", Impact, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --nav-h: 56px;
@@ -174,8 +208,27 @@ svg {
 
 :focus-visible {
   outline: none;
+}
+
+:is(button, a, [role="button"], [tabindex]):not(input, textarea, select):focus-visible {
   box-shadow: var(--ring);
   border-radius: 999px;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 ::selection {
@@ -185,45 +238,45 @@ svg {
 /* Shared button recipes, measured */
 .btnHero,
 .btnHeroGlass {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   height: 64px;
-  padding: 0 38px;
+  padding: 0 50px;
   border-radius: 999px;
   font-size: 22px;
-  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.3s ease;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s ease, background-color 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease;
 }
 
 .btnHero {
-  background: var(--primary);
-  color: var(--on-accent);
-  font-weight: 600;
-  letter-spacing: -0.22px;
-  box-shadow: var(--glow-shadow);
+  background: #ffffff;
+  color: #000000;
+  letter-spacing: -0.15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .btnHero:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+  background: #f0f0f0;
+  transform: scale(1.02);
 }
 
 .btnHeroGlass {
-  background-color: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(24px) saturate(190%) brightness(110%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(110%);
+  background-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: var(--glass-control-blur);
+  -webkit-backdrop-filter: var(--glass-control-blur);
   color: #fff;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
 .btnHeroGlass:hover {
-  background-color: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.38);
-  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.02);
 }
 
 .chip {
@@ -237,6 +290,8 @@ svg {
   font-weight: 600;
   color: #fff;
   background-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: var(--glass-control-blur);
+  -webkit-backdrop-filter: var(--glass-control-blur);
   background-image: linear-gradient(rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
   box-shadow: rgba(255, 255, 255, 0.14) 0 1px 0 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px inset,
     rgba(0, 0, 0, 0.32) 0 1px 2px 0;
@@ -438,3 +493,254 @@ svg {
   border: 0 !important;
 }
 
+
+/* Global utility classes matching reference interface */
+.barGlass {
+  background-color: rgba(12, 12, 14, 0.22);
+  box-shadow: rgba(255, 255, 255, 0.19) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.6) 0px 12px 32px -12px;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12));
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+}
+
+.popGlass {
+  z-index: var(--z-popover, 300);
+  border-radius: var(--radius-menu, 12px);
+  background-color: var(--bg, rgba(8, 8, 8, 0.62));
+  background-image: linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07));
+  box-shadow: rgba(255, 255, 255, 0.19) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.7) 0px 24px 48px -14px;
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+}
+
+.popItem {
+  border-radius: var(--radius-menu-item, 8px);
+  width: 100%;
+  min-height: 42px;
+  font-size: var(--fs-md, 14px);
+  color: var(--text, #fff);
+  text-align: left;
+  white-space: nowrap;
+  transition: background var(--t-fast, 0.2s), color var(--t-fast, 0.2s);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-weight: 500;
+  display: flex;
+}
+
+.popItem:hover {
+  background: var(--fill-1, rgba(255, 255, 255, 0.07));
+}
+
+.barShade {
+  box-shadow: var(--bar-shadow);
+  border-radius: var(--radius-round, 999px);
+}
+
+/* Interactive Lucide motion: a quiet default, with gestures matched to each action. */
+@keyframes lucide-hover-pop {
+  0% { transform: translateY(0) scale(1); }
+  58% { transform: translateY(-2px) scale(1.14); }
+  100% { transform: translateY(-1px) scale(1.06); }
+}
+
+@keyframes lucide-bell-ring {
+  0%, 100% { transform: rotate(0); }
+  14% { transform: rotate(16deg); }
+  28% { transform: rotate(-14deg); }
+  42% { transform: rotate(10deg); }
+  56% { transform: rotate(-7deg); }
+  70% { transform: rotate(4deg); }
+  84% { transform: rotate(-2deg); }
+}
+
+@keyframes lucide-search-pop {
+  0% { transform: scale(0.86); }
+  62% { transform: scale(1.2); }
+  100% { transform: scale(1.06); }
+}
+
+@keyframes lucide-plus-turn {
+  0% { transform: rotate(0) scale(1); }
+  76% { transform: rotate(360deg) scale(1.14); }
+  100% { transform: rotate(360deg) scale(1.08); }
+}
+
+@keyframes lucide-spin-quarter {
+  0% { transform: rotate(0); }
+  75% { transform: rotate(100deg); }
+  100% { transform: rotate(90deg); }
+}
+
+@keyframes lucide-heart-beat {
+  0%, 100% { transform: scale(1); }
+  24% { transform: scale(1.2); }
+  42% { transform: scale(0.96); }
+  62% { transform: scale(1.14); }
+  78% { transform: scale(1); }
+}
+
+@keyframes lucide-nudge-right {
+  0%, 100% { transform: translateX(0); }
+  55% { transform: translateX(3px); }
+}
+
+@keyframes lucide-nudge-left {
+  0%, 100% { transform: translateX(0); }
+  55% { transform: translateX(-3px); }
+}
+
+@keyframes lucide-nudge-down {
+  0%, 100% { transform: translateY(0); }
+  55% { transform: translateY(3px); }
+}
+
+@keyframes lucide-bookmark-lift {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-4px); }
+}
+
+@keyframes lucide-message-wiggle {
+  0%, 100% { transform: rotate(0); }
+  28% { transform: rotate(-9deg); }
+  58% { transform: rotate(8deg); }
+  82% { transform: rotate(-3deg); }
+}
+
+@keyframes lucide-download-bounce {
+  0%, 100% { transform: translateY(0); }
+  42% { transform: translateY(3px); }
+  72% { transform: translateY(-2px); }
+}
+
+@keyframes lucide-like-lift {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  55% { transform: rotate(-12deg) translateY(-3px); }
+}
+
+@keyframes lucide-dislike-dip {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  55% { transform: rotate(12deg) translateY(3px); }
+}
+
+@keyframes lucide-play-forward {
+  0%, 100% { transform: translateX(0) scale(1); }
+  58% { transform: translateX(3px) scale(1.1); }
+}
+
+@keyframes lucide-eye-blink {
+  0%, 100% { transform: scaleY(1); }
+  46% { transform: scaleY(0.14); }
+  68% { transform: scaleY(1); }
+}
+
+@keyframes lucide-more-bounce {
+  0%, 100% { transform: translateY(0); }
+  35% { transform: translateY(-2px); }
+  70% { transform: translateY(1px); }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: lucide-hover-pop 300ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-bell,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-bell {
+    transform-origin: 50% 12%;
+    animation: lucide-bell-ring 560ms ease-in-out both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-search,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-search {
+    animation: lucide-search-pop 320ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-plus,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-plus,
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-list-plus,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-list-plus {
+    animation: lucide-plus-turn 520ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-settings,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-settings,
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-settings-2,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-settings-2 {
+    animation: lucide-spin-quarter 420ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-heart,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-heart {
+    animation: lucide-heart-beat 520ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-chevron-right,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-chevron-right {
+    animation: lucide-nudge-right 260ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-chevron-left,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-chevron-left {
+    animation: lucide-nudge-left 260ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-chevron-down,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-chevron-down {
+    animation: lucide-nudge-down 260ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-bookmark,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-bookmark {
+    animation: lucide-bookmark-lift 340ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-message-circle,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-message-circle,
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-message-square,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-message-square {
+    animation: lucide-message-wiggle 420ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-download,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-download {
+    animation: lucide-download-bounce 360ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-thumbs-up,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-thumbs-up {
+    animation: lucide-like-lift 340ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-thumbs-down,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-thumbs-down {
+    animation: lucide-dislike-dip 340ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-play,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-play {
+    animation: lucide-play-forward 300ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-eye,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-eye {
+    transform-origin: center;
+    animation: lucide-eye-blink 360ms ease-in-out both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-more-horizontal,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-more-horizontal,
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-ellipsis,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-ellipsis {
+    animation: lucide-more-bounce 320ms var(--ease-out) both;
+  }
+
+  :is(button:not(:disabled), a, [role="button"]):hover .lucide-x,
+  :is(button:not(:disabled), a, [role="button"]):focus-visible .lucide-x {
+    animation: lucide-spin-quarter 300ms var(--ease-out) both;
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Play, Pause, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
 import { RatingRing, CertBadge, Dot } from "./Meta";
 import { runtimeLabel } from "../lib/constants";
@@ -10,27 +10,34 @@ import styles from "./HeroBanner.module.css";
 
 function Wordmark({ title }) {
   const [logoFailed, setLogoFailed] = useState(false);
-  if (title.logo && !logoFailed) {
+  const titleStr =
+    typeof title?.title === "string"
+      ? title.title
+      : typeof title?.name === "string"
+      ? title.name
+      : String(title?.title || title || "");
+
+  if (title?.logo && !logoFailed) {
     return (
-      <h1 className={styles.logoWrap} style={{ margin: 0, padding: 0 }}>
+      <h1 className={styles.logoWrap}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={title.logo}
-          alt={title.title}
+          alt={titleStr}
           className={styles.logoImg}
           onError={() => setLogoFailed(true)}
         />
         <span style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", border: 0 }}>
-          {title.title}
+          {titleStr}
         </span>
       </h1>
     );
   }
-  const words = title.title.toUpperCase().split(" ");
-  const stack = words.length <= 3 && title.type === "movie";
+  const words = titleStr ? titleStr.toUpperCase().split(" ") : [];
+  const stack = words.length <= 3 && title?.type === "movie";
   return (
-    <h1 className={`${styles.mark} ${stack ? styles.markStack : styles.markWide}`} aria-label={title.title}>
-      {stack ? words.map((w, i) => <span key={i}>{w}</span>) : title.title.toUpperCase()}
+    <h1 className={`${styles.mark} ${stack ? styles.markStack : styles.markWide}`} aria-label={titleStr}>
+      {stack ? words.map((w, i) => <span key={i}>{w}</span>) : (titleStr ? titleStr.toUpperCase() : "")}
     </h1>
   );
 }
@@ -40,9 +47,8 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
   const [i, setI] = useState(0);
   const [hover, setHover] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [settings] = useSettings();
-  const paused = hover || isFocused || isManuallyPaused || settings.autoplay === false || settings.autoplayPreviews === false;
+  const paused = hover || isFocused || settings.autoplay === false || settings.autoplayPreviews === false;
   const n = validItems.length;
   const go = useCallback((next) => setI(((next % n) + n) % n), [n]);
 
@@ -95,28 +101,26 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
           >
             <Wordmark title={t} />
             <div className={styles.meta}>
-              <RatingRing value={t.rating} size={56} />
+              <RatingRing value={t.rating} size={38} />
               <Dot />
               <span>{t.year}</span>
               <Dot />
               <span>{runtimeLabel(t)}</span>
               <Dot />
               <CertBadge cert={t.cert} />
-              {t.type === "movie" && (
-                <>
-                  <Dot />
-                  <span>HD</span>
-                </>
-              )}
+              <Dot />
+              <span>HD</span>
             </div>
             <p className={styles.overview}>{t.overview}</p>
             <div className={styles.actions}>
-              <Link href={`/watch/${t.id}`} className="btnHero">
-                <Play size={22} fill="currentColor" />
+              <Link
+                href={t.type === "movie" ? `/watch/${t.id}` : `/watch/${t.id}?season=1&episode=1`}
+                className="btnHero"
+              >
+                <Play size={22} fill="currentColor" stroke="none" />
                 Play
               </Link>
               <Link href={`/title/${t.id}`} className="btnHeroGlass">
-                <Info size={22} className={styles.infoIcon} />
                 Details
               </Link>
             </div>
@@ -125,17 +129,8 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
       </div>
 
       <div className={styles.pager}>
-        <button
-          type="button"
-          className={styles.arrow}
-          onClick={() => setIsManuallyPaused((p) => !p)}
-          aria-label={isManuallyPaused ? "Resume carousel autoplay" : "Pause carousel autoplay"}
-          title={isManuallyPaused ? "Resume autoplay" : "Pause autoplay"}
-        >
-          {isManuallyPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-        </button>
         <button type="button" className={styles.arrow} onClick={() => go(i - 1)} aria-label="Previous title">
-          <ChevronLeft size={18} strokeWidth={2.6} />
+          <ChevronLeft size={18} strokeWidth={2.4} />
         </button>
         <div className={styles.dots} role="tablist" aria-label="Choose title">
           {validItems.map((it, idx) => (
@@ -151,7 +146,7 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
           ))}
         </div>
         <button type="button" className={styles.arrow} onClick={() => go(i + 1)} aria-label="Next title">
-          <ChevronRight size={18} strokeWidth={2.6} />
+          <ChevronRight size={18} strokeWidth={2.4} />
         </button>
       </div>
     </section>
