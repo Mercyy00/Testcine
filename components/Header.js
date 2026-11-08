@@ -3,6 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 import { DEFAULT_AVATAR } from "../lib/avatars";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 import {
   House,
   Clapperboard,
@@ -23,7 +24,6 @@ import {
   CheckCheck,
   X,
 } from "lucide-react";
-import SearchPalette from "./SearchPalette";
 import Popover from "./Popover";
 import { BRAND } from "../lib/constants";
 import {
@@ -37,6 +37,8 @@ import {
 } from "../lib/store";
 import { buildDynamicNotifications } from "../lib/notifications";
 import styles from "./Header.module.css";
+
+const SearchPalette = dynamic(() => import("./SearchPalette"), { ssr: false });
 
 export const NAV = [
   { href: "/", label: "Home", Icon: House },

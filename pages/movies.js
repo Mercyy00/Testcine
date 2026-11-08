@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import HeroBanner from "../components/HeroBanner";
 import MediaRow from "../components/MediaRow";
@@ -81,6 +82,9 @@ const YEARS = [
 ];
 
 export default function Movies() {
+  const router = useRouter();
+  const gridRef = useRef(null);
+  const queryReady = useRef(false);
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
@@ -101,6 +105,57 @@ export default function Movies() {
 
   const [topMovies, setTopMovies] = useState([]);
   const [topLoading, setTopLoading] = useState(true);
+
+  // Shared catalog URLs must restore the exact selected view on a fresh load.
+  useEffect(() => {
+    if (!router.isReady || queryReady.current) return;
+    const nextCategory = CATEGORIES.some((item) => item.value === router.query.category)
+      ? router.query.category
+      : "trending";
+    const read = (key) => {
+      const value = router.query[key];
+      return typeof value === "string" && value.length <= 50 ? value : "all";
+    };
+    setCategory(nextCategory);
+    setFilters({
+      genre: read("genre"),
+      country: read("country"),
+      year: read("year"),
+      service: read("service"),
+      language: read("language"),
+      rating: read("rating"),
+    });
+    queryReady.current = true;
+  }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    if (!router.isReady || !queryReady.current) return;
+    const query = {};
+    if (category !== "trending") query.category = category;
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== "all") query[key] = value;
+    });
+    const current = new URLSearchParams(
+      Object.entries(router.query).flatMap(([key, value]) =>
+        typeof value === "string" ? [[key, value]] : []
+      )
+    ).toString();
+    const next = new URLSearchParams(query).toString();
+    if (current !== next) {
+      router.replace({ pathname: "/movies", query }, undefined, { shallow: true, scroll: false });
+    }
+  }, [category, filters, router]);
+
+  const scrollToGrid = () => {
+    window.requestAnimationFrame(() => {
+      gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const handleCategoryChange = (value) => {
+    setCategory(value);
+    scrollToGrid();
+  };
 
   // 1. Fetch featured hero banner movies from TMDB API (trending movies)
   useEffect(() => {
@@ -197,6 +252,7 @@ export default function Movies() {
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
+    scrollToGrid();
   };
 
   const handleShuffle = () => {
@@ -224,16 +280,18 @@ export default function Movies() {
       ) : null}
 
       <section
+        ref={gridRef}
         style={{
           padding: "36px var(--page-pad) 64px",
           maxWidth: "var(--page-max)",
           margin: "0 auto",
+          scrollMarginTop: 84,
         }}
       >
         <CatalogFilterBar
           title="Movies"
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           categories={CATEGORIES}
           filters={filters}
           onFilterChange={handleFilterChange}

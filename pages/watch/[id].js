@@ -4,11 +4,13 @@ import { useRouter } from "next/router";
 import { ArrowLeft, Tv, Film } from "lucide-react";
 import Layout from "../../components/Layout";
 import Art from "../../components/Art";
-import VideoPlayer from "../../components/VideoPlayer";
+import dynamic from "next/dynamic";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
 import { useHistory, useSettings, toSnapshot } from "../../lib/store";
 import styles from "../../styles/Watch.module.css";
+
+const VideoPlayer = dynamic(() => import("../../components/VideoPlayer"), { ssr: false });
 
 export function getStaticPaths() {
   return {
