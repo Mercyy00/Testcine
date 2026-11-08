@@ -1,12 +1,12 @@
 .card {
   position: relative;
   flex: none;
-  width: clamp(220px, 19vw, 320px);
+  width: clamp(220px, 17vw, 280px);
   scroll-snap-align: start;
 }
 
 .wide {
-  width: clamp(220px, 19vw, 320px);
+  width: clamp(220px, 17vw, 280px);
 }
 
 .poster {
@@ -34,7 +34,7 @@
   position: relative;
   display: block;
   aspect-ratio: 16 / 9;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--surface-2, #14171d);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
@@ -43,7 +43,7 @@
 
 .poster .art {
   aspect-ratio: 2 / 3;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
 .img {

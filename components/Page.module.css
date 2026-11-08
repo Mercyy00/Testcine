@@ -30,7 +30,7 @@
 }
 
 .gridWide {
-  grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 20vw, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 17vw, 280px), 1fr));
 }
 
 .empty {
@@ -148,10 +148,10 @@
 }
 
 .categoryPill {
-  height: 36px;
-  padding: 0 16px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: 999px;
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.12);
@@ -192,7 +192,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 36px;
+  height: 30px;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -204,6 +204,13 @@
   transition: all 0.18s ease;
 }
 
+.dropdownPill[data-filter="genre"] { width: 76px; }
+.dropdownPill[data-filter="country"] { width: 92px; }
+.dropdownPill[data-filter="year"] { width: 66px; }
+.dropdownPill[data-filter="service"] { width: 84px; }
+.dropdownPill[data-filter="language"] { width: 98px; }
+.dropdownPill[data-filter="rating"] { width: 84px; }
+
 .dropdownPill:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.3);
@@ -214,7 +221,8 @@
   border: none;
   outline: none;
   color: #ffffff;
-  font-size: 13px;
+  width: 100%;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   appearance: none;
@@ -234,8 +242,8 @@
 }
 
 .shuffleBtn {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px) saturate(180%);

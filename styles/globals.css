@@ -2,8 +2,8 @@
 :root {
   --bg: #080808;
   --bg-rgb: 8, 8, 8;
-  --bar-h: 64px;
-  --bar-ctl: 46px;
+  --bar-h: 56px;
+  --bar-ctl: 40px;
   --radius-round: 999px;
   --radius-float: 999px;
   --bar-glass: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, .12), rgba(255, 255, 255, .12)) #0c0c0e38;
@@ -98,7 +98,7 @@
   --ring: 0 0 0 2px #e6e6e6;
   --rail-w: 232px;
   --page-max: 1600px;
-  --page-pad: clamp(16px, 5%, 80px);
+  --page-pad: clamp(16px, 4.15vw, 80px);
   --radius-panel: 16px;
   --radius-chip: 8px;
   --radius-menu-item: 8px;
@@ -190,10 +190,10 @@ svg {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 64px;
-  padding: 0 38px;
+  height: 54px;
+  padding: 0 32px;
   border-radius: 999px;
-  font-size: 22px;
+  font-size: 18px;
   transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.3s ease;
 }
 

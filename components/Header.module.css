@@ -1,14 +1,14 @@
 .bar {
-  --bar-ctl: 46px;
+  --bar-ctl: 40px;
   --bar-fill: var(--bar-glass);
   --bar-fill-hover: var(--bar-glass-hover);
   --bar-ring: var(--glass-button-ring), var(--shadow-md);
   z-index: var(--z-bar, 200);
   height: var(--bar-h, 64px);
-  grid-template-columns: minmax(max-content, 1fr) minmax(160px, 600px) minmax(max-content, 1fr);
+  grid-template-columns: minmax(max-content, 1fr) minmax(160px, 490px) minmax(max-content, 1fr);
   align-items: center;
   gap: 16px;
-  padding: 0 20px;
+  padding: 0 16px;
   display: grid;
   position: fixed;
   top: 0;
@@ -81,11 +81,11 @@
   border-radius: var(--radius-float, 999px);
   color: var(--text, #fff);
   font-family: var(--font-body);
-  font-size: var(--fs-lg, 17px);
+  font-size: 14px;
   white-space: nowrap;
   transition: background var(--t-fast), color var(--t-fast);
   align-items: center;
-  padding: 0 18px;
+  padding: 0 14px;
   font-weight: 600;
   display: inline-flex;
   position: relative;
@@ -149,7 +149,7 @@
 .barEnd {
   justify-self: end;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   display: flex;
   flex: 0 0 auto;
 }

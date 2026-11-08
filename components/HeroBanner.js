@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Play, Pause, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
 import { RatingRing, CertBadge, Dot } from "./Meta";
 import { runtimeLabel } from "../lib/constants";
@@ -40,9 +40,8 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
   const [i, setI] = useState(0);
   const [hover, setHover] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [settings] = useSettings();
-  const paused = hover || isFocused || isManuallyPaused || settings.autoplay === false || settings.autoplayPreviews === false;
+  const paused = hover || isFocused || settings.autoplay === false || settings.autoplayPreviews === false;
   const n = validItems.length;
   const go = useCallback((next) => setI(((next % n) + n) % n), [n]);
 
@@ -95,7 +94,7 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
           >
             <Wordmark title={t} />
             <div className={styles.meta}>
-              <RatingRing value={t.rating} size={56} />
+              <RatingRing value={t.rating} size={48} />
               <Dot />
               <span>{t.year}</span>
               <Dot />
@@ -125,15 +124,6 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
       </div>
 
       <div className={styles.pager}>
-        <button
-          type="button"
-          className={styles.arrow}
-          onClick={() => setIsManuallyPaused((p) => !p)}
-          aria-label={isManuallyPaused ? "Resume carousel autoplay" : "Pause carousel autoplay"}
-          title={isManuallyPaused ? "Resume autoplay" : "Pause autoplay"}
-        >
-          {isManuallyPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-        </button>
         <button type="button" className={styles.arrow} onClick={() => go(i - 1)} aria-label="Previous title">
           <ChevronLeft size={18} strokeWidth={2.6} />
         </button>
