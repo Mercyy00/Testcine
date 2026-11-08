@@ -60,13 +60,13 @@ test("rejects unsafe origin configuration while allowing local development", () 
   }).servers.length, 1);
 });
 
-test("API rejects non-GET methods with Allow and avoids caching stream URLs", () => {
+test("API rejects non-GET methods with Allow and avoids caching stream URLs", async () => {
   const response = { headers: {}, setHeader(name, value) { this.headers[name] = value; },
     status(value) { this.code = value; return this; }, json(value) { this.body = value; return this; } };
-  handler({ method: "POST", query: {} }, response);
+  await handler({ method: "POST", query: {}, headers: {} }, response);
   assert.equal(response.code, 405);
   assert.equal(response.headers.Allow, "GET");
-  handler({ method: "GET", query: { id: "../secret", type: "movie" } }, response);
+  await handler({ method: "GET", query: { id: "../secret", type: "movie" }, headers: {} }, response);
   assert.equal(response.code, 400);
   assert.equal(response.headers["Cache-Control"], "private, no-store");
   assert.equal(typeof response.body.error, "string");

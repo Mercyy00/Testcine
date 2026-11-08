@@ -2,7 +2,7 @@ import { fetchLogoForId } from "../../../lib/tmdb";
 import { applyApiGuard, handleApiError } from "../../../lib/api-guard";
 
 export default async function handler(req, res) {
-  if (!applyApiGuard(req, res, { cacheSeconds: 86400 })) {
+  if (!(await applyApiGuard(req, res, { cacheSeconds: 86400 }))) {
     return;
   }
 

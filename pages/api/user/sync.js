@@ -1,10 +1,12 @@
 import { prisma } from "../../../lib/prisma";
 import { requireUser } from "../../../lib/session";
+import { applyApiGuard } from "../../../lib/api-guard";
 
 const MAX_ITEMS = 500;
 const idOf = (e) => (typeof e === "string" ? e : e?.id);
 
 export default async function handler(req, res) {
+  if (!(await applyApiGuard(req, res, { cacheSeconds: 0 }))) return;
   const user = await requireUser(req, res);
   if (!user) return;
   res.setHeader("Cache-Control", "no-store");

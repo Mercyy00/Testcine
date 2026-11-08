@@ -1,23 +1,15 @@
 import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import SyncManager from "../components/SyncManager";
-import { Figtree, Bebas_Neue } from "next/font/google";
 import { useSettings } from "../lib/store";
+import "@fontsource/figtree/400.css";
+import "@fontsource/figtree/500.css";
+import "@fontsource/figtree/600.css";
+import "@fontsource/figtree/700.css";
+import "@fontsource/figtree/800.css";
+import "@fontsource/figtree/900.css";
+import "@fontsource/bebas-neue/400.css";
 import "../styles/globals.css";
-
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-figtree",
-  display: "swap",
-});
-
-const bebasNeue = Bebas_Neue({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-bebas",
-  display: "swap",
-});
 
 export default function App({ Component, pageProps }) {
   const [settings] = useSettings();
@@ -36,7 +28,7 @@ export default function App({ Component, pageProps }) {
   }, [settings.theme, settings.bgIntensity, settings.showBackground]);
 
   return (
-    <div className={`${figtree.variable} ${bebasNeue.variable} appRoot`}>
+    <div className="appRoot">
       <SessionProvider session={pageProps.session} refetchOnWindowFocus={false}>
         <SyncManager />
         <Component {...pageProps} />

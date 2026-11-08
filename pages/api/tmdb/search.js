@@ -3,7 +3,7 @@ import { searchTitles as localSearch } from "../../../lib/data";
 import { applyApiGuard, clampInt, handleApiError } from "../../../lib/api-guard";
 
 export default async function handler(req, res) {
-  if (!applyApiGuard(req, res, { cacheSeconds: 600 })) {
+  if (!(await applyApiGuard(req, res, { cacheSeconds: 600 }))) {
     return;
   }
 

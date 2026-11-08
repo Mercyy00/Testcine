@@ -11,7 +11,7 @@ const schema = z.object({
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  if (!applyApiGuard(req, res, { cacheSeconds: 0 })) return;
+  if (!(await applyApiGuard(req, res, { cacheSeconds: 0 }))) return;
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
 

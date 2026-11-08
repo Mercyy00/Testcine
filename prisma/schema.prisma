@@ -57,7 +57,8 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  bio           String?
+  bio           String?   @db.VarChar(160)
+  isPublic      Boolean   @default(false)
   passwordHash  String?
   role          Role      @default(USER)
   createdAt     DateTime  @default(now())

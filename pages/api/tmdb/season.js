@@ -2,7 +2,7 @@ import { tmdbFetch } from "../../../lib/tmdb";
 import { applyApiGuard, clampInt, handleApiError } from "../../../lib/api-guard";
 
 export default async function handler(req, res) {
-  if (!applyApiGuard(req, res, { cacheSeconds: 3600 })) {
+  if (!(await applyApiGuard(req, res, { cacheSeconds: 3600 }))) {
     return;
   }
 

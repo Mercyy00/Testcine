@@ -101,9 +101,7 @@ export default function SettingsPage() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
-  const deleteAccount = async () => {
-    const password = window.prompt("Enter your password to permanently delete your account (leave empty for social-login accounts):") ;
-    if (password === null) return;
+  const deleteAccount = async (password) => {
     const r = await fetch("/api/user/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
     if (!r.ok) { const d = await r.json().catch(() => ({})); showToast(d.error || "Could not delete account"); return; }
     Object.keys(localStorage).filter((k) => k.startsWith("viv:")).forEach((k) => localStorage.removeItem(k));
@@ -143,6 +141,7 @@ export default function SettingsPage() {
   // Modals / Dialogs
   const [dialogMode, setDialogMode] = useState(null); // "email" | "password" | "clear-history" | "clear-watchlist" | "reset-all" | "signout-all"
   const [dialogInput, setDialogInput] = useState("");
+  const [dialogPassword, setDialogPassword] = useState("");
 
   // Toast with auto-cleanup
   const [toast, showToast] = useToast(2500);
@@ -231,7 +230,7 @@ export default function SettingsPage() {
   };
 
   // Dialog actions
-  const handleConfirmDialog = () => {
+  const handleConfirmDialog = async () => {
     if (dialogMode === "email") {
       const trimmed = dialogInput.trim();
       if (trimmed) {
@@ -258,9 +257,17 @@ export default function SettingsPage() {
     } else if (dialogMode === "signout-all") {
       setSettings((s) => ({ ...s, signedIn: false, name: "Guest", email: "guest@vivarium.internal" }));
       showToast("Signed out of all devices");
+    } else if (dialogMode === "delete-account") {
+      if (dialogInput !== "DELETE") {
+        showToast("Type DELETE to confirm");
+        return;
+      }
+      await deleteAccount(dialogPassword);
+      return;
     }
     setDialogMode(null);
     setDialogInput("");
+    setDialogPassword("");
   };
 
   // Search filter matching
@@ -1184,7 +1191,7 @@ export default function SettingsPage() {
                     <span>Export my data (JSON)</span>
                   </button>
                   {authStatus === "authenticated" && (
-                    <button type="button" className={`${styles.actionRowBtn} ${styles.dangerAction}`} onClick={deleteAccount}>
+                    <button type="button" className={`${styles.actionRowBtn} ${styles.dangerAction}`} onClick={() => { setDialogMode("delete-account"); setDialogInput(""); setDialogPassword(""); }}>
                       <span>Delete account</span>
                       <Trash2 size={16} />
                     </button>
@@ -1269,6 +1276,7 @@ export default function SettingsPage() {
                 {dialogMode === "clear-watchlist" && "Clear Watchlist?"}
                 {dialogMode === "reset-all" && "Reset All Settings?"}
                 {dialogMode === "signout-all" && "Sign Out of All Devices?"}
+                {dialogMode === "delete-account" && "Permanently Delete Account?"}
               </h3>
 
               {dialogMode === "email" && (
@@ -1293,6 +1301,33 @@ export default function SettingsPage() {
                   className={styles.miniDialogInput}
                   autoFocus
                 />
+              )}
+
+              {dialogMode === "delete-account" && (
+                <div>
+                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, margin: "0 0 14px" }}>
+                    This permanently deletes your profile, history, watchlist and settings. This cannot be undone.
+                  </p>
+                  <input
+                    type="password"
+                    value={dialogPassword}
+                    onChange={(e) => setDialogPassword(e.target.value)}
+                    placeholder="Account password (if set)"
+                    aria-label="Account password"
+                    className={styles.miniDialogInput}
+                    autoComplete="current-password"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={dialogInput}
+                    onChange={(e) => setDialogInput(e.target.value)}
+                    placeholder="Type DELETE"
+                    aria-label="Type DELETE to confirm"
+                    className={styles.miniDialogInput}
+                    autoComplete="off"
+                  />
+                </div>
               )}
 
               {dialogMode === "clear-history" && (
@@ -1330,7 +1365,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   className={`${styles.dialogConfirm} ${
-                    dialogMode.includes("clear") || dialogMode.includes("reset") || dialogMode.includes("signout")
+                    dialogMode.includes("clear") || dialogMode.includes("reset") || dialogMode.includes("signout") || dialogMode.includes("delete")
                       ? styles.dialogConfirmDanger
                       : ""
                   }`}

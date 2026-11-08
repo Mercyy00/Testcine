@@ -5,7 +5,11 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-test("encodes silent sources into playable HLS without upscaling and refuses existing output", () => {
+const hasFfmpeg = spawnSync("ffmpeg", ["-version"], { stdio: "ignore" }).status === 0
+  && spawnSync("ffprobe", ["-version"], { stdio: "ignore" }).status === 0;
+const ffmpegTest = (name, fn) => test(name, { skip: hasFfmpeg ? false : "FFmpeg is not installed" }, fn);
+
+ffmpegTest("encodes silent sources into playable HLS without upscaling and refuses existing output", () => {
   const root = mkdtempSync(join(tmpdir(), "vivarium-transcode-test-"));
   const input = join(root, "silent.mp4");
   const output = join(root, "output");
@@ -27,7 +31,7 @@ test("encodes silent sources into playable HLS without upscaling and refuses exi
   assert.equal(readFileSync(join(output, "master.m3u8"), "utf8"), master);
 });
 
-test("does not report success when FFmpeg emits an empty master for a subsecond source", () => {
+ffmpegTest("does not report success when FFmpeg emits an empty master for a subsecond source", () => {
   const root = mkdtempSync(join(tmpdir(), "vivarium-transcode-test-"));
   const input = join(root, "short.mp4");
   const source = spawnSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-f", "lavfi",
