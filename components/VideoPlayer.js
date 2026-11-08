@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 import useVideoPlayback from "./useVideoPlayback";
+import { joinRoom } from "../lib/watchParty";
 import { useSettings } from "../lib/store";
 import styles from "../styles/Watch.module.css";
 
@@ -11,7 +12,7 @@ export const formatTime = (seconds) => {
   return `${hours ? `${hours}:${String(minutes).padStart(2, "0")}` : minutes}:${String(time % 60).padStart(2, "0")}`;
 };
 
-export default function VideoPlayer({ servers, defaultServer, title, initialProgress, onProgress, children }) {
+export default function VideoPlayer({ servers, defaultServer, title, initialProgress, onProgress, nextEpisode, onNext, room, partyName = "Guest", children }) {
   const stageRef = useRef(null);
   const hideTimer = useRef(null);
   const attempts = useRef(new Set());
@@ -46,6 +47,41 @@ export default function VideoPlayer({ servers, defaultServer, title, initialProg
   // the warning is from the React 19 strict rules. In practice this causes no cascading
   // render because it's idempotent and only fires when player.playing transitions.
   const [settings] = useSettings();
+  const isSeries = title.type !== "movie";
+  const showSkipIntro = isSeries && player.ready && player.currentTime >= 15 && player.currentTime < 90;
+  const nearEnd = Boolean(nextEpisode) && player.duration > 0 && player.currentTime / player.duration >= 0.95;
+  const [countdown, setCountdown] = useState(10);
+  const [nextCancelled, setNextCancelled] = useState(false);
+  useEffect(() => {
+    if (!nearEnd || nextCancelled) { setCountdown(10); return; }
+    if (countdown <= 0) { onNext?.(); return; }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [nearEnd, nextCancelled, countdown, onNext]);
+
+  // Watch party: broadcast local play/pause/seek, apply remote ones.
+  useEffect(() => {
+    const video = player.videoRef.current;
+    if (!room || !video) return;
+    let applying = false;
+    const conn = joinRoom(room, partyName, {
+      onPlayback: ({ type, time }) => {
+        applying = true;
+        if (Number.isFinite(time) && Math.abs(video.currentTime - time) > 1.5) video.currentTime = time;
+        if (type === "play") video.play().catch(() => {});
+        if (type === "pause") video.pause();
+        setTimeout(() => { applying = false; }, 400);
+      },
+    });
+    if (!conn) return;
+    const send = (type) => () => { if (!applying) conn.sendPlayback({ type, time: video.currentTime }); };
+    const onPlay = send("play"), onPause = send("pause"), onSeek = send("seek");
+    video.addEventListener("play", onPlay); video.addEventListener("pause", onPause); video.addEventListener("seeked", onSeek);
+    return () => {
+      video.removeEventListener("play", onPlay); video.removeEventListener("pause", onPause); video.removeEventListener("seeked", onSeek);
+      conn.leave();
+    };
+  }, [room, partyName, player.videoRef]);
   const skipSec = parseInt(settings.skipInterval || "10", 10) || 10;
 
   const fullscreen = async () => {
@@ -119,6 +155,16 @@ export default function VideoPlayer({ servers, defaultServer, title, initialProg
         </div>
       ) : player.buffering && (
         <div className={styles.status} role="status"><p>{player.ready ? "Buffering…" : "Loading stream…"}</p></div>
+      )}
+      {showSkipIntro && !nearEnd && (
+        <button type="button" className={styles.skipBtn} onClick={() => player.seek(Math.min(player.duration || Infinity, player.currentTime + 85))}>Skip intro</button>
+      )}
+      {nearEnd && !nextCancelled && (
+        <div className={styles.nextCard} role="status">
+          <span>Next episode in {countdown}s</span>
+          <button type="button" className={styles.skipBtn} onClick={() => onNext?.()}>Play now</button>
+          <button type="button" className={styles.skipBtn} onClick={() => setNextCancelled(true)}>Cancel</button>
+        </div>
       )}
       <div className={`${styles.bar} ${chrome ? "" : styles.hidden}`}>
         <p className={styles.playerNotice} role="status">{player.notice || switchNotice}</p>

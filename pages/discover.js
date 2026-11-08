@@ -21,7 +21,7 @@ const TYPES = [
 
 export default function Discover() {
   const { query, replace } = useRouter();
-  const [type, setType] = useState("all");
+  const type = typeof query.type === "string" ? query.type : "all";
   const service = typeof query.service === "string" ? query.service : "all";
   const studio = typeof query.studio === "string" ? query.studio : "all";
 
@@ -76,7 +76,7 @@ export default function Discover() {
           sub={crumbs.length ? crumbs.join(" · ") : "Filter the whole catalogue by format, service and studio directly from TMDB."}
         />
         <div style={{ display: "grid", gap: 14, marginBottom: 30 }}>
-          <Chips label="Format" options={TYPES} value={type} onChange={setType} />
+          <Chips label="Format" options={TYPES} value={type} onChange={(v) => setParam("type", v)} />
           <Chips
             label="Service"
             options={[{ value: "all", label: "All services" }, ...SERVICES.map((s) => ({ value: s.id, label: s.name }))]}

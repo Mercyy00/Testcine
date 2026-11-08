@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { SessionProvider } from "next-auth/react";
+import SyncManager from "../components/SyncManager";
 import { Figtree, Bebas_Neue } from "next/font/google";
 import { useSettings } from "../lib/store";
 import "../styles/globals.css";
@@ -35,7 +37,10 @@ export default function App({ Component, pageProps }) {
 
   return (
     <div className={`${figtree.variable} ${bebasNeue.variable} appRoot`}>
-      <Component {...pageProps} />
+      <SessionProvider session={pageProps.session} refetchOnWindowFocus={false}>
+        <SyncManager />
+        <Component {...pageProps} />
+      </SessionProvider>
     </div>
   );
 }

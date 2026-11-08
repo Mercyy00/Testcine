@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { DEFAULT_AVATAR } from "../lib/avatars";
 import Head from "next/head";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -85,7 +87,38 @@ export default function SettingsPage() {
   const [, setWatchlist] = useList();
 
   // Active Tab: "account" | "integrations" | "player" | "appearance" | "content" | "about"
+  const { status: authStatus } = useSession();
+  const exportData = () => {
+    if (authStatus === "authenticated") { window.location.href = "/api/user/export"; return; }
+    const out = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith("viv:") && k !== "viv:settings") { try { out[k] = JSON.parse(localStorage.getItem(k)); } catch {} }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
+    a.download = "vivarium-export.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const deleteAccount = async () => {
+    const password = window.prompt("Enter your password to permanently delete your account (leave empty for social-login accounts):") ;
+    if (password === null) return;
+    const r = await fetch("/api/user/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); showToast(d.error || "Could not delete account"); return; }
+    Object.keys(localStorage).filter((k) => k.startsWith("viv:")).forEach((k) => localStorage.removeItem(k));
+    signOut({ callbackUrl: "/" });
+  };
   const [activeTab, setActiveTab] = useState("account");
+  const [device, setDevice] = useState({ label: "This browser", sub: "Active now" });
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const browser = /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Browser";
+    const os = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Win/.test(ua) ? "Windows" : /Mac/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "device";
+    let tz = "";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch {}
+    setDevice({ label: `${browser} on ${os}`, sub: `${tz || "Local"} · Active now` });
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Current active profile
@@ -95,7 +128,7 @@ export default function SettingsPage() {
       profiles?.[0] || {
         id: "guest",
         name: "Guest",
-        avatar: "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+        avatar: DEFAULT_AVATAR,
       }
     );
   }, [profiles, activeProfileId]);
@@ -513,10 +546,10 @@ export default function SettingsPage() {
                   <div className={styles.settingRow}>
                     <div className={styles.settingLeft}>
                       <div>
-                        <span className={styles.settingLabel}>Chrome on Windows</span>
+                        <span className={styles.settingLabel}>{device.label}</span>
                         <span className={styles.deviceBadge}>This device</span>
                       </div>
-                      <span className={styles.settingSub}>IN · Active just now</span>
+                      <span className={styles.settingSub}>{device.sub}</span>
                     </div>
                   </div>
 
@@ -1144,6 +1177,16 @@ export default function SettingsPage() {
                     >
                       <span>Reset all settings</span>
                       <RotateCcw size={16} />
+                    </button>
+                  )}
+
+                  <button type="button" className={styles.actionRowBtn} onClick={exportData}>
+                    <span>Export my data (JSON)</span>
+                  </button>
+                  {authStatus === "authenticated" && (
+                    <button type="button" className={`${styles.actionRowBtn} ${styles.dangerAction}`} onClick={deleteAccount}>
+                      <span>Delete account</span>
+                      <Trash2 size={16} />
                     </button>
                   )}
                 </section>

@@ -7,7 +7,7 @@ import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
-import { useHistory, toSnapshot } from "../../lib/store";
+import { useHistory, useSettings, toSnapshot } from "../../lib/store";
 import styles from "../../styles/Watch.module.css";
 
 export function getStaticPaths() {
@@ -124,6 +124,14 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     });
   }, [t.id, t.type, currentSeason, currentEpisode, setHistory]);
 
+  const router = useRouter();
+  const hasNext = t.type !== "movie" && !(t.episodes?.length && currentSeason === 1 && currentEpisode >= t.episodes.length && (t.seasons || 1) <= 1);
+  const goNext = useCallback(() => {
+    router.push(`/watch/${t.id}?season=${currentSeason}&episode=${currentEpisode + 1}`);
+  }, [router, t.id, currentSeason, currentEpisode]);
+  const room = typeof router.query.room === "string" && /^[A-Za-z2-9]{5}$/.test(router.query.room) ? router.query.room : null;
+  const [settings] = useSettings();
+
   const top = <>
     <h1 className="visually-hidden">Watching {t.title}{t.type !== "movie" ? ` - Season ${currentSeason} Episode ${currentEpisode}` : ""}</h1>
     <Link href={`/title/${t.id}`} className={styles.back}><ArrowLeft size={20} /><span>{t.title}</span></Link>
@@ -143,7 +151,9 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         title={`${t.title} Official Trailer`} allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen />
       <div className={styles.top}>{top}</div>
     </div> : sources.default && !sources.loading ? <VideoPlayer servers={sources.servers} defaultServer={sources.default}
-      title={t} initialProgress={saved?.progress || 0} onProgress={saveProgress}>{top}</VideoPlayer> : <div className={styles.stage}>
+      title={t} initialProgress={saved?.progress || 0} onProgress={saveProgress}
+      nextEpisode={hasNext ? { season: currentSeason, episode: currentEpisode + 1 } : null} onNext={goNext}
+      room={room} partyName={settings.name || "Guest"}>{top}</VideoPlayer> : <div className={styles.stage}>
       <Art title={t} variant="backdrop" className={styles.art} />
       <div className={styles.unavailableShade} />
       <div className={styles.top}>{top}</div>

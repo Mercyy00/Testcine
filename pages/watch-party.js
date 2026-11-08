@@ -4,6 +4,7 @@ import { PageHead, Select } from "../components/Page";
 import { Copy, Check, Send } from "lucide-react";
 import { getWatchPartyData } from "../lib/data.server";
 import { useSettings } from "../lib/store";
+import { partyEnabled, joinRoom, newRoomCode, validRoomCode } from "../lib/watchParty";
 import styles from "../styles/Party.module.css";
 
 export async function getStaticProps() {
@@ -16,9 +17,6 @@ export async function getStaticProps() {
   };
 }
 
-const code = () => Math.random().toString(36).slice(2, 7).toUpperCase();
-
-// Local demo: rooms live in this tab. Connect a realtime service (WebSocket, Supabase Realtime) to share them.
 export default function WatchParty({ options = [] }) {
   const [settings] = useSettings();
   const me = settings.name || "Guest";
@@ -27,11 +25,26 @@ export default function WatchParty({ options = [] }) {
   const [copied, setCopied] = useState(false);
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState([]);
+  const [joinCode, setJoinCode] = useState("");
+  const [people, setPeople] = useState([]);
+  const conn = useRef(null);
 
-  const create = () => {
-    setRoom({ code: code(), titleId });
-    setMsgs([{ id: 1, who: "System", text: `${me} opened the room.` }]);
+  const enter = (code, tid) => {
+    conn.current?.leave();
+    setMsgs([{ id: 1, who: "System", text: `${me} joined room ${code}.` }]);
+    setRoom({ code, titleId: tid });
+    conn.current = joinRoom(code, me, {
+      onChat: (m) => setMsgs((list) => [...list, m]),
+      onPresence: setPeople,
+    });
   };
+  const create = () => enter(newRoomCode(), titleId);
+  const join = (e) => {
+    e.preventDefault();
+    const c = joinCode.trim().toUpperCase();
+    if (validRoomCode(c)) enter(c, titleId);
+  };
+  useEffect(() => () => conn.current?.leave(), []);
 
   const link = room && typeof window !== "undefined" ? `${window.location.origin}/watch/${room.titleId}?room=${room.code}` : "";
 
@@ -59,6 +72,7 @@ export default function WatchParty({ options = [] }) {
     const v = text.trim();
     if (!v) return;
     setMsgs((m) => [...m, { id: Date.now(), who: me, text: v }]);
+    conn.current?.sendChat(v);
     setText("");
   };
 
@@ -73,9 +87,15 @@ export default function WatchParty({ options = [] }) {
             <button type="button" className="btnHero" onClick={create}>
               Open room
             </button>
+            <form onSubmit={join} style={{ display: "flex", gap: 8 }}>
+              <input value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="Room code" aria-label="Room code" maxLength={5}
+                style={{ flex: 1, height: 40, padding: "0 12px", borderRadius: 12, background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)", color: "#fff", textTransform: "uppercase" }} />
+              <button type="submit" className="chip">Join</button>
+            </form>
+            {!partyEnabled && <p className={styles.hint}>Realtime is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to share rooms.</p>}
             {room && (
               <div className={styles.invite}>
-                <small>Room code</small>
+                <small>Room code · {people.length || 1} watching</small>
                 <b>{room.code}</b>
                 <button type="button" className="chip" onClick={copy}>
                   {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -104,7 +124,7 @@ export default function WatchParty({ options = [] }) {
                 </form>
               </>
             ) : (
-              <p className={styles.hint}>Open a room to start chatting. Messages stay in this browser tab until you connect a realtime backend.</p>
+              <p className={styles.hint}>Open or join a room to start chatting.</p>
             )}
           </section>
         </div>

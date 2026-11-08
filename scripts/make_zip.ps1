@@ -53,7 +53,7 @@ try {
             Copy-Item $file.FullName -Destination $destFile
         }
     }
-    Compress-Archive -Path "$tempDir\*" -DestinationPath $destination -CompressionLevel Optimal
+    Compress-Archive -LiteralPath (Get-ChildItem -LiteralPath $tempDir -Force | ForEach-Object { $_.FullName }) -DestinationPath $destination -CompressionLevel Optimal
     Write-Host "Archive created successfully at $destination"
 } finally {
     Remove-Item -Recurse -Force $tempDir

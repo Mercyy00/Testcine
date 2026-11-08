@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { DEFAULT_AVATAR } from "../lib/avatars";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -55,7 +57,7 @@ function Discord(props) {
 
 export function Avatar({
   name = "Guest",
-  image = "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+  image = DEFAULT_AVATAR,
   size = 46,
 }) {
   const [failed, setFailed] = useState(false);
@@ -111,7 +113,8 @@ export default function Header() {
   // Notification Filter Tab: "all" | "unread" | "mentions"
   const [notifTab, setNotifTab] = useState("all");
 
-  const signedIn = settings.signedIn !== false;
+  const { data: session, status: authStatus } = useSession();
+  const signedIn = authStatus === "authenticated";
 
   const navRef = useRef(null);
   const linkRefs = useRef({});
@@ -122,12 +125,12 @@ export default function Header() {
     profiles?.[0] ||
     null;
 
-  const name = activeProfile?.name || settings.name || "Guest";
+  const name = session?.user?.name || activeProfile?.name || settings.name || "Guest";
   const avatarImage =
     activeProfile?.avatar ||
     settings.avatar ||
-    "https://image.tmdb.org/t/p/w185/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg";
-  const email = settings.email || "guest@vivarium.internal";
+    DEFAULT_AVATAR;
+  const email = session?.user?.email || "Not signed in";
 
   // Real Dynamic Behavior Pattern Notifications
   const notificationsData = useMemo(() => {
@@ -461,13 +464,7 @@ export default function Header() {
             type="button"
             role="menuitem"
             className={`${styles.item} ${styles.danger}`}
-            onClick={() =>
-              setSettings((s) => ({
-                ...s,
-                signedIn: !signedIn,
-                ...(signedIn ? { name: "Guest", email: "guest@vivarium.internal" } : {}),
-              }))
-            }
+            onClick={() => (signedIn ? signOut({ callbackUrl: "/" }) : (window.location.href = "/auth/signin"))}
           >
             {signedIn ? <LogOut size={18} /> : <LogIn size={18} />}
             {signedIn ? "Log out" : "Sign in"}

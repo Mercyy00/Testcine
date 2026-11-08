@@ -276,21 +276,9 @@ function TitleContent({ t, id }) {
     };
   }, [t, selectedSeason, seasonEpisodesMap]);
 
-  // Initialize episodes 1, 2, 3 as watched for VisionQuest to match user reference
-  useEffect(() => {
-    if (t?.id === "visionquest" && (!watchedEpisodes || !watchedEpisodes["visionquest"])) {
-      setWatchedEpisodes((prev) => ({
-        ...(prev || {}),
-        visionquest: [1, 2, 3],
-      }));
-    }
-  }, [t?.id, watchedEpisodes, setWatchedEpisodes]);
-
   const watchedList =
     (t?.id && watchedEpisodes?.[t.id]) !== undefined
       ? watchedEpisodes[t.id]
-      : t?.id === "visionquest"
-      ? [1, 2, 3]
       : [];
 
   const seasonOptions = useMemo(() => {
@@ -408,7 +396,7 @@ function TitleContent({ t, id }) {
   const comingLabel = useMemo(() => {
     if (!t) return null;
     if (t.upcomingPill) return t.upcomingPill;
-    if (t.releaseDate && (t.status === "upcoming" || String(t.releaseDate) > "2026-01-01")) {
+    if (t.releaseDate && (t.status === "upcoming" || new Date(t.releaseDate) > new Date())) {
       return `${t.title} · coming ${formatDate(t.releaseDate)}`;
     }
     return null;
@@ -432,7 +420,7 @@ function TitleContent({ t, id }) {
 
   const handleDownload = () => {
     setShowMoreMenu(false);
-    showToast(`Downloading "${t.title}" to device...`);
+    showToast("Downloads are not available");
   };
 
   const handleMoreLikeThis = () => {
@@ -987,10 +975,7 @@ function TitleContent({ t, id }) {
             <div className={styles.episodesGrid}>
               {displayedEpisodes.map((ep) => {
                 const isWatched = watchedList.includes(ep.episodeNumber);
-                const progress =
-                  t.id === "visionquest" && ep.episodeNumber === 4
-                    ? 0.44
-                    : null;
+                const progress = null;
                 const isSelected = selectedEp === ep.episodeNumber || Boolean(progress);
                 const dateStr = formatEpDate(ep.airDate);
                 const epSubtext = [dateStr, ep.runtime ? `${ep.runtime} min` : null]
@@ -1105,32 +1090,13 @@ function TitleContent({ t, id }) {
                 <div className={styles.scoreHero}>
                   <div className={styles.starBig}>★</div>
                   <div className={styles.scoreVal}>
-                    {t.rating > 0 ? t.rating.toFixed(1) : "8.6"}
+                    {t.rating > 0 ? t.rating.toFixed(1) : "N/A"}
                     <span className={styles.scoreMax}>/10</span>
                   </div>
                 </div>
                 <p className={styles.scoreSub}>
-                  Based on{" "}
-                  {t.voteCount
-                    ? t.voteCount.toLocaleString()
-                    : (124800).toLocaleString()}{" "}
-                  user ratings worldwide
+                  {t.voteCount ? `Based on ${t.voteCount.toLocaleString()} TMDB user ratings` : "No rating data available yet"}
                 </p>
-
-                <div className={styles.externalScores}>
-                  <div className={styles.extBadge}>
-                    <span className={styles.extLabel}>Audience Score</span>
-                    <span className={styles.extNum}>
-                      {Math.min(99, Math.round((t.rating || 8.6) * 10 + 6))}%
-                    </span>
-                  </div>
-                  <div className={styles.extBadge}>
-                    <span className={styles.extLabel}>Metascore</span>
-                    <span className={styles.extNum}>
-                      {Math.min(96, Math.round((t.rating || 8.6) * 9.5))}
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* Card 2: Interactive Rating */}
@@ -1169,31 +1135,6 @@ function TitleContent({ t, id }) {
                     Clear rating
                   </button>
                 )}
-              </div>
-            </div>
-
-            {/* Rating Distribution Histogram */}
-            <div className={styles.distributionCard}>
-              <h3 className={styles.distTitle}>Rating Breakdown</h3>
-              <div className={styles.distBars}>
-                {[
-                  { star: "10-9 ★", pct: 64 },
-                  { star: "8-7 ★", pct: 24 },
-                  { star: "6-5 ★", pct: 7 },
-                  { star: "4-3 ★", pct: 3 },
-                  { star: "2-1 ★", pct: 2 },
-                ].map((row) => (
-                  <div key={row.star} className={styles.distRow}>
-                    <span className={styles.distLabel}>{row.star}</span>
-                    <div className={styles.distTrack}>
-                      <div
-                        className={styles.distFill}
-                        style={{ width: `${row.pct}%` }}
-                      />
-                    </div>
-                    <span className={styles.distPct}>{row.pct}%</span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
