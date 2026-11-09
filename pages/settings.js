@@ -1094,6 +1094,36 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Ambient lighting */}
+                  {matchesSearch("Ambient lighting") && (
+                    <div className={styles.settingRow}>
+                      <span className={styles.settingLabel}>Ambient lighting</span>
+                      <div className={styles.segmentedWrap}>
+                        {[
+                          { id: "art", label: "Artwork" },
+                          { id: "live", label: "Live Sync" },
+                          { id: "off", label: "Off" },
+                        ].map((mode) => (
+                          <button
+                            key={mode.id}
+                            type="button"
+                            className={`${styles.segmentBtn} ${
+                              (settings.ambientLight || "art") === mode.id
+                                ? styles.segmentBtnActive
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setSettings((s) => ({ ...s, ambientLight: mode.id }));
+                              showToast(`Ambient lighting set to ${mode.label}`);
+                            }}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </section>
 
                 <section className={styles.section}>

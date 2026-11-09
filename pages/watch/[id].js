@@ -27,11 +27,13 @@ import {
   Volume2,
   Zap,
   Server,
+  Sparkles,
 } from "lucide-react";
 import Layout from "../../components/Layout";
 import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
 import Ambilight from "../../components/Ambilight";
+import { useAmbientSource } from "../../components/useAmbientSource";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
 import { fetchAniListDetails, extractAniListId } from "../../lib/anilist";
@@ -587,13 +589,27 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     ? `${overview.slice(0, synopsisLimit).trimEnd()}…`
     : overview;
 
+  const {
+    activeVideoEl,
+    isLive: isLiveAmbient,
+    isCapturing,
+    toggleCapture: toggleAmbientLive,
+    getCropRect,
+  } = useAmbientSource({
+    videoEl,
+    anchorRef: playerStageRef,
+    showToast,
+  });
+
   return (
     <div className={styles.watchContainer}>
       <Ambilight
-        videoEl={videoEl}
+        videoEl={activeVideoEl}
         images={[t.backdrop, ...(t.backdrops || [])]}
         intensity={0.48}
         anchorRef={playerStageRef}
+        getCropRect={getCropRect}
+        enabled={settings.ambientLight !== "off"}
       />
       <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
@@ -828,6 +844,31 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               </div>
             )}
           </div>
+
+          {/* Ambient Lighting Toggle */}
+          <button
+            type="button"
+            className={`${styles.actionPillBtn} ${
+              isLiveAmbient
+                ? styles.ambientPillLive
+                : settings.ambientLight !== "off"
+                ? styles.ambientPillActive
+                : ""
+            }`}
+            onClick={toggleAmbientLive}
+            aria-label={`Ambient lighting: ${
+              isLiveAmbient ? "Live scene sync active" : settings.ambientLight === "off" ? "Off" : "Artwork mode"
+            }`}
+            title={
+              isLiveAmbient
+                ? "Live scene sync is active. Click to switch back to artwork."
+                : "Sync ambient lighting to live scene playback"
+            }
+          >
+            <Sparkles size={15} className={isLiveAmbient ? styles.sparkleLive : ""} />
+            <span>{isLiveAmbient ? "Ambient: Live" : "Ambient"}</span>
+            {isLiveAmbient && <span className={styles.livePulseDot} />}
+          </button>
 
           {/* Download */}
           <button
