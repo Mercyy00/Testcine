@@ -118,7 +118,7 @@ test("Zeus generates correct Vidy Anime route using AniList id", () => {
   assert.match(zeus.url, /autoplayNextEpisode=true/);
 });
 
-test("Poseidon (VidRift) generates movie embed route customized to Vivarium theme", () => {
+test("Poseidon (VidRift) generates movie embed route customized to DIVINE theme", () => {
   const result = resolveGreekGodSources({
     id: "movie-1440098",
     type: "movie",
@@ -132,7 +132,7 @@ test("Poseidon (VidRift) generates movie embed route customized to Vivarium them
   assert.equal(poseidon.name, "Poseidon");
   assert.equal(poseidon.provider, "VidRift");
   assert.ok(poseidon.url.startsWith("https://embed.vidrift.net/embed/movie/1440098?"));
-  assert.match(poseidon.url, /brand=Vivarium/);
+  assert.match(poseidon.url, /brand=DIVINE/);
   assert.match(poseidon.url, /brandColor=dc2626/);
   assert.match(poseidon.url, /controlBg=solid/);
   assert.match(poseidon.url, /font=Inter/);
@@ -177,7 +177,7 @@ test("Hades (vidstuck) generates movie and TV routes with branding, color, overl
   assert.equal(hadesMovie.provider, "vidstuck");
   assert.ok(hadesMovie.url.startsWith("https://vidstuck.cc/embed/movie/299534?"));
   assert.match(hadesMovie.url, /color=DC2626/);
-  assert.match(hadesMovie.url, /branding=Vivarium/);
+  assert.match(hadesMovie.url, /branding=DIVINE/);
   assert.match(hadesMovie.url, /subtitle=english/);
   assert.match(hadesMovie.url, /overlay=true/);
   assert.match(hadesMovie.url, /progress=120/);
@@ -305,7 +305,7 @@ test("Hermes (Rivestream) generates movie and TV embed routes with optional aggr
   assert.equal(hermesTorrent.url, "https://www.rivestream.app/embed/torrent?type=tv&id=1396&season=1&episode=1");
 });
 
-test("Ares (Cinezo) generates movie, TV, and anime embed routes customized to Vivarium theme", () => {
+test("Ares (Cinezo) generates movie, TV, and anime embed routes customized to DIVINE theme", () => {
   const movieResult = resolveGreekGodSources({
     id: "movie-533535",
     type: "movie",

@@ -22,7 +22,7 @@ test("extractAniListId parses various ID formats correctly", () => {
   assert.equal(extractAniListId(null), null);
 });
 
-test("normalizeAniListItem maps AniList data to Vivarium title schema without mixing TMDB", () => {
+test("normalizeAniListItem maps AniList data to DIVINE title schema without mixing TMDB", () => {
   const mockMedia = {
     id: 16498,
     title: {

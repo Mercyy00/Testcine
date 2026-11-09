@@ -33,6 +33,7 @@ import {
   PROFILE_AVATARS,
   DEFAULT_SETTINGS,
 } from "../lib/store";
+import { AVATAR_CATEGORIES } from "../lib/avatars";
 import styles from "../styles/Settings.module.css";
 
 // 10 Themes matching Image 4
@@ -97,7 +98,7 @@ export default function SettingsPage() {
     }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
-    a.download = "vivarium-export.json";
+    a.download = "divine-export.json";
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -133,6 +134,13 @@ export default function SettingsPage() {
 
   // Form states
   const [nameVal, setNameVal] = useState(activeProfile?.name || settings.name || "Guest");
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [avatarCategory, setAvatarCategory] = useState("All");
+
+  const visibleAvatars =
+    avatarCategory === "All"
+      ? PROFILE_AVATARS
+      : PROFILE_AVATARS.filter((a) => a.category === avatarCategory);
 
   // Dropdown states
   const [openAudioMenu, setOpenAudioMenu] = useState(false);
@@ -210,6 +218,19 @@ export default function SettingsPage() {
     }));
 
     showToast("Profile saved");
+  };
+
+  // Avatar select
+  const handleSelectAvatar = (av) => {
+    updateProfile(setProfiles, activeProfile.id, {
+      avatar: av.url,
+    });
+    setSettings((s) => ({
+      ...s,
+      avatar: av.url,
+    }));
+    showToast(`Avatar changed to ${av.name}`);
+    setShowAvatarPicker(false);
   };
 
   // Avatar cycle / change
@@ -375,7 +396,7 @@ export default function SettingsPage() {
   return (
     <>
       <Head>
-        <title>Settings · Vivarium</title>
+        <title>Settings · {BRAND.name}</title>
       </Head>
 
       <main className={styles.pageWrap}>
@@ -482,9 +503,9 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       className={styles.profileAvatar}
-                      onClick={handleCycleAvatar}
-                      title="Click to change avatar"
-                      aria-label="Change profile avatar"
+                      onClick={() => setShowAvatarPicker((v) => !v)}
+                      title="Click to choose avatar"
+                      aria-label="Choose profile avatar"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -507,6 +528,42 @@ export default function SettingsPage() {
                       Save
                     </button>
                   </form>
+
+                  {showAvatarPicker && (
+                    <div className={styles.avatarPickerWrap}>
+                      <div className={styles.avatarCategoryTabs}>
+                        {AVATAR_CATEGORIES.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            className={`${styles.avatarCategoryTab} ${
+                              avatarCategory === cat ? styles.avatarCategoryTabActive : ""
+                            }`}
+                            onClick={() => setAvatarCategory(cat)}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                      <div className={styles.avatarGrid}>
+                        {visibleAvatars.map((av) => (
+                          <button
+                            key={av.id}
+                            type="button"
+                            className={`${styles.avatarChoice} ${
+                              activeProfile.avatar === av.url ? styles.avatarChoiceActive : ""
+                            }`}
+                            onClick={() => handleSelectAvatar(av)}
+                            title={`${av.name} (${av.subtitle})`}
+                            aria-label={`${av.name} (${av.subtitle})`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={av.url} alt={av.name} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {matchesSearch("Public profile") && (
                     <div className={styles.settingRow}>
@@ -554,14 +611,14 @@ export default function SettingsPage() {
                       <span className={styles.settingLabel}>Email</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span className={styles.settingSub}>
-                          {settings.email || "guest@vivarium.internal"}
+                          {settings.email || "guest@divine.internal"}
                         </span>
                         <button
                           type="button"
                           className={styles.pillActionBtn}
                           onClick={() => {
                             setDialogMode("email");
-                            setDialogInput(settings.email || "guest@vivarium.internal");
+                            setDialogInput(settings.email || "guest@divine.internal");
                           }}
                         >
                           Change
@@ -1267,7 +1324,7 @@ export default function SettingsPage() {
             {activeTab === "about" && (
               <>
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>About Vivarium</h2>
+                  <h2 className={styles.sectionTitle}>About {BRAND.name}</h2>
 
                   <div className={styles.settingRow}>
                     <span className={styles.settingLabel}>Version</span>

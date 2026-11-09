@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Vivarium Settings Modal & Page Styles
+   DIVINE Settings Modal & Page Styles
    Matching 5 reference screenshots: Account, Integrations, Player, Appearance, Content
    ========================================================================== */
 
@@ -265,6 +265,95 @@
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 0 1.5px rgba(255, 255, 255, 0.15);
   background: #1e1e24;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profileAvatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.35);
+}
+
+.avatarPickerWrap {
+  margin-top: 14px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.avatarCategoryTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.avatarCategoryTab {
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.avatarCategoryTab:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.avatarCategoryTabActive {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  font-weight: 700;
+}
+
+.avatarGrid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+}
+
+.avatarChoice {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.avatarChoice:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.avatarChoiceActive {
+  border-color: #ffffff;
+  transform: scale(1.12);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.4);
+}
+
+.avatarChoice img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .profileAvatar img {

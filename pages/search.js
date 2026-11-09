@@ -167,7 +167,7 @@ export default function SearchPage() {
 
   return (
     <Layout
-      title={qParam ? `${qParam} · Search · Vivarium` : "Search · Vivarium"}
+      title={qParam ? `${qParam} · Search · DIVINE` : "Search · DIVINE"}
       description="Search movies, TV series, anime and people directly from TMDB."
     >
       <div className={styles.container}>
@@ -297,7 +297,7 @@ export default function SearchPage() {
           />
         ) : (
           <Empty
-            title="Search Vivarium"
+            title="Search DIVINE"
             text="Type any movie, TV series, anime, or person above to explore titles from TMDB."
           />
         )}

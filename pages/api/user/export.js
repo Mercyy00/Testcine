@@ -11,6 +11,6 @@ export default async function handler(req, res) {
     prisma.userSettings.findUnique({ where: { userId: user.id } }),
   ]);
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Content-Disposition", 'attachment; filename="vivarium-export.json"');
+  res.setHeader("Content-Disposition", 'attachment; filename="divine-export.json"');
   res.status(200).send(JSON.stringify({ profile, history, watchlist, settings: settings?.data || {} }, null, 2));
 }

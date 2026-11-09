@@ -1010,7 +1010,7 @@ function WatchForRoute({ initialTitle, id }) {
 
   if (router.isFallback || (!t && loading)) {
     return (
-      <Layout title="Loading Stream · Vivarium">
+      <Layout title="Loading Stream · DIVINE">
         <div
           className={styles.stage}
           style={{
@@ -1051,7 +1051,7 @@ function WatchForRoute({ initialTitle, id }) {
   }
 
   return (
-    <Layout title={`Watching ${t.title} · Vivarium`} image={t.backdrop || t.poster} flush>
+    <Layout title={`Watching ${t.title} · DIVINE`} image={t.backdrop || t.poster} flush>
       <WatchContent
         key={`${id}:${season}:${episode}`}
         title={t}

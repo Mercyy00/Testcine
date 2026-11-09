@@ -33,7 +33,7 @@
   object-fit: contain;
 }
 
-/* Tailored brand logo sizes matching Vivarium reference */
+/* Tailored brand logo sizes matching DIVINE reference */
 .tile[data-brand="netflix"] .logoWrap img { width: 125px; max-height: 36px; }
 .tile[data-brand="prime"] .logoWrap img { width: 125px; max-height: 38px; }
 .tile[data-brand="disney"] .logoWrap img { width: 130px; max-height: 52px; }

@@ -55,17 +55,17 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: process.env.EMAIL_FROM || "Vivarium <security@vivarium.su>",
+            from: process.env.EMAIL_FROM || "DIVINE <security@divine.su>",
             to: email,
-            subject: "Reset your Vivarium password",
-            html: `<p>Hello,</p><p>You requested a password reset for Vivarium. Click the link below to set a new password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link will expire in 1 hour.</p>`,
+            subject: "Reset your DIVINE password",
+            html: `<p>Hello,</p><p>You requested a password reset for DIVINE. Click the link below to set a new password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link will expire in 1 hour.</p>`,
           }),
         });
       } catch (err) {
         console.error("Failed to send reset email via Resend:", err);
       }
     } else {
-      console.log(`[Vivarium Auth] Password reset link for ${email}: ${resetUrl}`);
+      console.log(`[DIVINE Auth] Password reset link for ${email}: ${resetUrl}`);
     }
 
     return res.status(200).json({ ok: true, message: "If an account with that email exists, password reset instructions have been sent." });

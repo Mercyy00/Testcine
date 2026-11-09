@@ -235,7 +235,7 @@ function TitlePageForRoute({ initialTitle, id }) {
 
   if (router.isFallback || (!t && !error)) {
     return (
-      <Layout flush title="Loading Title · Vivarium">
+      <Layout flush title="Loading Title · DIVINE">
         <SkeletonHero />
         <div style={{ maxWidth: "var(--page-max)", margin: "40px auto", padding: "0 var(--page-pad)" }}>
           <SkeletonRow title="Similar & Recommended" count={6} wide={true} />
@@ -246,7 +246,7 @@ function TitlePageForRoute({ initialTitle, id }) {
 
   if (!t) {
     return (
-      <Layout title="Title Not Found · Vivarium">
+      <Layout title="Title Not Found · DIVINE">
         <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
           <h2>Title not found</h2>
           <p style={{ color: "var(--text-dim)" }}>We could not find this title in the TMDB catalogue.</p>

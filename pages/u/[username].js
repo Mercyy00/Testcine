@@ -32,6 +32,7 @@ import {
   updateProfile,
   PROFILE_AVATARS,
 } from "../../lib/store";
+import { AVATAR_CATEGORIES } from "../../lib/avatars";
 import {
   Lock,
   Pencil,
@@ -140,7 +141,13 @@ export default function UserProfile({ cardMap = {} }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
+  const [avatarCategory, setAvatarCategory] = useState("All");
   const [editBio, setEditBio] = useState("");
+
+  const visibleAvatars =
+    avatarCategory === "All"
+      ? PROFILE_AVATARS
+      : PROFILE_AVATARS.filter((a) => a.category === avatarCategory);
   const [editPublic, setEditPublic] = useState(true);
   const [editHidden, setEditHidden] = useState(false);
 
@@ -380,7 +387,7 @@ export default function UserProfile({ cardMap = {} }) {
   return (
     <Layout
       title={`${displayName} (@${displayName.toLowerCase().replace(/\s+/g, "")})`}
-      description={`View ${displayName}'s watch history, liked titles, and custom collections on Vivarium.`}
+      description={`View ${displayName}'s watch history, liked titles, and custom collections on DIVINE.`}
     >
       <div className={styles.pageWrap}>
         {/* 1. Hero Banner (last watched backdrop) */}
@@ -702,8 +709,22 @@ export default function UserProfile({ cardMap = {} }) {
               <form onSubmit={handleSaveProfile} className={styles.modalForm}>
                 <div className={styles.inputGroup}>
                   <label className={styles.inputLabel}>Choose Avatar</label>
+                  <div className={styles.avatarCategoryTabs}>
+                    {AVATAR_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        className={`${styles.avatarCategoryTab} ${
+                          avatarCategory === cat ? styles.avatarCategoryTabActive : ""
+                        }`}
+                        onClick={() => setAvatarCategory(cat)}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                   <div className={styles.avatarPicker}>
-                    {PROFILE_AVATARS.map((av) => (
+                    {visibleAvatars.map((av) => (
                       <button
                         key={av.id}
                         type="button"
@@ -711,6 +732,8 @@ export default function UserProfile({ cardMap = {} }) {
                           editAvatar === av.url ? styles.avatarOptionActive : ""
                         }`}
                         onClick={() => setEditAvatar(av.url)}
+                        title={`${av.name} (${av.subtitle})`}
+                        aria-label={`${av.name} (${av.subtitle})`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={av.url} alt={av.name} />

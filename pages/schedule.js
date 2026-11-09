@@ -24,10 +24,10 @@ function generateIcs(title, dateStr) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Vivarium//Air Schedule//EN",
+    "PRODID:-//DIVINE//Air Schedule//EN",
     "BEGIN:VEVENT",
-    `SUMMARY:Vivarium: ${title} New Episode`,
-    `DESCRIPTION:Stream the latest episode of ${title} on Vivarium.`,
+    `SUMMARY:DIVINE: ${title} New Episode`,
+    `DESCRIPTION:Stream the latest episode of ${title} on DIVINE.`,
     `DTSTART:${start}`,
     `DTEND:${end}`,
     "END:VEVENT",
@@ -90,7 +90,7 @@ export default function Schedule() {
 
   return (
     <Layout
-      title="Schedule · Vivarium"
+      title="Schedule · DIVINE"
       description="What airs this week and upcoming blockbuster releases dynamically from TMDB."
     >
       <div className="pageInner">

@@ -1,6 +1,6 @@
 import { getAllCardTitles } from "../lib/data.server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vivarium.internal";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://divine.internal";
 
 function generateSiteMap(titles) {
   const staticPages = [

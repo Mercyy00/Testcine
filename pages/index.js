@@ -110,7 +110,7 @@ export default function Home({ initialData }) {
       })
       .catch(() => {});
 
-    // 4. Popular movies (for Popular on Vivarium)
+    // 4. Popular movies (for Popular on DIVINE)
     fetch("/api/tmdb/discover?category=popular&type=movie")
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
@@ -251,10 +251,10 @@ export default function Home({ initialData }) {
       ) : null}
 
       {popularLoading ? (
-        <SkeletonRow title="Popular on Vivarium" count={6} />
+        <SkeletonRow title="Popular on DIVINE" count={6} />
       ) : popularItems.length > 0 ? (
         <MediaRow
-          title="Popular on Vivarium"
+          title="Popular on DIVINE"
           href="/browse/movie"
           menu={{ value: period, options: PERIODS, onChange: setPeriod }}
         >

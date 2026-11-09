@@ -1,6 +1,6 @@
 # HLS streaming
 
-Vivarium resolves configured CDN mirrors through `GET /api/sources`, then the browser downloads playlists and segments directly from the selected CDN. The Next.js server never proxies video bytes. The watch page supports adaptive quality, manual quality, seek, mute, volume, fullscreen, saved progress, and automatic failover after fatal playback errors. Official trailers remain available separately.
+DIVINE resolves configured CDN mirrors through `GET /api/sources`, then the browser downloads playlists and segments directly from the selected CDN. The Next.js server never proxies video bytes. The watch page supports adaptive quality, manual quality, seek, mute, volume, fullscreen, saved progress, and automatic failover after fatal playback errors. Official trailers remain available separately.
 
 ## Configure origins
 

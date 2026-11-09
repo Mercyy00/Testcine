@@ -88,7 +88,7 @@ export default function AdminUsersPage() {
           <ShieldAlert size={48} color="#e53e3e" style={{ margin: "0 auto 16px" }} />
           <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 10px" }}>Administrator Access Required</h1>
           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, margin: "0 0 24px" }}>
-            This page is restricted to Vivarium system administrators.
+            This page is restricted to DIVINE system administrators.
           </p>
           <Link
             href="/"

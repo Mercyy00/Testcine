@@ -74,7 +74,7 @@ export default function CustomListPage() {
   return (
     <Layout
       title={listData ? listData.name : "Custom List"}
-      description={listData?.description || "Curated list on Vivarium."}
+      description={listData?.description || "Curated list on DIVINE."}
     >
       <div className="pageInner" style={{ padding: "40px var(--page-pad) 80px", maxWidth: "var(--page-max)", margin: "0 auto" }}>
         {/* Back navigation */}

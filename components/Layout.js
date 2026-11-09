@@ -15,11 +15,11 @@ export default function Layout({
   flush = false,
   children,
 }) {
-  const cleanTitle = title ? title.replace(/\s*·\s*Vivarium.*$/i, "").trim() : "";
+  const cleanTitle = title ? title.replace(/\s*·\s*(?:Vivarium|DIVINE).*$/i, "").trim() : "";
   const full = cleanTitle ? `${cleanTitle} · ${BRAND.name}` : `${BRAND.name} · ${BRAND.tagline}`;
   const metaDesc = description || "Movies, series and anime in one place.";
   const router = useRouter();
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://vivarium.internal").replace(/\/+$/, "");
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://divine.internal").replace(/\/+$/, "");
   const currentPath = router?.asPath ? router.asPath.split("?")[0] : "";
   const canonicalUrl = url || `${siteUrl}${currentPath === "/" ? "" : currentPath}`;
 

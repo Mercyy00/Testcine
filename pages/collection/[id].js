@@ -94,7 +94,7 @@ export default function CollectionPage({ collection: initialCollection }) {
 
   if (router.isFallback || (!collection && router.query.id)) {
     return (
-      <Layout title="Loading Collection · Vivarium">
+      <Layout title="Loading Collection · DIVINE">
         <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-dim)" }}>
           Loading collection from TMDB...
         </div>

@@ -35,7 +35,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Layout title="Forgot Password · Vivarium" flush>
+    <Layout title="Forgot Password · DIVINE" flush>
       <div className={styles.wrap}>
         <form className={styles.card} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Reset Password</h1>

@@ -14,6 +14,7 @@ import {
   deleteProfile,
   PROFILE_AVATARS,
 } from "../lib/store";
+import { AVATAR_CATEGORIES } from "../lib/avatars";
 import styles from "../styles/Profiles.module.css";
 
 export default function Profiles() {
@@ -29,6 +30,12 @@ export default function Profiles() {
   // Form states for Add/Edit
   const [formName, setFormName] = useState("");
   const [formAvatar, setFormAvatar] = useState(PROFILE_AVATARS[0].url);
+  const [avatarCategory, setAvatarCategory] = useState("All");
+
+  const visibleAvatars =
+    avatarCategory === "All"
+      ? PROFILE_AVATARS
+      : PROFILE_AVATARS.filter((a) => a.category === avatarCategory);
 
   const profileList = profiles && profiles.length > 0 ? profiles : [
     {
@@ -105,14 +112,14 @@ export default function Profiles() {
   return (
     <>
       <Head>
-        <title>Who&apos;s watching? · {BRAND?.name || "Vivarium"}</title>
+        <title>Who&apos;s watching? · {BRAND?.name || "DIVINE"}</title>
       </Head>
 
       <main className={styles.pageWrap}>
         {/* Top brand logo */}
         <div className={styles.topBar}>
           <Link href="/" aria-label="Home" style={{ textDecoration: "none", color: "inherit", fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px" }}>
-            {BRAND?.name || "Vivarium"}
+            {BRAND?.name || "DIVINE"}
           </Link>
         </div>
 
@@ -207,8 +214,23 @@ export default function Profiles() {
             <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
               <h2 className={styles.modalTitle}>Add Profile</h2>
               <form onSubmit={handleSaveAdd}>
+                <div className={styles.avatarCategoryTabs}>
+                  {AVATAR_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      className={`${styles.avatarCategoryTab} ${
+                        avatarCategory === cat ? styles.avatarCategoryTabActive : ""
+                      }`}
+                      onClick={() => setAvatarCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
                 <div className={styles.avatarPicker}>
-                  {PROFILE_AVATARS.map((av) => (
+                  {visibleAvatars.map((av) => (
                     <button
                       key={av.id}
                       type="button"
@@ -216,7 +238,8 @@ export default function Profiles() {
                         formAvatar === av.url ? styles.avatarChoiceActive : ""
                       }`}
                       onClick={() => setFormAvatar(av.url)}
-                      title={av.name}
+                      title={`${av.name} (${av.subtitle})`}
+                      aria-label={`${av.name} (${av.subtitle})`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={av.url} alt={av.name} className={styles.avatarChoiceImg} />
@@ -268,8 +291,23 @@ export default function Profiles() {
             <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
               <h2 className={styles.modalTitle}>Edit Profile</h2>
               <form onSubmit={handleSaveEdit}>
+                <div className={styles.avatarCategoryTabs}>
+                  {AVATAR_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      className={`${styles.avatarCategoryTab} ${
+                        avatarCategory === cat ? styles.avatarCategoryTabActive : ""
+                      }`}
+                      onClick={() => setAvatarCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
                 <div className={styles.avatarPicker}>
-                  {PROFILE_AVATARS.map((av) => (
+                  {visibleAvatars.map((av) => (
                     <button
                       key={av.id}
                       type="button"
@@ -277,7 +315,8 @@ export default function Profiles() {
                         formAvatar === av.url ? styles.avatarChoiceActive : ""
                       }`}
                       onClick={() => setFormAvatar(av.url)}
-                      title={av.name}
+                      title={`${av.name} (${av.subtitle})`}
+                      aria-label={`${av.name} (${av.subtitle})`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={av.url} alt={av.name} className={styles.avatarChoiceImg} />

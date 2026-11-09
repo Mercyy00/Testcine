@@ -1,6 +1,6 @@
 {
-  "name": "Vivarium",
-  "short_name": "Vivarium",
+  "name": "DIVINE",
+  "short_name": "DIVINE",
   "description": "Stream movies, series and anime directly with high quality video and real-time TMDB discovery.",
   "start_url": "/",
   "display": "standalone",

@@ -53,7 +53,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <Layout title="New Password · Vivarium" flush>
+    <Layout title="New Password · DIVINE" flush>
       <div className={styles.wrap}>
         <form className={styles.card} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Set New Password</h1>

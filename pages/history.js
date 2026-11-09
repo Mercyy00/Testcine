@@ -143,7 +143,7 @@ export default function History({ cardMap = {} }) {
 
   return (
     <Layout
-      title="Watch History · Vivarium"
+      title="Watch History · DIVINE"
       description="Pick up where you left off across all your movies and series."
     >
       <div className={`pageInner ${styles.pageWrap}`}>
