@@ -383,12 +383,44 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   const totalEpisodes = episodesList.length;
 
   // Recommendations for "More like this"
+  const [smartRecs, setSmartRecs] = useState(t.recommendations || []);
+  const [recFilter, setRecFilter] = useState("all");
+
+  useEffect(() => {
+    let active = true;
+    const targetId = t.tmdbId || t.anilistId || t.id;
+    if (!targetId) return;
+
+    fetch(`/api/tmdb/recommendations?id=${encodeURIComponent(targetId)}&type=${t.type || "movie"}&limit=18`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setSmartRecs(data);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [t.id, t.tmdbId, t.anilistId, t.type]);
+
+  const hasDirectorRecs = useMemo(() => (smartRecs || []).some((r) => r.matchType === "director"), [smartRecs]);
+  const hasCastRecs = useMemo(() => (smartRecs || []).some((r) => r.matchType === "cast"), [smartRecs]);
+
   const recommendations = useMemo(() => {
-    if (t.recommendations && t.recommendations.length > 0) {
-      return t.recommendations.slice(0, 6);
+    const list = smartRecs && smartRecs.length > 0 ? smartRecs : (t.recommendations || []);
+    if (recFilter === "director") {
+      return list.filter((r) => r.matchType === "director");
     }
-    return [];
-  }, [t]);
+    if (recFilter === "cast") {
+      return list.filter((r) => r.matchType === "cast");
+    }
+    if (recFilter === "genre") {
+      return list.filter((r) => r.matchType === "genre" || r.matchType === "franchise");
+    }
+    return list.slice(0, 14);
+  }, [smartRecs, t.recommendations, recFilter]);
 
   // Fetch streaming sources and sync with server
   useEffect(() => {
@@ -616,6 +648,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               room={room}
               partyName={settings.name || "Guest"}
               onVideoElement={setVideoEl}
+              recommendations={recommendations}
             />
           ) : (
             <div className={styles.stage}>
@@ -958,8 +991,47 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
         {/* More Like This Section */}
         {recommendations.length > 0 && (
-          <div>
-            <h3 className={styles.moreLikeThisTitle}>More like this</h3>
+          <div className={styles.moreLikeThisSection}>
+            <div className={styles.moreLikeThisHeaderRow}>
+              <h3 className={styles.moreLikeThisTitle}>More like this</h3>
+              {(hasDirectorRecs || hasCastRecs) && (
+                <div className={styles.recFilterChips}>
+                  <button
+                    type="button"
+                    className={`${styles.recFilterChip} ${recFilter === "all" ? styles.recFilterChipActive : ""}`}
+                    onClick={() => setRecFilter("all")}
+                  >
+                    All
+                  </button>
+                  {hasDirectorRecs && (
+                    <button
+                      type="button"
+                      className={`${styles.recFilterChip} ${recFilter === "director" ? styles.recFilterChipActive : ""}`}
+                      onClick={() => setRecFilter("director")}
+                    >
+                      Director
+                    </button>
+                  )}
+                  {hasCastRecs && (
+                    <button
+                      type="button"
+                      className={`${styles.recFilterChip} ${recFilter === "cast" ? styles.recFilterChipActive : ""}`}
+                      onClick={() => setRecFilter("cast")}
+                    >
+                      Cast
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.recFilterChip} ${recFilter === "genre" ? styles.recFilterChipActive : ""}`}
+                    onClick={() => setRecFilter("genre")}
+                  >
+                    Vibe
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className={styles.moreLikeThisList}>
               {recommendations.map((rec) => (
                 <Link
@@ -979,9 +1051,16 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                   <div className={styles.recInfoCol}>
                     <span className={styles.recTitle}>{rec.title}</span>
                     <span className={styles.recSub}>
-                      {rec.year} · {rec.type === "movie" ? "Movie" : "Series"}
+                      {rec.year ? `${rec.year} · ` : ""}{rec.type === "movie" ? "Movie" : "Series"}
                     </span>
-                    <span className={styles.recRating}>★ {rec.rating}</span>
+                    <div className={styles.recMetaLine}>
+                      {rec.rating > 0 && <span className={styles.recRating}>★ {rec.rating}</span>}
+                      {rec.matchReason && (
+                        <span className={styles.recBadge} title={rec.matchReason}>
+                          {rec.matchReason}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}

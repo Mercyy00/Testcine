@@ -10,6 +10,7 @@ import {
   PictureInPicture2,
   Settings as SettingsIcon,
   Tv,
+  Sparkles,
 } from "lucide-react";
 import useVideoPlayback from "./useVideoPlayback";
 import { joinRoom } from "../lib/watchParty";
@@ -38,6 +39,7 @@ export default function VideoPlayer({
   partyName = "Guest",
   onWatched,
   onVideoElement,
+  recommendations = [],
   children,
 }) {
   const stageRef = useRef(null);
@@ -53,6 +55,7 @@ export default function VideoPlayer({
   const [switchNotice, setSwitchNotice] = useState("");
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showRecsDrawer, setShowRecsDrawer] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(
     initialProgress > 0.02 && initialProgress < 0.9
   );
@@ -748,6 +751,22 @@ export default function VideoPlayer({
                   <PictureInPicture2 size={19} />
                 </button>
 
+                {/* More Like This Popover / Drawer */}
+                {recommendations && recommendations.length > 0 && (
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${showRecsDrawer ? styles.btnActive : ""}`}
+                    onClick={() => {
+                      setShowRecsDrawer((v) => !v);
+                      setShowSettingsMenu(false);
+                    }}
+                    title="More like this"
+                    aria-label="More like this"
+                  >
+                    <Sparkles size={19} />
+                  </button>
+                )}
+
                 {/* Settings Gear Popover */}
                 <div className={styles.srvWrap}>
                   <button
@@ -844,6 +863,60 @@ export default function VideoPlayer({
             </div>
           </div>
         </>
+      )}
+
+      {/* In-Player "More Like This" Slide-Out Drawer */}
+      {showRecsDrawer && recommendations && recommendations.length > 0 && (
+        <div className={styles.inPlayerDrawerOverlay} onClick={() => setShowRecsDrawer(false)}>
+          <div className={styles.inPlayerDrawer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.inPlayerDrawerHeader}>
+              <div>
+                <h4 className={styles.inPlayerDrawerTitle}>More like this</h4>
+                <p className={styles.inPlayerDrawerSub}>
+                  Similar cast, director & vibe for {title?.title || "current movie"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.inPlayerDrawerClose}
+                onClick={() => setShowRecsDrawer(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.inPlayerCardsGrid}>
+              {recommendations.map((rec) => (
+                <a
+                  key={rec.id}
+                  href={`/watch/${rec.id}`}
+                  className={styles.inPlayerCard}
+                  onClick={() => setShowRecsDrawer(false)}
+                >
+                  <div className={styles.inPlayerCardThumbWrap}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={rec.backdrop || rec.poster}
+                      alt={rec.title}
+                      className={styles.inPlayerCardImg}
+                      loading="lazy"
+                    />
+                    {rec.matchReason && (
+                      <span className={styles.inPlayerCardBadge}>{rec.matchReason}</span>
+                    )}
+                  </div>
+                  <div className={styles.inPlayerCardBody}>
+                    <span className={styles.inPlayerCardTitle}>{rec.title}</span>
+                    <div className={styles.inPlayerCardMeta}>
+                      <span>{rec.year ? `${rec.year} · ` : ""}{rec.type === "movie" ? "Movie" : "Series"}</span>
+                      {rec.rating > 0 && <span>★ {rec.rating}</span>}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

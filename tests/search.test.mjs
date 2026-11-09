@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSearchTypoCandidates, fetchBollywood, fetchTollywood, searchTMDB } from "../lib/tmdb.js";
+import { getSearchTypoCandidates, fetchBollywood, fetchTollywood, searchTMDB, fetchSmartRecommendations } from "../lib/tmdb.js";
 
 test("getSearchTypoCandidates generates correct typo corrections for common misspellings", () => {
   const bahubli = getSearchTypoCandidates("bahubli");
@@ -19,6 +19,16 @@ test("getSearchTypoCandidates generates correct typo corrections for common miss
 test("fetchBollywood and fetchTollywood functions exist and return arrays", async () => {
   assert.equal(typeof fetchBollywood, "function");
   assert.equal(typeof fetchTollywood, "function");
+  assert.equal(typeof fetchSmartRecommendations, "function");
+});
+
+test("fetchSmartRecommendations returns items with cast/director matchReasons when TMDB_API_KEY is present", async () => {
+  if (!process.env.TMDB_API_KEY) return;
+  const recs = await fetchSmartRecommendations("movie", 872585, 10); // Oppenheimer
+  assert.ok(Array.isArray(recs), "should return an array");
+  assert.ok(recs.length > 0, "should return recommendations");
+  const hasDirectorOrCast = recs.some((r) => r.matchType === "director" || r.matchType === "cast");
+  assert.ok(hasDirectorOrCast, "should contain matching director or cast recommendations");
 });
 
 test("searchTMDB handles common typos and sets didYouMean", async () => {
