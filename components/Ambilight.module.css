@@ -1,38 +1,72 @@
-/* Sits behind the video box and extends past it, feathered at the edges. */
+/* Ambient glow container sits directly behind the video box and extends ~30% beyond it */
 .ambient {
   position: absolute;
-  inset: -30% -35%;               /* glow reaches ~30% past the player on every side */
+  inset: -25% -30%;               /* glow reaches ~25-30% past the player on each side */
   z-index: -1;
   pointer-events: none;
-  -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
-          mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 45%, transparent 78%);
+          mask-image: radial-gradient(ellipse at center, #000 45%, transparent 78%);
 }
 
-.img, .live {
+.img,
+.projector {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 1.6s ease;
+  pointer-events: none;
+  transition: opacity 1.4s ease;
+  will-change: transform, opacity;
 }
 
-/* fallback: blurred backdrop */
+/* Fallback: blurred backdrop cross-fade */
 .img {
   background-size: cover;
   background-position: center;
-  filter: blur(70px) saturate(1.5) brightness(0.8);
-  transform: scale(1.1);
+  filter: blur(72px) saturate(1.5) brightness(0.85);
+  transform: scale(1.12);
 }
-.imgOn { opacity: var(--ambient-opacity, 0.45); }
 
-/* live: tiny canvas stretched and heavily blurred */
-.live {
-  filter: blur(80px) saturate(1.6) brightness(0.9);
-  transform: scale(1.05);
+.imgOn {
+  opacity: var(--ambient-opacity, 0.45);
 }
-.liveOn { opacity: var(--ambient-opacity, 0.45); }
+
+/* Multi-tier YouTube Ambilight Projectors */
+/* Inner: sharp edge bloom close to the frame */
+.projectorInner {
+  transform: scale(1.08);
+  filter: blur(24px) saturate(1.7) brightness(0.95);
+}
+
+/* Mid: medium diffuse field */
+.projectorMid {
+  transform: scale(1.22);
+  filter: blur(52px) saturate(1.5) brightness(0.85);
+}
+
+/* Outer: soft atmospheric dissipation */
+.projectorOuter {
+  transform: scale(1.38);
+  filter: blur(88px) saturate(1.3) brightness(0.72);
+}
+
+.liveOn.projectorInner {
+  opacity: calc(var(--ambient-opacity, 0.45) * 0.7);
+}
+
+.liveOn.projectorMid {
+  opacity: calc(var(--ambient-opacity, 0.45) * 0.5);
+}
+
+.liveOn.projectorOuter {
+  opacity: calc(var(--ambient-opacity, 0.45) * 0.35);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .img, .live { transition: none; }
+  .img,
+  .projector {
+    transition: none;
+  }
 }
