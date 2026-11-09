@@ -44,7 +44,7 @@ export default function handler(req, res) {
       if (numMatch) resolvedTmdbId = parseInt(numMatch[1], 10);
     }
 
-    // Greek God servers (Zeus default, Poseidon second, etc.)
+    // Greek God servers (Poseidon default, Zeus second, etc.)
     const greekSources = resolveGreekGodSources({
       id,
       type,

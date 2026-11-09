@@ -7,9 +7,11 @@ import {
   resolveGreekGodSources,
 } from "../lib/servers.js";
 
-test("Zeus, Poseidon, Hades, Apollo, Hermes, Ares, and Atlas are registered as Greek god servers with Zeus as default", () => {
+test("Poseidon, Zeus, Hades, Apollo, Hermes, Ares, and Atlas are registered as Greek god servers with Poseidon as default", () => {
   const servers = getGreekGodServers();
-  assert.ok(servers.length >= 7, "Should have at least 7 servers (Zeus, Poseidon, Hades, Apollo, Hermes, Ares, Atlas)");
+  assert.ok(servers.length >= 7, "Should have at least 7 servers (Poseidon, Zeus, Hades, Apollo, Hermes, Ares, Atlas)");
+  assert.equal(servers[0].id, "poseidon");
+  assert.equal(servers[1].id, "zeus");
 
   const zeus = servers.find((s) => s.id === "zeus");
   assert.ok(zeus);
@@ -17,7 +19,7 @@ test("Zeus, Poseidon, Hades, Apollo, Hermes, Ares, and Atlas are registered as G
   assert.equal(zeus.provider, "Vidy");
   assert.equal(zeus.type, "embed");
   assert.equal(zeus.status, "online");
-  assert.equal(zeus.isDefault, true);
+  assert.equal(zeus.isDefault, false);
 
   const poseidon = servers.find((s) => s.id === "poseidon");
   assert.ok(poseidon);
@@ -25,6 +27,7 @@ test("Zeus, Poseidon, Hades, Apollo, Hermes, Ares, and Atlas are registered as G
   assert.equal(poseidon.provider, "VidRift");
   assert.equal(poseidon.type, "embed");
   assert.equal(poseidon.status, "online");
+  assert.equal(poseidon.isDefault, true);
 
   const hades = servers.find((s) => s.id === "hades");
   assert.ok(hades);
@@ -62,7 +65,7 @@ test("Zeus, Poseidon, Hades, Apollo, Hermes, Ares, and Atlas are registered as G
   assert.equal(atlas.status, "online");
 
   const defaultServer = getDefaultGreekGodServer();
-  assert.equal(defaultServer.id, "zeus");
+  assert.equal(defaultServer.id, "poseidon");
 });
 
 test("Zeus generates correct Vidy movie embed route and query flags", () => {
@@ -73,7 +76,7 @@ test("Zeus generates correct Vidy movie embed route and query flags", () => {
     progress: 90,
   });
 
-  assert.equal(result.default, "zeus");
+  assert.equal(result.default, "poseidon");
   const zeus = result.servers.find((s) => s.id === "zeus");
   assert.ok(zeus);
   assert.equal(zeus.type, "embed");

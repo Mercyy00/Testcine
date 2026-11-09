@@ -196,7 +196,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   const initialResumeSeconds = initialSavedSecondsRef.current || 0;
   const initialResumeProgress = initialProgressRef.current || 0;
 
-  // Initialize immediately with Greek God servers (Zeus default, Poseidon, etc.)
+  // Initialize immediately with Greek God servers (Poseidon default, Zeus second, etc.)
   const [sources, setSources] = useState(() => {
     try {
       const initialResolved = resolveGreekGodSources({
@@ -710,12 +710,12 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             <button
               type="button"
               className={`${styles.actionPillBtn} ${showSourceMenu ? styles.actionPillBtnActive : ""}`}
-              aria-label={`Server: ${activeServer?.name || "Zeus"}`}
+              aria-label={`Server: ${activeServer?.name || "Poseidon"}`}
               aria-expanded={showSourceMenu}
               onClick={() => setShowSourceMenu((open) => !open)}
             >
               <Server size={14} className={styles.serverIcon} />
-              <span>Server: <strong className={styles.serverNameBold}>{activeServer?.name || "Zeus"}</strong></span>
+              <span>Server: <strong className={styles.serverNameBold}>{activeServer?.name || "Poseidon"}</strong></span>
               <ChevronDown size={13} className={`${styles.chevronIcon} ${showSourceMenu ? styles.chevronRotated : ""}`} />
             </button>
             {showSourceMenu && (
@@ -750,7 +750,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                           <span className={styles.sourceName}>{server.name}</span>
                         </div>
                         <div className={styles.sourceMeta}>
-                          {server.id === "zeus" ? (
+                          {server.id === (sources.default || "poseidon") ? (
                             <span className={styles.sourceBadgeDefault}>Default</span>
                           ) : server.status === "online" ? (
                             <span className={styles.sourceBadgeOnline}>Online</span>
