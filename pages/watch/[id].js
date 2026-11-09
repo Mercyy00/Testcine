@@ -538,95 +538,106 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
   return (
     <>
-      <Ambilight videoEl={videoEl} image={t.backdrop || t.poster} />
+      <Ambilight videoEl={videoEl} image={t.backdrop || t.poster} hues={t.hues} intensity={0.8} />
       <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
       <div className={styles.mainCol}>
-        {/* Video Player Container */}
-        {mode === "trailer" && t.trailerKey ? (
-          <div className={styles.stage}>
-            <iframe
-              className={styles.trailer}
-              src={`https://www.youtube-nocookie.com/embed/${t.trailerKey}?autoplay=1&rel=0`}
-              title={`${t.title} Official Trailer`}
-              allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-            />
-            <div className={styles.top}>
-              <Link href={`/title/${t.id}`} className={styles.back}>
-                <ArrowLeft size={20} />
-                <span>{t.title}</span>
-              </Link>
-              <button
-                type="button"
-                className={`chip ${styles.trailerButton}`}
-                onClick={() => setMode("player")}
-              >
-                <Tv size={14} />
-                <span>Switch to Player</span>
-              </button>
-            </div>
-          </div>
-        ) : (sources.default || sources.servers.length > 0) && !sources.loading ? (
-          <VideoPlayer
-            servers={sources.servers}
-            defaultServer={selectedServerId || sources.default}
-            title={t}
-            initialProgress={initialResumeProgress}
-            initialProgressSeconds={initialResumeSeconds}
-            onProgress={saveProgress}
-            onWatched={handleMarkWatched}
-            nextEpisode={hasNext ? { season: currentSeason, episode: currentEpisode + 1 } : null}
-            onNext={goNext}
-            onEpisodeSelect={(s, ep) => {
-              router.push(`/watch/${t.id}?season=${s}&episode=${ep}`);
-            }}
-            onExit={() => {
-              router.push(`/title/${t.id}`);
-            }}
-            room={room}
-            partyName={settings.name || "Guest"}
-            onVideoElement={setVideoEl}
-          />
-        ) : (
-          <div className={styles.stage}>
-            <Art title={t} variant="backdrop" className={styles.art} />
-            <div className={styles.unavailableShade} />
-            <div className={styles.top} aria-hidden="true">
-              <button type="button" className={styles.previewCast} aria-label="Cast to TV" disabled>
-                <Cast size={22} />
-              </button>
-            </div>
-            <div className={styles.status} role={sources.error ? "alert" : "status"}>
-              <p>{sources.loading ? "Finding streaming servers…" : sources.error || "No streams are available for this title."}</p>
-              {!sources.loading && (
-                <button type="button" className="chip" onClick={() => setRequest((value) => value + 1)}>
-                  Retry sources
+        {/* Video Player Container with outside back button */}
+        <div className={styles.playerStageWrap}>
+          <Link
+            href={`/title/${t.id}`}
+            className={styles.outsideBackBtn}
+            aria-label="Back to title"
+            title="Back to title"
+          >
+            <ArrowLeft size={20} strokeWidth={2.4} />
+          </Link>
+
+          {mode === "trailer" && t.trailerKey ? (
+            <div className={styles.stage}>
+              <iframe
+                className={styles.trailer}
+                src={`https://www.youtube-nocookie.com/embed/${t.trailerKey}?autoplay=1&rel=0`}
+                title={`${t.title} Official Trailer`}
+                allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+              />
+              <div className={styles.top}>
+                <Link href={`/title/${t.id}`} className={styles.back}>
+                  <ArrowLeft size={20} />
+                  <span>{t.title}</span>
+                </Link>
+                <button
+                  type="button"
+                  className={`chip ${styles.trailerButton}`}
+                  onClick={() => setMode("player")}
+                >
+                  <Tv size={14} />
+                  <span>Switch to Player</span>
                 </button>
-              )}
+              </div>
             </div>
-            <div className={styles.previewBar} aria-label="Player controls unavailable">
-              <input className={styles.seek} type="range" min="0" max="0" value="0" disabled aria-label="Seek time" />
-              <div className={styles.controls}>
-                <div className={styles.controlsLeft}>
-                  <button type="button" className={styles.btn} disabled aria-label="Play"><Play size={22} fill="currentColor" /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Back 10 seconds"><RotateCcw size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Forward 10 seconds"><RotateCw size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Mute"><Volume2 size={20} /></button>
-                  <input className={styles.volume} type="range" min="0" max="1" value="1" disabled aria-label="Volume" />
-                  <span className={styles.time}>0:00 / 0:00</span>
-                </div>
-                <div className={styles.controlsRight}>
-                  <button type="button" className={styles.btn} disabled aria-label="Picture-in-Picture"><PictureInPicture2 size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Subtitles"><Captions size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Settings"><Settings size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Theatre mode"><RectangleHorizontal size={19} /></button>
-                  <button type="button" className={styles.btn} disabled aria-label="Fullscreen"><Maximize size={19} /></button>
+          ) : (sources.default || sources.servers.length > 0) && !sources.loading ? (
+            <VideoPlayer
+              servers={sources.servers}
+              defaultServer={selectedServerId || sources.default}
+              title={t}
+              initialProgress={initialResumeProgress}
+              initialProgressSeconds={initialResumeSeconds}
+              onProgress={saveProgress}
+              onWatched={handleMarkWatched}
+              nextEpisode={hasNext ? { season: currentSeason, episode: currentEpisode + 1 } : null}
+              onNext={goNext}
+              onEpisodeSelect={(s, ep) => {
+                router.push(`/watch/${t.id}?season=${s}&episode=${ep}`);
+              }}
+              onExit={() => {
+                router.push(`/title/${t.id}`);
+              }}
+              room={room}
+              partyName={settings.name || "Guest"}
+              onVideoElement={setVideoEl}
+            />
+          ) : (
+            <div className={styles.stage}>
+              <Art title={t} variant="backdrop" className={styles.art} />
+              <div className={styles.unavailableShade} />
+              <div className={styles.top} aria-hidden="true">
+                <button type="button" className={styles.previewCast} aria-label="Cast to TV" disabled>
+                  <Cast size={22} />
+                </button>
+              </div>
+              <div className={styles.status} role={sources.error ? "alert" : "status"}>
+                <p>{sources.loading ? "Finding streaming servers…" : sources.error || "No streams are available for this title."}</p>
+                {!sources.loading && (
+                  <button type="button" className="chip" onClick={() => setRequest((value) => value + 1)}>
+                    Retry sources
+                  </button>
+                )}
+              </div>
+              <div className={styles.previewBar} aria-label="Player controls unavailable">
+                <input className={styles.seek} type="range" min="0" max="0" value="0" disabled aria-label="Seek time" />
+                <div className={styles.controls}>
+                  <div className={styles.controlsLeft}>
+                    <button type="button" className={styles.btn} disabled aria-label="Play"><Play size={22} fill="currentColor" /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Back 10 seconds"><RotateCcw size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Forward 10 seconds"><RotateCw size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Mute"><Volume2 size={20} /></button>
+                    <input className={styles.volume} type="range" min="0" max="1" value="1" disabled aria-label="Volume" />
+                    <span className={styles.time}>0:00 / 0:00</span>
+                  </div>
+                  <div className={styles.controlsRight}>
+                    <button type="button" className={styles.btn} disabled aria-label="Picture-in-Picture"><PictureInPicture2 size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Subtitles"><Captions size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Settings"><Settings size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Theatre mode"><RectangleHorizontal size={19} /></button>
+                    <button type="button" className={styles.btn} disabled aria-label="Fullscreen"><Maximize size={19} /></button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Title & Subtitle */}
         <div className={styles.titleArea}>

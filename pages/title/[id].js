@@ -85,16 +85,27 @@ export async function getStaticProps({ params }) {
   let t = getTitle(id);
 
   const anilistId = extractAniListId(id);
-  const isAnime =
+  const isAniListExplicit =
     Boolean(anilistId) ||
     id.startsWith("anilist-") ||
-    id.startsWith("anime-") ||
-    (t?.type === "anime" && (!t?.cast || !t?.videos));
+    id.startsWith("anime-");
 
-  if (isAnime) {
-    const isAnimeSeries = t ? t.format !== "MOVIE" : !id.includes("movie");
-    const needsFullAnimeSeasons = isAnimeSeries && (!t?.seasonsList || t.seasonsList.length <= 1);
-    if (!t || !t.cast || !t.episodes || t.episodes.length === 0 || needsFullAnimeSeasons) {
+  const isAnime = isAniListExplicit || t?.type === "anime";
+  const isSeries = t ? (t.type === "series" || t.type === "anime") : (id.startsWith("tv-") || id.startsWith("series-") || isAnime);
+
+  // Check if seasons are dummy/incomplete (missing seasons, placeholder names without posters/airDates)
+  const hasIncompleteSeasons =
+    isSeries &&
+    (!t?.seasonsList ||
+      t.seasonsList.length <= 1 ||
+      t.seasonsList.some(
+        (s) =>
+          s.seasonNumber > 1 &&
+          (!s.poster || s.poster === t?.poster || s.name === `Season ${s.seasonNumber}`)
+      ));
+
+  if (isAniListExplicit) {
+    if (!t || !t.cast || !t.episodes || t.episodes.length === 0 || hasIncompleteSeasons) {
       try {
         const liveAnime = await fetchAniListDetails(id);
         if (liveAnime) {
@@ -126,10 +137,7 @@ export async function getStaticProps({ params }) {
       }
     }
   } else {
-    const isSeries = t ? t.type === "series" : id.startsWith("tv-") || id.startsWith("series-");
-    const needsFullSeasons = isSeries && (!t?.seasonsList || t.seasonsList.length <= 1);
-
-    if (!t || !t.cast || !t.videos || needsFullSeasons) {
+    if (!t || !t.cast || !t.videos || hasIncompleteSeasons) {
       let type = isSeries ? "tv" : "movie";
       let tmdbId = id;
       if (id.startsWith("movie-")) {
@@ -138,15 +146,22 @@ export async function getStaticProps({ params }) {
       } else if (id.startsWith("tv-") || id.startsWith("series-")) {
         type = "tv";
         tmdbId = id.replace(/^(tv|series)-/, "");
-      } else if (t?.type) {
-        type = t.type === "series" ? "tv" : "movie";
-        tmdbId = t.tmdbId || id;
+      } else if (t?.tmdbId) {
+        type = isSeries ? "tv" : "movie";
+        tmdbId = t.tmdbId;
       }
 
       try {
         const live = await fetchLiveTitle(type || "any", tmdbId);
         if (live) {
-          t = { ...(t || {}), ...live };
+          t = {
+            ...(t || {}),
+            ...live,
+            tmdbId: live.tmdbId || t?.tmdbId || null,
+            seasons: live.seasons || t?.seasons || 1,
+            numberOfSeasons: live.numberOfSeasons || t?.numberOfSeasons || 1,
+            seasonsList: live.seasonsList || t?.seasonsList || null,
+          };
         } else if (!t) {
           const fallbackType = type === "movie" ? "tv" : "movie";
           const altLive = await fetchLiveTitle(fallbackType, tmdbId);
@@ -299,10 +314,16 @@ function TitleContent({ t, id }) {
     const listMap = new Map();
     existingList.forEach((s, idx) => {
       const sNum = s.seasonNumber || idx + 1;
+      const loadedEps = seasonEpisodesMap[sNum];
+      const count =
+        loadedEps && loadedEps.length > 0
+          ? loadedEps.length
+          : s.episodeCount || (Array.isArray(s.episodes) ? s.episodes.length : 0);
+
       listMap.set(sNum, {
         seasonNumber: sNum,
         name: s.name || `Season ${sNum}`,
-        episodeCount: s.episodeCount || (Array.isArray(s.episodes) ? s.episodes.length : 0),
+        episodeCount: count,
         year: s.year || (s.airDate ? s.airDate.slice(0, 4) : t.year) || null,
         poster: s.poster || t.poster,
       });
@@ -313,17 +334,18 @@ function TitleContent({ t, id }) {
       if (listMap.has(i)) {
         options.push(listMap.get(i));
       } else {
+        const loadedEps = seasonEpisodesMap[i];
         options.push({
           seasonNumber: i,
           name: t.status === "upcoming" && totalSeasons === 1 ? "Miniseries" : `Season ${i}`,
-          episodeCount: 0,
+          episodeCount: loadedEps && loadedEps.length > 0 ? loadedEps.length : 0,
           year: t.year || null,
           poster: t.poster,
         });
       }
     }
     return options;
-  }, [t]);
+  }, [t, seasonEpisodesMap]);
 
   const currentSeasonObj = useMemo(() => {
     return (
@@ -447,13 +469,13 @@ function TitleContent({ t, id }) {
     // If season > 1 and no specific episodes were returned from API, generate season episodes
     // using the season's episodeCount or a sensible default so user can browse and watch
     const targetSeasonObj = seasonOptions.find((s) => s.seasonNumber === selectedSeason);
-    const count = targetSeasonObj?.episodeCount > 0 ? targetSeasonObj.episodeCount : (t.episodes?.length || 12);
+    const count = targetSeasonObj?.episodeCount > 0 ? targetSeasonObj.episodeCount : 12;
     const fallbackEps = [];
     for (let i = 1; i <= count; i++) {
       fallbackEps.push({
         episodeNumber: i,
         title: `Episode ${i}`,
-        overview: `Season ${selectedSeason}, Episode ${i}`,
+        overview: `${targetSeasonObj?.name || `Season ${selectedSeason}`}, Episode ${i}`,
         still: targetSeasonObj?.poster || t.backdrop || t.poster,
         runtime: t.runtime || 24,
       });
@@ -1059,7 +1081,12 @@ function TitleContent({ t, id }) {
                     aria-haspopup="dialog"
                     aria-expanded={showSeasonModal}
                   >
-                    <span>{currentSeasonObj?.name || `Season ${selectedSeason}`}</span>
+                    <span>
+                      {currentSeasonObj?.name &&
+                      !currentSeasonObj.name.toLowerCase().startsWith("season")
+                        ? `Season ${selectedSeason} · ${currentSeasonObj.name}`
+                        : currentSeasonObj?.name || `Season ${selectedSeason}`}
+                    </span>
                     {showSeasonModal ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
 
@@ -1136,12 +1163,15 @@ function TitleContent({ t, id }) {
                       {/* Active Season Meta Info below matching user reference */}
                       <div className={styles.seasonMetaInfo}>
                         <h4 className={styles.seasonMetaTitle}>
-                          {currentSeasonObj?.name || `Season ${selectedSeason}`}
+                          {currentSeasonObj?.name &&
+                          !currentSeasonObj.name.toLowerCase().startsWith("season")
+                            ? `Season ${selectedSeason} · ${currentSeasonObj.name}`
+                            : currentSeasonObj?.name || `Season ${selectedSeason}`}
                         </h4>
                         <p className={styles.seasonMetaSub}>
                           {currentSeasonObj?.episodeCount
                             ? `${currentSeasonObj.episodeCount} episodes`
-                            : "10 episodes"}
+                            : "12 episodes"}
                           {currentSeasonObj?.year ? ` · ${currentSeasonObj.year}` : ""}
                         </p>
                         <button

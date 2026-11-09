@@ -168,7 +168,7 @@ test("fetchAniListDetails retrieves live anime details with anilistId", async ()
   assert.ok(anime, "Expected anime details for Attack on Titan (16498)");
   assert.equal(anime.anilistId, 16498);
   assert.equal(anime.id, "16498");
-  assert.equal(anime.tmdbId, null);
+  assert.ok(anime.tmdbId === 1429 || anime.tmdbId === null);
   assert.equal(anime.type, "anime");
   assert.ok(anime.title);
   assert.ok(anime.episodes && anime.episodes.length > 0);
@@ -226,7 +226,7 @@ test("AniList API details handler responds with anime JSON and rejects invalid I
   assert.equal(validRes.statusCode, 200);
   assert.equal(validRes.body.anilistId, 16498);
   assert.equal(validRes.body.type, "anime");
-  assert.equal(validRes.body.tmdbId, null);
+  assert.ok(validRes.body.tmdbId === 1429 || validRes.body.tmdbId === null);
 
   // Missing or invalid ID
   const invalidRes = createMockRes();

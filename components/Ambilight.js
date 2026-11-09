@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./Ambilight.module.css";
 
-const NEUTRAL = ["#2a2a2e", "#1c1c20", "#26262b", "#18181b"];
+const NEUTRAL = ["#3b82f6", "#8b5cf6", "#ec4899", "#10b981"];
 
-// Average colour of a region of a small canvas, with a saturation boost so the glow is not grey.
+// Average colour of a region of a small canvas, with saturation & brightness boost so glow is vibrant.
 function avg(data, w, x0, y0, x1, y1) {
   let r = 0, g = 0, b = 0, n = 0;
   for (let y = y0; y < y1; y++) {
@@ -14,14 +14,37 @@ function avg(data, w, x0, y0, x1, y1) {
   }
   r /= n; g /= n; b /= n;
   const m = (r + g + b) / 3;
-  const s = 1.35; // saturation boost
-  const c = (v) => Math.max(0, Math.min(255, Math.round(m + (v - m) * s)));
-  return `rgb(${c(r)}, ${c(g)}, ${c(b)})`;
+  const s = 1.6; // vibrant saturation boost
+  let cr = m + (r - m) * s;
+  let cg = m + (g - m) * s;
+  let cb = m + (b - m) * s;
+
+  // Luminance floor boost: ensure dark/moody scenes still produce vibrant glowing color
+  const lum = cr * 0.299 + cg * 0.587 + cb * 0.114;
+  if (lum < 65) {
+    const boost = Math.min(3.2, 70 / Math.max(lum, 14));
+    cr *= boost;
+    cg *= boost;
+    cb *= boost;
+  }
+
+  const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+  return `rgb(${clamp(cr)}, ${clamp(cg)}, ${clamp(cb)})`;
 }
 
 // Four quadrant colours of an image (TMDB images send CORS headers, so this is allowed).
-function useBackdropColors(src) {
-  const [colors, setColors] = useState(NEUTRAL);
+function useBackdropColors(src, hues) {
+  const initialColors = hues && hues.length >= 2
+    ? [
+        `hsl(${hues[0]}, 85%, 52%)`,
+        `hsl(${hues[1]}, 80%, 48%)`,
+        `hsl(${(hues[0] + 40) % 360}, 80%, 46%)`,
+        `hsl(${(hues[1] + 40) % 360}, 80%, 44%)`,
+      ]
+    : NEUTRAL;
+
+  const [colors, setColors] = useState(initialColors);
+
   useEffect(() => {
     if (!src) return;
     let alive = true;
@@ -34,23 +57,32 @@ function useBackdropColors(src) {
         const ctx = c.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, 16, 9);
         const d = ctx.getImageData(0, 0, 16, 9).data;
-        if (alive) setColors([avg(d, 16, 0, 0, 8, 5), avg(d, 16, 8, 0, 16, 5), avg(d, 16, 0, 4, 8, 9), avg(d, 16, 8, 4, 16, 9)]);
-      } catch { /* tainted canvas: keep neutral */ }
+        if (alive) {
+          setColors([
+            avg(d, 16, 0, 0, 8, 5),
+            avg(d, 16, 8, 0, 16, 5),
+            avg(d, 16, 0, 4, 8, 9),
+            avg(d, 16, 8, 4, 16, 9),
+          ]);
+        }
+      } catch { /* tainted canvas: keep vibrant initial colors */ }
     };
+    img.onerror = () => { /* keep vibrant initial colors */ };
     img.src = src;
     return () => { alive = false; };
   }, [src]);
+
   return colors;
 }
 
 /**
- * <Ambilight videoEl={HTMLVideoElement | null} image={backdropUrl} />
+ * <Ambilight videoEl={HTMLVideoElement | null} image={backdropUrl} hues={number[] | null} intensity={number} />
  * videoEl: pass the real <video> element when you have one (our HLS player). Pass null for iframe embeds.
  */
-export default function Ambilight({ videoEl = null, image, intensity = 0.55 }) {
+export default function Ambilight({ videoEl = null, image, hues = null, intensity = 0.75 }) {
   const canvasRef = useRef(null);
   const [live, setLive] = useState(false);
-  const colors = useBackdropColors(image);
+  const colors = useBackdropColors(image, hues);
 
   useEffect(() => {
     setLive(false);

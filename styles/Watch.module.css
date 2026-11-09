@@ -798,18 +798,23 @@
   z-index: 1;
 }
 
-.embedBackBtn {
+.playerStageWrap {
+  position: relative;
+  width: 100%;
+}
+
+.outsideBackBtn {
   position: absolute;
-  top: 18px;
-  left: 20px;
-  z-index: 25;
+  top: 14px;
+  left: -58px;
+  z-index: 20;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: rgba(12, 12, 14, 0.72);
+  background: rgba(18, 18, 22, 0.78);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -817,27 +822,30 @@
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: auto;
   text-decoration: none;
 }
 
-.embedBackBtn:hover {
+.outsideBackBtn:hover {
   background: rgba(255, 255, 255, 0.22);
   border-color: rgba(255, 255, 255, 0.38);
-  transform: scale(1.06);
+  transform: scale(1.08);
   color: #fff;
 }
 
-.embedBackBtn:active {
+.outsideBackBtn:active {
   transform: scale(0.94);
 }
 
-@media (max-width: 600px) {
-  .embedBackBtn {
-    top: 12px;
-    left: 12px;
-    width: 36px;
-    height: 36px;
+@media (max-width: 1280px) {
+  .playerStageWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .outsideBackBtn {
+    position: static;
+    width: 38px;
+    height: 38px;
   }
 }
 
