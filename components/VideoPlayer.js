@@ -513,8 +513,8 @@ export default function VideoPlayer({
             height="100%"
             frameBorder="0"
             allowFullScreen
-            allow="autoplay *; encrypted-media; fullscreen *; picture-in-picture *"
-            referrerPolicy="strict-origin-when-cross-origin"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            referrerPolicy="no-referrer-when-downgrade"
             className={styles.embedIframe}
             onLoad={handleIframeLoad}
           />
