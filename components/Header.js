@@ -23,6 +23,7 @@ import {
   Settings,
   CheckCheck,
   X,
+  Shield,
 } from "lucide-react";
 import SearchPalette from "./SearchPalette";
 import Popover from "./Popover";
@@ -518,6 +519,14 @@ export default function Header() {
               </span>
               Settings
             </Link>
+            {session?.user?.role === "ADMIN" && (
+              <Link href="/admin/users" role="menuitem" className={styles.menuItem}>
+                <span style={{ display: "inline-flex", flex: "0 0 auto", color: "var(--primary, #00e599)" }}>
+                  <Shield size={17} strokeWidth={1.8} />
+                </span>
+                Admin Dashboard
+              </Link>
+            )}
             {BRAND.discord && (
               <a href={BRAND.discord} target="_blank" rel="noreferrer" role="menuitem" className={styles.menuItem}>
                 <Discord />
