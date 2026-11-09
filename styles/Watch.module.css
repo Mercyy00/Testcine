@@ -415,6 +415,13 @@
 
 /* Additional styles for full parity with Screenshot 2026-11-08 125652.png */
 
+.watchContainer {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: clip; /* Binds horizontal overflow to viewport boundary preventing horizontal scroll */
+}
+
 .watchLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(380px, 29.5vw, 393px);
@@ -424,7 +431,8 @@
   padding: calc(var(--bar-h) + 24px) var(--page-pad) 80px;
   padding-left: clamp(74px, 5.5vw, 88px);
   align-items: start;
-  overflow-x: clip;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 1599px) {

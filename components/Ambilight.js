@@ -14,17 +14,20 @@ const reduced = () =>
  * YouTube-style Ambient Lighting component (inspired by WesselKroos/youtube-ambilight)
  *
  * Features:
- * 1. Multi-tier projector layers (Inner, Mid, Outer) for graduated, feathered dispersion
- * 2. Real-time black bar / letterbox & pillarbox detection so glow syncs to active picture
- * 3. Temporal rolling-average frame blending to eliminate flicker and strobing
- * 4. Fallback backdrop cross-fading for iframe embed servers without CORS
- * 5. Page-isolated ambient halo behind the video player
+ * 1. Full-bleed atmospheric radiance spanning pageShell with zero hard side cutoffs
+ * 2. Multi-tier projector layers (Inner, Mid, Outer) for graduated, feathered dispersion
+ * 3. Dynamic focal tracking locking the glow epicenter to the player center
+ * 4. Real-time black bar / letterbox & pillarbox detection so glow syncs to active picture
+ * 5. Temporal rolling-average frame blending to eliminate flicker and strobing
+ * 6. Fallback backdrop cross-fading for iframe embed servers without CORS
  */
 export default function Ambilight({
   videoEl = null,
   images = [],
-  intensity = 0.45,
+  intensity = 0.48,
+  anchorRef = null,
 }) {
+  const rootRef = useRef(null);
   const innerRef = useRef(null);
   const midRef = useRef(null);
   const outerRef = useRef(null);
@@ -32,6 +35,43 @@ export default function Ambilight({
   const [live, setLive] = useState(false);
   const [idx, setIdx] = useState(0);
   const list = images.filter(Boolean).slice(0, 4);
+
+  // ---- Dynamic focal tracking: anchor glow epicenter to video player ----
+  useEffect(() => {
+    if (!anchorRef?.current) return;
+
+    const updatePosition = () => {
+      const el = anchorRef.current;
+      const root = rootRef.current;
+      if (!el || !root) return;
+
+      const r = el.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const centerX = r.left + r.width / 2 - rootRect.left;
+      const centerY = r.top + r.height / 2 - rootRect.top;
+
+      if (Number.isFinite(centerX) && Number.isFinite(centerY)) {
+        root.style.setProperty("--focus-x", `${Math.round(centerX)}px`);
+        root.style.setProperty("--focus-y", `${Math.round(centerY)}px`);
+      }
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition, { passive: true });
+    window.addEventListener("scroll", updatePosition, { passive: true });
+
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(updatePosition);
+      ro.observe(anchorRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition);
+      ro?.disconnect();
+    };
+  }, [anchorRef]);
 
   // ---- LIVE MODE: YouTube Ambilight multi-layer projector + bar detection ----
   useEffect(() => {
@@ -225,6 +265,7 @@ export default function Ambilight({
 
   return (
     <div
+      ref={rootRef}
       className={styles.ambient}
       aria-hidden="true"
       style={{ "--ambient-opacity": intensity }}

@@ -1,12 +1,37 @@
-/* Ambient glow container sits directly behind the video box and extends ~30% beyond it */
+/* Ambient glow container: full-bleed behind the player and pageShell */
 .ambient {
   position: absolute;
-  inset: -25% -30%;               /* glow reaches ~25-30% past the player on each side */
-  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(750px, 85vh, 1100px);
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 45%, transparent 78%);
-          mask-image: radial-gradient(ellipse at center, #000 45%, transparent 78%);
+  --focus-x: calc(50% - 160px);
+  --focus-y: 380px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 95% 82% at var(--focus-x) var(--focus-y),
+    #000 24%,
+    rgba(0, 0, 0, 0.78) 50%,
+    rgba(0, 0, 0, 0.32) 74%,
+    transparent 95%
+  );
+  mask-image: radial-gradient(
+    ellipse 95% 82% at var(--focus-x) var(--focus-y),
+    #000 24%,
+    rgba(0, 0, 0, 0.78) 50%,
+    rgba(0, 0, 0, 0.32) 74%,
+    transparent 95%
+  );
+}
+
+@media (max-width: 1080px) {
+  .ambient {
+    --focus-x: 50%;
+    --focus-y: 280px;
+    height: clamp(550px, 75vh, 850px);
+  }
 }
 
 .img,
@@ -15,53 +40,55 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   opacity: 0;
   pointer-events: none;
   transition: opacity 1.4s ease;
   will-change: transform, opacity;
+  transform-origin: var(--focus-x) var(--focus-y);
 }
 
 /* Fallback: blurred backdrop cross-fade */
 .img {
   background-size: cover;
-  background-position: center;
-  filter: blur(72px) saturate(1.5) brightness(0.85);
-  transform: scale(1.12);
+  background-position: var(--focus-x) center;
+  filter: blur(80px) saturate(1.5) brightness(0.85);
+  transform: scale(1.15);
 }
 
 .imgOn {
-  opacity: var(--ambient-opacity, 0.45);
+  opacity: var(--ambient-opacity, 0.48);
 }
 
 /* Multi-tier YouTube Ambilight Projectors */
-/* Inner: sharp edge bloom close to the frame */
+/* Inner: sharp edge bloom hugging the player region */
 .projectorInner {
   transform: scale(1.08);
-  filter: blur(24px) saturate(1.7) brightness(0.95);
+  filter: blur(32px) saturate(1.7) brightness(0.95);
 }
 
-/* Mid: medium diffuse field */
+/* Mid: medium diffuse field spreading across pageShell */
 .projectorMid {
-  transform: scale(1.22);
-  filter: blur(52px) saturate(1.5) brightness(0.85);
+  transform: scale(1.24);
+  filter: blur(65px) saturate(1.5) brightness(0.85);
 }
 
-/* Outer: soft atmospheric dissipation */
+/* Outer: soft atmospheric dissipation seamlessly washing over side margins */
 .projectorOuter {
-  transform: scale(1.38);
-  filter: blur(88px) saturate(1.3) brightness(0.72);
+  transform: scale(1.42);
+  filter: blur(105px) saturate(1.3) brightness(0.72);
 }
 
 .liveOn.projectorInner {
-  opacity: calc(var(--ambient-opacity, 0.45) * 0.7);
+  opacity: calc(var(--ambient-opacity, 0.48) * 0.7);
 }
 
 .liveOn.projectorMid {
-  opacity: calc(var(--ambient-opacity, 0.45) * 0.5);
+  opacity: calc(var(--ambient-opacity, 0.48) * 0.5);
 }
 
 .liveOn.projectorOuter {
-  opacity: calc(var(--ambient-opacity, 0.45) * 0.35);
+  opacity: calc(var(--ambient-opacity, 0.48) * 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {

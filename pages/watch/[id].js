@@ -143,6 +143,7 @@ export async function getStaticProps({ params }) {
 
 function WatchContent({ title: t, id, season, episode, isReady }) {
   const router = useRouter();
+  const playerStageRef = useRef(null);
   const [toast, showToast] = useToast(2400);
   const [mode, setMode] = useState("player");
   const [videoEl, setVideoEl] = useState(null);
@@ -587,12 +588,18 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     : overview;
 
   return (
-    <>
+    <div className={styles.watchContainer}>
+      <Ambilight
+        videoEl={videoEl}
+        images={[t.backdrop, ...(t.backdrops || [])]}
+        intensity={0.48}
+        anchorRef={playerStageRef}
+      />
       <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
       <div className={styles.mainCol}>
         {/* Video Player Container with outside back button */}
-        <div className={styles.playerStageWrap}>
+        <div ref={playerStageRef} className={styles.playerStageWrap}>
           <Link
             href={`/title/${t.id}`}
             className={styles.outsideBackBtn}
@@ -603,13 +610,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             <ArrowLeft size={22} strokeWidth={2.4} />
           </Link>
 
-          <div className={styles.playerWrap} style={{ position: "relative", isolation: "isolate" }}>
-            <Ambilight
-              videoEl={videoEl}
-              images={[t.backdrop, ...(t.backdrops || [])]}
-              intensity={0.45}
-            />
-
+          <div className={styles.playerWrap}>
             {mode === "trailer" && t.trailerKey ? (
               <div className={styles.stage}>
                 <iframe
@@ -1077,8 +1078,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
       </div>
 
       {toast && <div className={styles.toastNotice}>{toast}</div>}
+      </div>
     </div>
-    </>
   );
 }
 
