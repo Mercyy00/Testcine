@@ -64,6 +64,12 @@ export default function Home({ initialData }) {
   const [airing, setAiring] = useState(initialData?.airing || []);
   const [airingLoading, setAiringLoading] = useState(!initialData?.airing?.length);
 
+  const [bollywood, setBollywood] = useState(initialData?.bollywood || []);
+  const [bollywoodLoading, setBollywoodLoading] = useState(!initialData?.bollywood?.length);
+
+  const [tollywood, setTollywood] = useState(initialData?.tollywood || []);
+  const [tollywoodLoading, setTollywoodLoading] = useState(!initialData?.tollywood?.length);
+
   // Client-side dynamic refresh from live TMDB
   useEffect(() => {
     let active = true;
@@ -142,6 +148,28 @@ export default function Home({ initialData }) {
         if (active && Array.isArray(data) && data.length > 0) {
           setAiring(data.slice(0, 12));
           setAiringLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 7. Bollywood Blockbusters (Hindi cinema)
+    fetch("/api/tmdb/discover?type=movie&language=hi&sort_by=popularity.desc")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setBollywood(data.slice(0, 16));
+          setBollywoodLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // 8. Tollywood & South Cinema (Telugu/South cinema)
+    fetch("/api/tmdb/discover?type=movie&language=te&sort_by=popularity.desc")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data) && data.length > 0) {
+          setTollywood(data.slice(0, 16));
+          setTollywoodLoading(false);
         }
       })
       .catch(() => {});
@@ -290,6 +318,34 @@ export default function Home({ initialData }) {
           ]}
         >
           {trendingItems.map((t) => (
+            <MediaCard key={t.id || t.tmdbId} title={t} />
+          ))}
+        </MediaRow>
+      ) : null}
+
+      {/* Bollywood Blockbusters */}
+      {bollywoodLoading ? (
+        <SkeletonRow title="Bollywood Blockbusters" count={6} />
+      ) : bollywood.length > 0 ? (
+        <MediaRow
+          title="Bollywood Blockbusters"
+          href="/browse/movie?language=hi"
+        >
+          {bollywood.map((t) => (
+            <MediaCard key={t.id || t.tmdbId} title={t} />
+          ))}
+        </MediaRow>
+      ) : null}
+
+      {/* Tollywood & South Cinema */}
+      {tollywoodLoading ? (
+        <SkeletonRow title="Tollywood & South Cinema" count={6} />
+      ) : tollywood.length > 0 ? (
+        <MediaRow
+          title="Tollywood & South Cinema"
+          href="/browse/movie?language=te"
+        >
+          {tollywood.map((t) => (
             <MediaCard key={t.id || t.tmdbId} title={t} />
           ))}
         </MediaRow>

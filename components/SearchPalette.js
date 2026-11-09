@@ -13,13 +13,19 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   const [active, setActive] = useState(-1);
   const [searches, setSearches] = useSearches();
   const [liveResults, setLiveResults] = useState([]);
+  const [didYouMean, setDidYouMean] = useState(null);
   const wrap = useRef(null);
   const input = useRef(null);
 
   useEffect(() => {
     let active = true;
     if (!q.trim()) {
-      setTimeout(() => { if (active) setLiveResults([]); }, 0);
+      setTimeout(() => {
+        if (active) {
+          setLiveResults([]);
+          setDidYouMean(null);
+        }
+      }, 0);
       return;
     }
     const controller = new AbortController();
@@ -27,10 +33,16 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
       fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}&limit=8`, {
         signal: controller.signal,
       })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data) => {
-          if (active && !controller.signal.aborted && Array.isArray(data)) {
-            setLiveResults(data);
+        .then(async (r) => {
+          const suggestion = r.headers.get("X-Did-You-Mean");
+          const data = r.ok ? await r.json() : [];
+          return { data, suggestion };
+        })
+        .then(({ data, suggestion }) => {
+          if (active && !controller.signal.aborted) {
+            const items = Array.isArray(data) ? data : data?.results || [];
+            setLiveResults(items);
+            setDidYouMean(suggestion || data?.didYouMean || null);
           }
         })
         .catch((err) => {
@@ -38,7 +50,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
             // Ignore aborts
           }
         });
-    }, 200);
+    }, 180);
     return () => {
       active = false;
       clearTimeout(timer);
@@ -204,6 +216,38 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
 
       {open && (
         <div className={styles.drop} id="search-listbox" role="listbox">
+          {didYouMean && (
+            <div
+              style={{
+                padding: "8px 16px",
+                fontSize: 12,
+                color: "rgba(255, 255, 255, 0.7)",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                background: "rgba(220, 38, 38, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span>Showing results for</span>
+              <button
+                type="button"
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  padding: 0,
+                  color: "#f87171",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  font: "inherit",
+                }}
+                onClick={() => setQ(didYouMean)}
+              >
+                {didYouMean}
+              </button>
+            </div>
+          )}
           {rows.length === 0 && q.trim() ? (
             <p className={styles.none}>No titles match “{q.trim()}”. Try a genre or a year.</p>
           ) : (

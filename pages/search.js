@@ -31,6 +31,7 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState(tabParam);
   const [results, setResults] = useState([]);
   const [peopleResults, setPeopleResults] = useState([]);
+  const [didYouMean, setDidYouMean] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Sync state if URL query changes
@@ -90,8 +91,13 @@ export default function SearchPage() {
         });
     } else {
       // Tab is "all", "movies", or "series"
+      let currentSuggestion = null;
       const tmdbPromise = fetch(`/api/tmdb/search?q=${encodeURIComponent(qParam)}`, { signal: controller.signal })
-        .then((res) => (res.ok ? res.json() : []))
+        .then(async (res) => {
+          currentSuggestion = res.headers.get("X-Did-You-Mean");
+          const data = res.ok ? await res.json() : [];
+          return Array.isArray(data) ? data : data?.results || [];
+        })
         .catch(() => []);
 
       const animePromise =
@@ -107,6 +113,7 @@ export default function SearchPage() {
           const cleanTmdb = (Array.isArray(tmdbItems) ? tmdbItems : []).filter((item) => item.type !== "anime");
           const cleanAnime = Array.isArray(animeItems) ? animeItems : [];
           setResults([...cleanTmdb, ...cleanAnime]);
+          setDidYouMean(currentSuggestion || null);
           setLoading(false);
         })
         .catch((err) => {
@@ -212,6 +219,49 @@ export default function SearchPage() {
             );
           })}
         </div>
+
+        {/* Did you mean typo notice */}
+        {didYouMean && !loading && (
+          <div
+            style={{
+              margin: "0 0 20px",
+              padding: "12px 18px",
+              borderRadius: "10px",
+              background: "rgba(220, 38, 38, 0.1)",
+              border: "1px solid rgba(220, 38, 38, 0.25)",
+              color: "rgba(255, 255, 255, 0.8)",
+              fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span>Showing results for</span>
+            <button
+              type="button"
+              style={{
+                background: "transparent",
+                border: 0,
+                padding: 0,
+                color: "#f87171",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontSize: 14,
+              }}
+              onClick={() => {
+                setInputVal(didYouMean);
+                router.replace(
+                  { pathname: "/search", query: { q: didYouMean, tab: activeTab } },
+                  undefined,
+                  { shallow: true }
+                );
+              }}
+            >
+              {didYouMean}
+            </button>
+          </div>
+        )}
 
         {/* Content State */}
         {loading ? (

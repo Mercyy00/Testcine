@@ -40,7 +40,7 @@ export default function handler(req, res) {
       resolvedAniListId = extractAniListId(id);
     }
     if (!resolvedTmdbId) {
-      const numMatch = id.match(/(?:movie|tv|series)-(\d+)/i) || id.match(/^(\d+)$/);
+      const numMatch = id.match(/(\d+)$/) || id.match(/(?:movie|tv|series)-(\d+)/i) || id.match(/^(\d+)$/);
       if (numMatch) resolvedTmdbId = parseInt(numMatch[1], 10);
     }
 
