@@ -797,3 +797,12 @@ select:focus-visible {
     animation: lucide-spin-quarter 300ms var(--ease-out) both;
   }
 }
+
+/* Netlify badge fallback */
+netlify-badge,
+#netlify-badge,
+.netlify-badge,
+[data-netlify-badge] {
+  display: none !important;
+}
+
