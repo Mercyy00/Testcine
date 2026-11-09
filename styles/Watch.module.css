@@ -422,6 +422,7 @@
   max-width: 1592px;
   margin: 0 auto;
   padding: calc(var(--bar-h) + 24px) var(--page-pad) 80px;
+  padding-left: clamp(74px, 5.5vw, 88px);
   align-items: start;
 }
 
@@ -806,37 +807,41 @@
 .outsideBackBtn {
   position: absolute;
   top: 14px;
-  left: -58px;
-  z-index: 20;
+  left: calc(-1 * min(180px, max(0px, (100vw - 1592px) / 2) + 58px));
+  z-index: 25;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(18, 18, 22, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(18, 18, 22, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #fff;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
 
 .outsideBackBtn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.6);
   transform: scale(1.08);
   color: #fff;
+  box-shadow: 0 6px 22px rgba(220, 38, 38, 0.35);
 }
 
 .outsideBackBtn:active {
   transform: scale(0.94);
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 768px) {
+  .watchLayout {
+    padding-left: var(--page-pad);
+  }
   .playerStageWrap {
     display: flex;
     flex-direction: column;

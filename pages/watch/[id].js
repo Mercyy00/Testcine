@@ -529,6 +529,24 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     }
   };
 
+  const handleOutsideBack = useCallback(
+    (e) => {
+      if (typeof document !== "undefined" && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      if (
+        typeof window !== "undefined" &&
+        window.history.length > 1 &&
+        document.referrer &&
+        document.referrer.includes(window.location.host)
+      ) {
+        e.preventDefault();
+        router.back();
+      }
+    },
+    [router]
+  );
+
   const overview = t.overview || "No synopsis available.";
   const synopsisLimit = 205;
   const showMore = overview.length > synopsisLimit;
@@ -549,8 +567,9 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             className={styles.outsideBackBtn}
             aria-label="Back to title"
             title="Back to title"
+            onClick={handleOutsideBack}
           >
-            <ArrowLeft size={20} strokeWidth={2.4} />
+            <ArrowLeft size={22} strokeWidth={2.4} />
           </Link>
 
           {mode === "trailer" && t.trailerKey ? (
