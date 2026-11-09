@@ -7,11 +7,12 @@ import {
   resolveGreekGodSources,
 } from "../lib/servers.js";
 
-test("Poseidon, Zeus, Hades, Apollo, Hermes, Ares, and Atlas are registered as Greek god servers with Poseidon as default", () => {
+test("Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, and Atlas are registered as Greek god servers with Poseidon as default and Hera below Zeus", () => {
   const servers = getGreekGodServers();
-  assert.ok(servers.length >= 7, "Should have at least 7 servers (Poseidon, Zeus, Hades, Apollo, Hermes, Ares, Atlas)");
+  assert.ok(servers.length >= 8, "Should have at least 8 servers (Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, Atlas)");
   assert.equal(servers[0].id, "poseidon");
   assert.equal(servers[1].id, "zeus");
+  assert.equal(servers[2].id, "hera", "Hera must be positioned immediately below Zeus");
 
   const zeus = servers.find((s) => s.id === "zeus");
   assert.ok(zeus);
@@ -20,6 +21,14 @@ test("Poseidon, Zeus, Hades, Apollo, Hermes, Ares, and Atlas are registered as G
   assert.equal(zeus.type, "embed");
   assert.equal(zeus.status, "online");
   assert.equal(zeus.isDefault, false);
+
+  const hera = servers.find((s) => s.id === "hera");
+  assert.ok(hera);
+  assert.equal(hera.name, "Hera");
+  assert.equal(hera.provider, "VidQueen");
+  assert.equal(hera.type, "embed");
+  assert.equal(hera.status, "online");
+  assert.equal(hera.isDefault, false);
 
   const poseidon = servers.find((s) => s.id === "poseidon");
   assert.ok(poseidon);
@@ -116,6 +125,48 @@ test("Zeus generates correct Vidy Anime route using AniList id", () => {
   assert.match(zeus.url, /nextEpisode=true/);
   assert.match(zeus.url, /episodeSelector=true/);
   assert.match(zeus.url, /autoplayNextEpisode=true/);
+});
+
+test("Hera (VidQueen) generates correct movie embed route with 4K and DIVINE theme colors", () => {
+  const result = resolveGreekGodSources({
+    id: "movie-315162",
+    type: "movie",
+    tmdbId: 315162,
+  });
+
+  const hera = result.servers.find((s) => s.id === "hera");
+  assert.ok(hera);
+  assert.equal(hera.name, "Hera");
+  assert.equal(hera.provider, "VidQueen");
+  assert.equal(hera.type, "embed");
+  assert.ok(hera.url.startsWith("https://vidqueen.st/embed/movie/315162?"));
+  assert.match(hera.url, /q=2160/);
+  assert.match(hera.url, /primarycolor=dc2626/);
+  assert.match(hera.url, /secondarycolor=0a0708/);
+  assert.match(hera.url, /iconcolor=ffffff/);
+  assert.match(hera.url, /autoplay=true/);
+
+  // Verify Hera is positioned immediately after Zeus in servers list
+  const zeusIndex = result.servers.findIndex((s) => s.id === "zeus");
+  const heraIndex = result.servers.findIndex((s) => s.id === "hera");
+  assert.equal(heraIndex, zeusIndex + 1, "Hera should be immediately below Zeus");
+});
+
+test("Hera (VidQueen) generates correct TV route with autonext and showNextEpisode", () => {
+  const result = resolveGreekGodSources({
+    id: "tv-1396",
+    type: "series",
+    tmdbId: 1396,
+    season: 3,
+    episode: 5,
+  });
+
+  const hera = result.servers.find((s) => s.id === "hera");
+  assert.ok(hera);
+  assert.ok(hera.url.startsWith("https://vidqueen.st/embed/tv/1396/3/5?"));
+  assert.match(hera.url, /q=2160/);
+  assert.match(hera.url, /autonext=true/);
+  assert.match(hera.url, /showNextEpisode=true/);
 });
 
 test("Poseidon (VidRift) generates movie embed route customized to DIVINE theme", () => {

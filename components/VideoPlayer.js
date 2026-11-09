@@ -101,7 +101,41 @@ export default function VideoPlayer({
         );
       } catch {}
     }
+    if ((activeServer?.provider === "VidQueen" || activeServer?.id === "hera") && initialProgressSeconds > 10) {
+      try {
+        const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+        frame?.contentWindow?.postMessage(
+          { type: "SET_TIME", time: Math.floor(initialProgressSeconds) },
+          "https://vidqueen.st"
+        );
+        setTimeout(() => {
+          frame?.contentWindow?.postMessage(
+            { type: "SET_TIME", time: Math.floor(initialProgressSeconds) },
+            "https://vidqueen.st"
+          );
+        }, 1200);
+      } catch {}
+    }
   };
+
+  // Expose seekTo helper for VidQueen
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.seekTo = (seconds) => {
+      const sec = Number(seconds);
+      if (!Number.isFinite(sec)) return;
+      const frame = iframeRef.current || document.getElementById("player") || document.getElementById("embed-player");
+      frame?.contentWindow?.postMessage(
+        { type: "SET_TIME", time: sec },
+        "https://vidqueen.st"
+      );
+    };
+    return () => {
+      try {
+        delete window.seekTo;
+      } catch {}
+    };
+  }, []);
 
   const handleMobileOptionSelect = (row) => {
     try {
@@ -134,7 +168,7 @@ export default function VideoPlayer({
     };
   }, [onVideoElement]);
 
-  // Unified postMessage listener for embed servers (Vidy, VidRift, vidstuck, vidbolt, Cinezo)
+  // Unified postMessage listener for embed servers (VidQueen, Vidy, VidRift, vidstuck, vidbolt, Cinezo)
   useEffect(() => {
     if (activeServer?.type !== "embed") return;
 
@@ -148,6 +182,44 @@ export default function VideoPlayer({
         }
       }
       if (!data || typeof data !== "object") return;
+
+      // 0. VidQueen (Hera) event handling
+      if (event.origin === "https://vidqueen.st") {
+        const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+        if (frame && event.source !== frame.contentWindow) return;
+
+        const msg = data || {};
+
+        if (msg.type === "PLAYER_EVENT" && msg.data) {
+          const { event: playerEvent, currentTime, duration, tmdbId } = msg.data;
+          if (playerEvent === "fullscreen-enter" || playerEvent === "fullscreen-exit") {
+            // Fullscreen events handled within embed
+          } else {
+            // play, pause, seeked, timeupdate, ended
+            const curTime = Number(currentTime);
+            const durTime = Number(duration);
+            if (Number.isFinite(curTime) && curTime >= 0) {
+              handlePlaybackProgress(curTime, Number.isFinite(durTime) ? durTime : 0);
+            }
+            if (playerEvent === "ended") {
+              if (onWatched) onWatched();
+              if (onNext) onNext();
+            }
+          }
+          return;
+        }
+
+        if (msg.type === "MEDIA_DATA" && msg.data?.progress) {
+          const { watched, duration } = msg.data.progress;
+          const watchedSec = Number(watched);
+          const durSec = Number(duration);
+          if (Number.isFinite(watchedSec) && watchedSec >= 0) {
+            handlePlaybackProgress(watchedSec, Number.isFinite(durSec) ? durSec : 0);
+          }
+          return;
+        }
+        return;
+      }
 
       // 1. Cinezo (Ares) event handling (WATCH_PROGRESS: { mediaId, eventType, currentTime, duration })
       if (data.type === "WATCH_PROGRESS" && data.data) {
@@ -393,11 +465,26 @@ export default function VideoPlayer({
 
       if (e.key === "ArrowLeft" || e.key === "j" || e.key === "J") {
         e.preventDefault();
-        player.seek(Math.max(0, player.currentTime - skipSec));
+        if (activeServer?.id === "hera" || activeServer?.provider === "VidQueen") {
+          const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+          const cur = Number(player.currentTime) || 0;
+          const next = Math.max(0, cur - skipSec);
+          frame?.contentWindow?.postMessage({ type: "SET_TIME", time: next }, "https://vidqueen.st");
+        } else {
+          player.seek(Math.max(0, player.currentTime - skipSec));
+        }
         wake();
       } else if (e.key === "ArrowRight" || e.key === "l" || e.key === "L") {
         e.preventDefault();
-        player.seek(Math.min(player.duration || 0, player.currentTime + skipSec));
+        if (activeServer?.id === "hera" || activeServer?.provider === "VidQueen") {
+          const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+          const cur = Number(player.currentTime) || 0;
+          const dur = Number(player.duration) || Infinity;
+          const next = Math.min(dur, cur + skipSec);
+          frame?.contentWindow?.postMessage({ type: "SET_TIME", time: next }, "https://vidqueen.st");
+        } else {
+          player.seek(Math.min(player.duration || 0, player.currentTime + skipSec));
+        }
         wake();
       } else if (e.key === " " || e.key === "k" || e.key === "K") {
         e.preventDefault();
@@ -482,6 +569,13 @@ export default function VideoPlayer({
 
   const handleResume = () => {
     setShowResumePrompt(false);
+    if (activeServer?.id === "hera" || activeServer?.provider === "VidQueen") {
+      const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+      frame?.contentWindow?.postMessage(
+        { type: "SET_TIME", time: Math.floor(initialProgressSeconds) },
+        "https://vidqueen.st"
+      );
+    }
     if (player.duration) {
       player.seek(initialProgress * player.duration);
     }
@@ -490,6 +584,13 @@ export default function VideoPlayer({
 
   const handleStartOver = () => {
     setShowResumePrompt(false);
+    if (activeServer?.id === "hera" || activeServer?.provider === "VidQueen") {
+      const frame = iframeRef.current || (typeof document !== "undefined" ? document.getElementById("player") : null);
+      frame?.contentWindow?.postMessage(
+        { type: "SET_TIME", time: 0 },
+        "https://vidqueen.st"
+      );
+    }
     player.seek(0);
     player.togglePlay();
   };
@@ -508,7 +609,13 @@ export default function VideoPlayer({
         <>
           <iframe
             ref={iframeRef}
-            id={activeServer?.id === "apollo" || activeServer?.provider === "vidbolt" ? "vidbolt-player" : "embed-player"}
+            id={
+              activeServer?.id === "hera" || activeServer?.provider === "VidQueen"
+                ? "player"
+                : activeServer?.id === "apollo" || activeServer?.provider === "vidbolt"
+                ? "vidbolt-player"
+                : "embed-player"
+            }
             key={activeServer?.id || "embed-player"}
             src={activeServer.url}
             title={`${title.title || "Video Player"} - ${activeServer.name}`}
