@@ -163,7 +163,13 @@ export default function VideoPlayer({
         if (onEpisodeSelect && data.season && data.episode) {
           onEpisodeSelect(data.season, data.episode);
         }
-      } else if (data.type === "vidrift:exit") {
+      } else if (
+        data.type === "vidrift:exit" ||
+        data.type === "exit" ||
+        data.event === "exit" ||
+        data.type === "close" ||
+        data.event === "close"
+      ) {
         if (onExit) {
           onExit();
         } else if (typeof window !== "undefined" && window.history.length > 1) {
@@ -477,15 +483,8 @@ export default function VideoPlayer({
             className={styles.embedIframe}
             onLoad={handleIframeLoad}
           />
-          <div className={`${styles.top} ${chrome ? "" : styles.hidden}`} style={{ pointerEvents: "none" }}>
-            <div style={{ pointerEvents: "auto" }}>
-              {children}
-            </div>
-            <div className={styles.playerServerBadge} style={{ pointerEvents: "auto" }}>
-              <span className={styles.playerServerDot} />
-              <span>{activeServer?.name || "Server"}</span>
-            </div>
-          </div>
+          {/* Embed servers (VidRift, Vidy, vidstuck, vidbolt, etc.) have their own native back button & title.
+              Overlaying our back button causes duplicate text and visual collisions. */}
           {mobileSheet.isOpen && (
             <div className={styles.mobileSheetOverlay} onClick={() => setMobileSheet((prev) => ({ ...prev, isOpen: false }))}>
               <div className={styles.mobileSheetContent} onClick={(e) => e.stopPropagation()}>
