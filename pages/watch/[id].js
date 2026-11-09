@@ -169,17 +169,30 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     }
   }, [isReady, router.isReady, isSeries, t.id, currentSeason, currentEpisode, router]);
 
-  const savedHistory = history.find(
-    (item) =>
-      item.id === t.id &&
-      (!isSeries || ((item.season || 1) === currentSeason && (item.episode || 1) === currentEpisode))
-  );
+  // Capture initial resume time ONCE on mount / season / episode change
+  // so ongoing playback timeupdates do not trigger source refetches or re-renders
+  const currentMediaKey = `${id}-s${currentSeason}-e${currentEpisode}`;
+  const lastMediaKeyRef = useRef(null);
+  const initialSavedSecondsRef = useRef(0);
+  const initialProgressRef = useRef(0);
 
-  const savedSeconds =
-    savedHistory?.currentTime ||
-    (savedHistory?.progress && savedHistory?.secondsLeft && savedHistory.progress > 0 && savedHistory.progress < 0.95
-      ? Math.floor((savedHistory.secondsLeft / (1 - savedHistory.progress)) * savedHistory.progress)
-      : 0);
+  if (lastMediaKeyRef.current !== currentMediaKey) {
+    lastMediaKeyRef.current = currentMediaKey;
+    const initialItem = history.find(
+      (item) =>
+        item.id === t.id &&
+        (!isSeries || ((item.season || 1) === currentSeason && (item.episode || 1) === currentEpisode))
+    );
+    initialProgressRef.current = initialItem?.progress || 0;
+    initialSavedSecondsRef.current =
+      initialItem?.currentTime ||
+      (initialItem?.progress && initialItem?.secondsLeft && initialItem.progress > 0 && initialItem.progress < 0.95
+        ? Math.floor((initialItem.secondsLeft / (1 - initialItem.progress)) * initialItem.progress)
+        : 0);
+  }
+
+  const initialResumeSeconds = initialSavedSecondsRef.current || 0;
+  const initialResumeProgress = initialProgressRef.current || 0;
 
   // Initialize immediately with Greek God servers (Zeus default, Poseidon, etc.)
   const [sources, setSources] = useState(() => {
@@ -191,7 +204,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         anilistId: t.anilistId || extractAniListId(id) || extractAniListId(t.id),
         season: currentSeason,
         episode: currentEpisode,
-        progress: savedSeconds,
+        progress: initialResumeSeconds,
         autoplay: true,
         title: t.title,
         backdrop: t.backdrop,
@@ -389,8 +402,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
       query.set("season", String(currentSeason));
       query.set("episode", String(currentEpisode));
     }
-    if (savedSeconds > 10) {
-      query.set("progress", String(savedSeconds));
+    if (initialResumeSeconds > 10) {
+      query.set("progress", String(initialResumeSeconds));
     }
 
     fetch(`/api/sources?${query}`, { signal: controller.signal })
@@ -420,7 +433,10 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
       });
 
     return () => controller.abort();
-  }, [id, t.type, t.tmdbId, t.anilistId, t.title, t.poster, season, episode, isReady, request, savedSeconds]);
+  }, [id, t.type, t.tmdbId, t.anilistId, t.title, t.poster, currentSeason, currentEpisode, isReady, request]);
+
+  const lastSaveTimeRef = useRef(0);
+  const lastSaveTimestampRef = useRef(0);
 
   const saveProgress = useCallback(
     (time, duration) => {
@@ -432,6 +448,14 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
           ? t.runtime * 60
           : 0;
       if (!validDuration || validDuration <= 0) return;
+
+      const now = Date.now();
+      // Throttle saving history to at most once every 3 seconds to avoid re-rendering and tearing iframe on subsecond ticks
+      if (now - lastSaveTimestampRef.current < 3000 && Math.abs(time - lastSaveTimeRef.current) < 3) {
+        return;
+      }
+      lastSaveTimestampRef.current = now;
+      lastSaveTimeRef.current = time;
 
       const progress = Math.min(1, Math.max(0, time / validDuration));
       const minsLeft = Math.ceil((validDuration - time) / 60);
@@ -448,7 +472,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         secondsLeft: Math.ceil(validDuration - time),
         currentTime: Math.floor(time),
         duration: Math.floor(validDuration),
-        at: Date.now(),
+        at: now,
         ...(isSeries ? { season: currentSeason, episode: currentEpisode } : {}),
       };
 
@@ -544,8 +568,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             servers={sources.servers}
             defaultServer={selectedServerId || sources.default}
             title={t}
-            initialProgress={savedHistory?.progress || 0}
-            initialProgressSeconds={savedSeconds || 0}
+            initialProgress={initialResumeProgress}
+            initialProgressSeconds={initialResumeSeconds}
             onProgress={saveProgress}
             onWatched={handleMarkWatched}
             nextEpisode={hasNext ? { season: currentSeason, episode: currentEpisode + 1 } : null}

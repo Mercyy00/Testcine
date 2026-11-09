@@ -96,13 +96,6 @@ export default function VideoPlayer({
           "*"
         );
       } catch {}
-    } else if ((activeServer?.provider === "vidbolt" || activeServer?.id === "apollo") && initialProgressSeconds > 10) {
-      try {
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: "seek", time: Math.floor(initialProgressSeconds) },
-          "https://vidbolt.xyz"
-        );
-      } catch {}
     }
   };
 
@@ -196,14 +189,7 @@ export default function VideoPlayer({
 
       // 4. Vidbolt event handling (ready, play, pause, timeupdate, durationchange, ended, mobile-panel)
       if (data.type === "ready") {
-        if (initialProgressSeconds > 10) {
-          try {
-            iframeRef.current?.contentWindow?.postMessage(
-              { type: "seek", time: Math.floor(initialProgressSeconds) },
-              "https://vidbolt.xyz"
-            );
-          } catch {}
-        }
+        // Vidbolt stream manifest is ready (initial position is handled natively via startAt query param)
       } else if (data.type === "durationchange" && typeof data.duration === "number") {
         currentDurationRef.current = Number(data.duration);
       } else if (
@@ -471,7 +457,7 @@ export default function VideoPlayer({
           <iframe
             ref={iframeRef}
             id={activeServer?.id === "apollo" || activeServer?.provider === "vidbolt" ? "vidbolt-player" : "embed-player"}
-            key={activeServer.url}
+            key={activeServer?.id || "embed-player"}
             src={activeServer.url}
             title={`${title.title || "Video Player"} - ${activeServer.name}`}
             width="100%"
