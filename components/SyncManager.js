@@ -8,6 +8,7 @@ import {
   useCustomLists,
   useUserRatings,
   useWatchedEpisodes,
+  useWatchLog,
 } from "../lib/store";
 import { mergeUserData, cleanSettingsForSync } from "../lib/syncMerge";
 
@@ -22,15 +23,16 @@ export default function SyncManager() {
   const [customLists, setCustomLists] = useCustomLists();
   const [ratings, setRatings] = useUserRatings();
   const [watched, setWatched] = useWatchedEpisodes();
+  const [watchLog, setWatchLog] = useWatchLog();
 
   const ready = useRef(false);
   const timer = useRef(null);
-  const latest = useRef({ history, list, settings, reactions, customLists, ratings, watched });
+  const latest = useRef({ history, list, settings, reactions, customLists, ratings, watched, watchLog });
 
   // Update ref in effect, avoiding render-time assignment
   useEffect(() => {
-    latest.current = { history, list, settings, reactions, customLists, ratings, watched };
-  }, [history, list, settings, reactions, customLists, ratings, watched]);
+    latest.current = { history, list, settings, reactions, customLists, ratings, watched, watchLog };
+  }, [history, list, settings, reactions, customLists, ratings, watched, watchLog]);
 
   // 1. On login: pull server data and merge.
   useEffect(() => {
