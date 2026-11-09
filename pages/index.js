@@ -121,12 +121,15 @@ export default function Home({ initialData }) {
       })
       .catch(() => {});
 
-    // 5. Coming soon (upcoming theatrical/digital movies)
+    // 5. Coming soon (upcoming theatrical/digital movies strictly in the future)
     fetch("/api/tmdb/discover?category=upcoming&type=movie")
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (active && Array.isArray(data) && data.length > 0) {
-          setComingSoon(data.slice(0, 12));
+          const todayStr = new Date().toISOString().split("T")[0];
+          const futureOnly = data.filter((t) => t.releaseDate && t.releaseDate >= todayStr);
+          const list = futureOnly.length > 0 ? futureOnly : data;
+          setComingSoon(list.slice(0, 12));
           setComingSoonLoading(false);
         }
       })

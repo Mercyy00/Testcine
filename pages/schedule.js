@@ -57,7 +57,10 @@ export default function Schedule() {
           const mappedAiring = (Array.isArray(airingData) ? airingData : [])
             .filter((title) => title.airDay && DAYS.includes(title.airDay));
           setAiring(mappedAiring);
-          setComingSoon(Array.isArray(upcomingData) ? upcomingData : []);
+          const todayStr = new Date().toISOString().split("T")[0];
+          const futureOnly = (Array.isArray(upcomingData) ? upcomingData : [])
+            .filter((t) => t.releaseDate && t.releaseDate >= todayStr);
+          setComingSoon(futureOnly.length > 0 ? futureOnly : (Array.isArray(upcomingData) ? upcomingData : []));
           setLoading(false);
         }
       })
@@ -152,12 +155,12 @@ export default function Schedule() {
         <ul className={styles.soon}>
           {comingSoon.map((t) => (
             <li key={t.id || t.tmdbId}>
+              <time>{formatDate(t.releaseDate)}</time>
               <Link href={`/title/${t.id}`}>
                 <b>{t.title}</b>
-                <small>
-                  {formatDate(t.releaseDate)} · {t.cert ? <CertBadge cert={t.cert} /> : null}
-                </small>
               </Link>
+              <span>{t.genres?.slice(0, 2).join(", ") || t.type}</span>
+              <span>{t.cert ? <CertBadge cert={t.cert} /> : null}</span>
             </li>
           ))}
         </ul>

@@ -115,7 +115,7 @@ export default function VideoPlayer({
     }));
   };
 
-  // Unified postMessage listener for embed servers (Vidy, VidRift, vidstuck, vidbolt)
+  // Unified postMessage listener for embed servers (Vidy, VidRift, vidstuck, vidbolt, Cinezo)
   useEffect(() => {
     if (activeServer?.type !== "embed") return;
 
@@ -129,6 +129,39 @@ export default function VideoPlayer({
         }
       }
       if (!data || typeof data !== "object") return;
+
+      // 1. Cinezo (Ares) event handling (WATCH_PROGRESS: { mediaId, eventType, currentTime, duration })
+      if (data.type === "WATCH_PROGRESS" && data.data) {
+        if (event.origin && !event.origin.includes("cinezo.live")) return;
+
+        const { mediaId, eventType, currentTime, duration } = data.data;
+        const timeNum = Number(currentTime);
+        const durNum = Number(duration);
+
+        if (mediaId && typeof window !== "undefined") {
+          try {
+            window.localStorage?.setItem(
+              `progress_${mediaId}`,
+              JSON.stringify({
+                currentTime: timeNum,
+                duration: durNum,
+                lastWatched: Date.now(),
+                eventType,
+              })
+            );
+          } catch {}
+        }
+
+        if (Number.isFinite(timeNum) && timeNum >= 0) {
+          handlePlaybackProgress(timeNum, durNum);
+        }
+
+        if (eventType === "ended") {
+          if (onWatched) onWatched();
+          if (onNext) onNext();
+        }
+        return;
+      }
 
       // 1. Vidy event handling (PLAYER_EVENT: { event: "timeupdate" | "ended", currentTime, duration })
       if (data.event === "timeupdate") {

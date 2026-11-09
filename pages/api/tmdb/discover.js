@@ -78,7 +78,7 @@ export default async function handler(req, res) {
       } else if (category === "now_playing") {
         items = await fetchNowPlaying(validPage);
       } else if (category === "upcoming") {
-        items = await fetchUpcoming(validPage);
+        items = await fetchUpcoming(validType, validPage);
       } else if (category === "airing_today") {
         items = await fetchAiringToday(validPage);
       } else if (category === "on_the_air") {
@@ -108,6 +108,15 @@ export default async function handler(req, res) {
         sort_by: discoverSort,
         page: validPage,
       });
+    }
+
+    if (category === "upcoming" && Array.isArray(items)) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      items = items.filter((item) => {
+        const d = item.releaseDate;
+        return d && d >= todayStr;
+      });
+      items.sort((a, b) => (a.releaseDate || "").localeCompare(b.releaseDate || ""));
     }
 
     return res.status(200).json(items || []);
