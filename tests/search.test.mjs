@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSearchTypoCandidates, fetchBollywood, fetchTollywood, searchTMDB, fetchSmartRecommendations } from "../lib/tmdb.js";
+import { getSearchTypoCandidates, fetchBollywood, fetchTollywood, searchTMDB, fetchSmartRecommendations, fetchDiscover } from "../lib/tmdb.js";
 
 test("getSearchTypoCandidates generates correct typo corrections for common misspellings", () => {
   const bahubli = getSearchTypoCandidates("bahubli");
@@ -20,6 +20,16 @@ test("fetchBollywood and fetchTollywood functions exist and return arrays", asyn
   assert.equal(typeof fetchBollywood, "function");
   assert.equal(typeof fetchTollywood, "function");
   assert.equal(typeof fetchSmartRecommendations, "function");
+  assert.equal(typeof fetchDiscover, "function");
+});
+
+test("fetchDiscover for Newest excludes unreleased future movies", async () => {
+  if (!process.env.TMDB_API_KEY) return;
+  const items = await fetchDiscover({ type: "movie", sort_by: "primary_release_date.desc" });
+  assert.ok(items.length > 0, "should return items");
+  const todayStr = new Date().toISOString().split("T")[0];
+  const hasFuture = items.some((t) => t.releaseDate && t.releaseDate > todayStr);
+  assert.equal(hasFuture, false, "should not contain unreleased future movies");
 });
 
 test("fetchSmartRecommendations returns items with cast/director matchReasons when TMDB_API_KEY is present", async () => {
