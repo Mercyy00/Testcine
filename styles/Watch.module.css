@@ -798,6 +798,49 @@
   z-index: 1;
 }
 
+.embedBackBtn {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(12, 12, 14, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  text-decoration: none;
+}
+
+.embedBackBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.38);
+  transform: scale(1.06);
+  color: #fff;
+}
+
+.embedBackBtn:active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 600px) {
+  .embedBackBtn {
+    top: 12px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .sourceBadge {
   margin-left: auto;
   font-size: 11px;

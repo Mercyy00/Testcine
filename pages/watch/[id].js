@@ -582,12 +582,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             }}
             room={room}
             partyName={settings.name || "Guest"}
-          >
-            <Link href={`/title/${t.id}`} className={styles.back}>
-              <ArrowLeft size={20} />
-              <span>{t.title}</span>
-            </Link>
-          </VideoPlayer>
+          />
         ) : (
           <div className={styles.stage}>
             <Art title={t} variant="backdrop" className={styles.art} />

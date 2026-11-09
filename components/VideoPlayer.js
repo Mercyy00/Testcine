@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   Play,
   Pause,
@@ -10,6 +12,7 @@ import {
   PictureInPicture2,
   Settings as SettingsIcon,
   Tv,
+  ArrowLeft,
 } from "lucide-react";
 import useVideoPlayback from "./useVideoPlayback";
 import { joinRoom } from "../lib/watchParty";
@@ -461,6 +464,20 @@ export default function VideoPlayer({
     setRetry((value) => value + 1);
   };
 
+  const router = useRouter();
+
+  const handleBack = (e) => {
+    if (e) e.preventDefault();
+    if (typeof document !== "undefined" && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    if (onExit) {
+      onExit();
+    } else if (title?.id) {
+      router.push(`/title/${title.id}`);
+    }
+  };
+
   const handleResume = () => {
     setShowResumePrompt(false);
     if (player.duration) {
@@ -485,6 +502,16 @@ export default function VideoPlayer({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Universal back arrow button (Zeus, Poseidon, Hades, Apollo, Hermes, Ares, Atlas, native player) */}
+      <Link
+        href={`/title/${title?.id || ""}`}
+        className={`${styles.embedBackBtn} ${activeServer?.type === "embed" ? "" : chrome ? "" : styles.hidden}`}
+        aria-label="Back to title"
+        title="Back to title"
+        onClick={handleBack}
+      >
+        <ArrowLeft size={20} strokeWidth={2.4} />
+      </Link>
       {activeServer?.type === "embed" ? (
         <>
           <iframe
@@ -559,9 +586,6 @@ export default function VideoPlayer({
             onClick={player.togglePlay}
           />
           <div className={styles.vignette} />
-
-          {/* Top back bar overlay inside video (if needed for fullscreen) */}
-          <div className={`${styles.top} ${chrome ? "" : styles.hidden}`}>{children}</div>
 
           {/* Cast Icon in top right */}
           <div className={`${styles.castIconTop} ${chrome ? "" : styles.hidden}`}>
