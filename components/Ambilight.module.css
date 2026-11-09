@@ -1,86 +1,38 @@
-@property --c1 { syntax: "<color>"; inherits: true; initial-value: #2a2a2e; }
-@property --c2 { syntax: "<color>"; inherits: true; initial-value: #1c1c20; }
-@property --c3 { syntax: "<color>"; inherits: true; initial-value: #26262b; }
-@property --c4 { syntax: "<color>"; inherits: true; initial-value: #18181b; }
-
+/* Sits behind the video box and extends past it, feathered at the edges. */
 .ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 0;            /* page content must be position: relative; z-index: 1 */
-  overflow: hidden;
+  position: absolute;
+  inset: -30% -35%;               /* glow reaches ~30% past the player on every side */
+  z-index: -1;
   pointer-events: none;
-  background: var(--bg, #080808);
+  -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
+          mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
 }
 
-/* Fallback: four soft colour blobs that slowly drift behind the player area */
-.glow {
-  position: absolute;
-  top: -5%;
-  left: -5%;
-  width: 75%;
-  height: 85%;
-  opacity: var(--ambient-opacity, 0.30);
-  background:
-    radial-gradient(45% 45% at 20% 25%, var(--c1), transparent 70%),
-    radial-gradient(45% 45% at 70% 20%, var(--c2), transparent 70%),
-    radial-gradient(50% 50% at 25% 70%, var(--c3), transparent 70%),
-    radial-gradient(50% 50% at 70% 65%, var(--c4), transparent 70%);
-  filter: blur(60px) saturate(1.05);
-  transition: --c1 1.2s ease, --c2 1.2s ease, --c3 1.2s ease, --c4 1.2s ease, opacity 0.8s ease;
-  animation: drift 26s ease-in-out infinite alternate;
-}
-
-.glowHidden {
-  opacity: 0 !important;
-  visibility: hidden;
-}
-
-/* Live: 32x18 canvas covering only the area behind the player */
-.live {
-  position: absolute;
-  top: -5%;
-  left: -5%;
-  width: 75%;
-  height: 85%;
-  opacity: 0;
-  filter: blur(110px) saturate(1.1) brightness(0.9);
-  transition: opacity 0.8s ease;
-  image-rendering: auto;
-}
-
-.liveShown {
-  opacity: 0.30;
-}
-
-/* Vignette: dark base with colour only showing near the video, smoothly fading to dark edges */
-.vignette {
+.img, .live {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 70% 60% at 35% 40%, transparent 0%, rgba(8, 8, 8, 0.55) 70%, rgba(8, 8, 8, 0.9) 100%),
-    linear-gradient(180deg, rgba(8, 8, 8, 0.5) 0%, transparent 25%, transparent 55%, rgba(8, 8, 8, 0.85) 100%);
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.6s ease;
 }
 
-@keyframes drift {
-  from { transform: translate3d(-2%, -1%, 0) scale(1); }
-  to   { transform: translate3d(2%, 2%, 0) scale(1.08); }
+/* fallback: blurred backdrop */
+.img {
+  background-size: cover;
+  background-position: center;
+  filter: blur(70px) saturate(1.5) brightness(0.8);
+  transform: scale(1.1);
 }
+.imgOn { opacity: var(--ambient-opacity, 0.45); }
 
-@media (max-width: 1024px) {
-  .glow,
-  .live {
-    width: 110%;
-    left: -5%;
-    height: 70%;
-  }
-  .vignette {
-    background:
-      radial-gradient(ellipse 90% 50% at 50% 30%, transparent 0%, rgba(8, 8, 8, 0.55) 70%, rgba(8, 8, 8, 0.9) 100%),
-      linear-gradient(180deg, rgba(8, 8, 8, 0.5) 0%, transparent 25%, transparent 55%, rgba(8, 8, 8, 0.85) 100%);
-  }
+/* live: tiny canvas stretched and heavily blurred */
+.live {
+  filter: blur(80px) saturate(1.6) brightness(0.9);
+  transform: scale(1.05);
 }
+.liveOn { opacity: var(--ambient-opacity, 0.45); }
 
 @media (prefers-reduced-motion: reduce) {
-  .glow { animation: none; transition: none; }
-  .live { display: none; }
+  .img, .live { transition: none; }
 }

@@ -424,6 +424,7 @@
   padding: calc(var(--bar-h) + 24px) var(--page-pad) 80px;
   padding-left: clamp(74px, 5.5vw, 88px);
   align-items: start;
+  overflow-x: clip;
 }
 
 @media (max-width: 1599px) {
@@ -444,6 +445,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .sideCol {
@@ -451,6 +454,8 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
+  position: relative;
+  z-index: 1;
 }
 
 .titleArea {
@@ -802,6 +807,13 @@
 .playerStageWrap {
   position: relative;
   width: 100%;
+}
+
+.playerWrap {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  background: transparent;
 }
 
 .outsideBackBtn {
