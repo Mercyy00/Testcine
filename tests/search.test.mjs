@@ -23,13 +23,18 @@ test("fetchBollywood and fetchTollywood functions exist and return arrays", asyn
   assert.equal(typeof fetchDiscover, "function");
 });
 
-test("fetchDiscover for Newest excludes unreleased future movies", async () => {
+test("fetchDiscover for Newest excludes unreleased future movies and shows", async () => {
   if (!process.env.TMDB_API_KEY) return;
-  const items = await fetchDiscover({ type: "movie", sort_by: "primary_release_date.desc" });
-  assert.ok(items.length > 0, "should return items");
+  const movieItems = await fetchDiscover({ type: "movie", sort_by: "primary_release_date.desc" });
+  assert.ok(movieItems.length > 0, "should return movie items");
   const todayStr = new Date().toISOString().split("T")[0];
-  const hasFuture = items.some((t) => t.releaseDate && t.releaseDate > todayStr);
-  assert.equal(hasFuture, false, "should not contain unreleased future movies");
+  const hasFutureMovie = movieItems.some((t) => !t.releaseDate || t.releaseDate > todayStr);
+  assert.equal(hasFutureMovie, false, "should not contain unreleased future or dateless movies");
+
+  const tvItems = await fetchDiscover({ type: "tv", sort_by: "first_air_date.desc" });
+  assert.ok(tvItems.length > 0, "should return tv items");
+  const hasFutureTv = tvItems.some((t) => !t.releaseDate || t.releaseDate > todayStr);
+  assert.equal(hasFutureTv, false, "should not contain unreleased future or dateless tv shows");
 });
 
 test("fetchSmartRecommendations returns items with cast/director matchReasons when TMDB_API_KEY is present", async () => {
