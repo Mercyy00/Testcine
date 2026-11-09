@@ -3,7 +3,7 @@ import { searchAniList } from "../../../lib/anilist.js";
 import { applyApiGuard, clampInt, handleApiError } from "../../../lib/api-guard.js";
 
 export default async function handler(req, res) {
-  if (!applyApiGuard(req, res, { cacheSeconds: 300 })) {
+  if (!applyApiGuard(req, res, { cacheSeconds: 0 })) {
     return;
   }
 
