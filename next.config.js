@@ -2,12 +2,12 @@
 
 const csp = [
   "default-src 'self'",
-  "img-src 'self' data: https://image.tmdb.org https://img.youtube.com",
-  "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
-  "connect-src 'self' https://image.tmdb.org https://api.themoviedb.org https://*.youtube.com https://*.supabase.co wss://*.supabase.co",
+  "img-src 'self' data: blob: https://image.tmdb.org https://img.youtube.com https://s4.anilist.co https:",
+  "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com https://*.vidrift.net https://embed.vidrift.net https://*.vidy.st https://vidy.st https://*.vidstuck.cc https://vidstuck.cc https://*.vidbolt.co https://vidbolt.co https://*.rivestream.app https://www.rivestream.app https://*.cinezo.live https://player.cinezo.live https://*.atlantic.st https://atlantic.st https:",
+  "connect-src 'self' https://image.tmdb.org https://api.themoviedb.org https://graphql.anilist.co https://*.youtube.com https://*.supabase.co wss://*.supabase.co https: http:",
   "media-src 'self' blob: https:",
   "worker-src 'self' blob:",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "frame-ancestors 'none'",
