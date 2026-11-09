@@ -14,9 +14,10 @@ export const BRAND_SVG_MAP = {
   hbo: "/brands/hbo-max.svg",
   "hbo-max": "/brands/hbo-max.svg",
   hulu: "/brands/hulu.svg",
-  apple: "/brands/apple-tv.svg",
-  "apple-tv": "/brands/apple-tv.svg",
-  "apple-tv+": "/brands/apple-tv.svg",
+  apple: "/brands/apple-tv-plus.svg",
+  "apple-tv": "/brands/apple-tv-plus.svg",
+  "apple-tv+": "/brands/apple-tv-plus.svg",
+  "apple-tv-plus": "/brands/apple-tv-plus.svg",
   paramount: "/brands/paramount-plus.svg",
   "paramount-plus": "/brands/paramount-plus.svg",
   "paramount+": "/brands/paramount-plus.svg",
@@ -42,7 +43,7 @@ export function getBrandLogoUrl(idOrName) {
   if (norm.includes("disney")) return "/brands/disney-plus.svg";
   if (norm.includes("max") || norm.includes("hbo")) return "/brands/hbo-max.svg";
   if (norm.includes("hulu")) return "/brands/hulu.svg";
-  if (norm.includes("apple")) return "/brands/apple-tv.svg";
+  if (norm.includes("apple")) return "/brands/apple-tv-plus.svg";
   if (norm.includes("paramount")) return "/brands/paramount-plus.svg";
   if (norm.includes("marvel")) return "/brands/marvel.svg";
   if (norm.includes("a24")) return "/brands/a24.svg";

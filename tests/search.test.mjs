@@ -47,3 +47,47 @@ test("searchTMDB handles common typos and sets didYouMean", async () => {
   assert.ok(results.length > 0, "results should not be empty");
   assert.equal(results.didYouMean, "baahubali");
 });
+
+test("all brand SVGs for SERVICES and STUDIOS exist locally and have valid XML viewBoxes", async () => {
+  const fs = await import("fs");
+  const path = await import("path");
+  const { SERVICES, STUDIOS } = await import("../lib/constants.js");
+
+  const expectedSvgs = {
+    netflix: "netflix.svg",
+    prime: "prime-video.svg",
+    disney: "disney-plus.svg",
+    max: "hbo-max.svg",
+    hulu: "hulu.svg",
+    apple: "apple-tv-plus.svg",
+    paramount: "paramount-plus.svg",
+    marvel: "marvel.svg",
+    a24: "a24.svg",
+    pixar: "pixar.svg",
+    ghibli: "studio-ghibli.svg",
+    dc: "dc.svg",
+    warner: "warner-bros.svg",
+    universal: "universal.svg",
+  };
+
+  const allItems = [...SERVICES, ...STUDIOS];
+  assert.equal(allItems.length, 14, "should have 7 services and 7 studios");
+
+  for (const item of allItems) {
+    const filename = expectedSvgs[item.id];
+    assert.ok(filename, `Brand ${item.id} should have expected SVG filename`);
+    const fullPath = path.resolve("./public/brands/" + filename);
+    assert.ok(fs.existsSync(fullPath), `SVG file should exist at ${fullPath}`);
+
+    const content = fs.readFileSync(fullPath, "utf8");
+    assert.ok(content.includes("<svg"), `${item.id} should have valid <svg> tag`);
+    assert.ok(content.includes("viewBox="), `${item.id} SVG should have a viewBox defined`);
+
+    // Verify no duplicate width/height attributes in svg root
+    const rootSvgTag = content.match(/<svg[^>]*>/)?.[0] || "";
+    const widthMatches = rootSvgTag.match(/\bwidth=/g) || [];
+    const heightMatches = rootSvgTag.match(/\bheight=/g) || [];
+    assert.ok(widthMatches.length <= 1, `${item.id} should not have duplicate width attributes`);
+    assert.ok(heightMatches.length <= 1, `${item.id} should not have duplicate height attributes`);
+  }
+});

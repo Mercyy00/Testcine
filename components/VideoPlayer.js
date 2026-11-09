@@ -570,7 +570,11 @@ export default function VideoPlayer({
         <>
           <video
             ref={(el) => {
-              player.videoRef.current = el;
+              const vr = player.videoRef;
+              if (vr) {
+                // eslint-disable-next-line react-hooks/immutability
+                vr.current = el;
+              }
               if (activeServer?.type !== "embed") {
                 onVideoElement?.(el);
               }
