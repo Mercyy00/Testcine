@@ -40,6 +40,7 @@ export default function VideoPlayer({
   room,
   partyName = "Guest",
   onWatched,
+  onVideoElement,
   children,
 }) {
   const stageRef = useRef(null);
@@ -117,6 +118,21 @@ export default function VideoPlayer({
       isOpen: false,
     }));
   };
+
+  // Report HTML5 video element for Ambilight reactive glow or null for iframe embeds
+  useEffect(() => {
+    if (activeServer?.type === "embed") {
+      onVideoElement?.(null);
+    } else if (player?.videoRef?.current) {
+      onVideoElement?.(player.videoRef.current);
+    }
+  }, [activeServer?.type, onVideoElement, player?.videoRef]);
+
+  useEffect(() => {
+    return () => {
+      onVideoElement?.(null);
+    };
+  }, [onVideoElement]);
 
   // Unified postMessage listener for embed servers (Vidy, VidRift, vidstuck, vidbolt, Cinezo)
   useEffect(() => {
@@ -577,7 +593,13 @@ export default function VideoPlayer({
       ) : (
         <>
           <video
-            ref={player.videoRef}
+            ref={(el) => {
+              player.videoRef.current = el;
+              if (activeServer?.type !== "embed") {
+                onVideoElement?.(el);
+              }
+            }}
+            crossOrigin="anonymous"
             className={styles.video}
             playsInline
             preload="metadata"

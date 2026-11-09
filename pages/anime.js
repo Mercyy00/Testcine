@@ -278,76 +278,80 @@ export default function Anime({ initialHero = [], initialTrending = [], initialT
         <HeroBanner items={heroItems} />
       ) : null}
 
-      <div className={styles.mainLayout}>
-        <div className={styles.contentColumn}>
-          {topLoading ? (
-            <SkeletonRow title="Top 10 Anime" count={5} wide={true} />
-          ) : topItems.length > 0 ? (
-            <MediaRow title="Top 10 Anime">
-              {topItems.map((t) => (
-                <MediaCard
-                  key={t.id || t.anilistId}
-                  title={t}
-                  badge={t.badge || `★ ${t.rating}`}
-                />
-              ))}
-            </MediaRow>
-          ) : null}
+      <section
+        ref={gridRef}
+        style={{
+          padding: "36px var(--page-pad) 64px",
+          maxWidth: "var(--page-max)",
+          margin: "0 auto",
+        }}
+      >
+        <CatalogFilterBar
+          title="All Anime"
+          category={category}
+          onCategoryChange={handleCategoryChange}
+          categories={CATEGORIES}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          filterOptions={filterOptions}
+          onShuffle={handleShuffle}
+        />
 
-          {trendingLoading ? (
-            <SkeletonRow title="Trending now" count={5} wide={true} />
-          ) : trendingItems.length > 0 ? (
-            <MediaRow title="Trending now">
-              {trendingItems.map((t) => (
-                <MediaCard
-                  key={t.id || t.anilistId}
-                  title={t}
-                  badge={t.badge || "Trending"}
-                />
-              ))}
-            </MediaRow>
-          ) : null}
-
-          <section ref={gridRef} style={{ marginTop: 12 }}>
-            <CatalogFilterBar
-              title="All Anime"
-              category={category}
-              onCategoryChange={handleCategoryChange}
-              categories={CATEGORIES}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              filterOptions={filterOptions}
-              onShuffle={handleShuffle}
-            />
-
-            <div style={{ display: "grid", gap: 12, marginTop: 16, marginBottom: 24 }}>
-              <Chips
-                label="Studio"
-                options={ANIME_STUDIOS}
-                value={studio}
-                onChange={handleStudioChange}
-              />
-              <Chips
-                label="Sub-genre"
-                options={ANIME_SUBGENRES}
-                value={subgenre}
-                onChange={handleSubgenreChange}
-              />
-            </div>
-
-            {animeLoading ? (
-              <SkeletonGrid count={12} wide={true} />
-            ) : displayedAnime.length > 0 ? (
-              <TitleGrid items={displayedAnime} wide={true} />
-            ) : (
-              <Empty
-                title="No anime found"
-                text="No anime match your selected AniList filters. Try another genre."
-              />
-            )}
-          </section>
+        <div style={{ display: "grid", gap: 12, marginTop: 16, marginBottom: 24 }}>
+          <Chips
+            label="Studio"
+            options={ANIME_STUDIOS}
+            value={studio}
+            onChange={handleStudioChange}
+          />
+          <Chips
+            label="Sub-genre"
+            options={ANIME_SUBGENRES}
+            value={subgenre}
+            onChange={handleSubgenreChange}
+          />
         </div>
-      </div>
+
+        {animeLoading ? (
+          <SkeletonGrid count={12} wide={true} />
+        ) : displayedAnime.length > 0 ? (
+          <TitleGrid items={displayedAnime} wide={true} />
+        ) : (
+          <Empty
+            title="No anime found"
+            text="No anime match your selected AniList filters. Try another genre."
+          />
+        )}
+      </section>
+
+      {topLoading ? (
+        <SkeletonRow title="Top 10 Anime" count={6} wide={true} />
+      ) : topItems.length > 0 ? (
+        <MediaRow title="Top 10 Anime">
+          {topItems.map((t, i) => (
+            <MediaCard
+              key={t.id || t.anilistId}
+              title={t}
+              rank={i + 1}
+              badge={t.badge || `★ ${t.rating}`}
+            />
+          ))}
+        </MediaRow>
+      ) : null}
+
+      {trendingLoading ? (
+        <SkeletonRow title="Trending now" count={6} wide={true} />
+      ) : trendingItems.length > 0 ? (
+        <MediaRow title="Trending now">
+          {trendingItems.map((t) => (
+            <MediaCard
+              key={t.id || t.anilistId}
+              title={t}
+              badge={t.badge || "Trending"}
+            />
+          ))}
+        </MediaRow>
+      ) : null}
     </Layout>
   );
 }

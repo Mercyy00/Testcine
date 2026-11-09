@@ -31,6 +31,7 @@ import {
 import Layout from "../../components/Layout";
 import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
+import Ambilight from "../../components/Ambilight";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
 import { fetchLiveTitle } from "../../lib/tmdb";
 import { fetchAniListDetails, extractAniListId } from "../../lib/anilist";
@@ -144,6 +145,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   const router = useRouter();
   const [toast, showToast] = useToast(2400);
   const [mode, setMode] = useState("player");
+  const [videoEl, setVideoEl] = useState(null);
   const [history, setHistory] = useHistory();
   const [list, setList] = useList();
   const [reactions, setReactions] = useReactions();
@@ -535,7 +537,9 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     : overview;
 
   return (
-    <div className={styles.watchLayout}>
+    <>
+      <Ambilight videoEl={videoEl} image={t.backdrop || t.poster} />
+      <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
       <div className={styles.mainCol}>
         {/* Video Player Container */}
@@ -582,6 +586,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             }}
             room={room}
             partyName={settings.name || "Guest"}
+            onVideoElement={setVideoEl}
           />
         ) : (
           <div className={styles.stage}>
@@ -957,6 +962,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
       {toast && <div className={styles.toastNotice}>{toast}</div>}
     </div>
+    </>
   );
 }
 
