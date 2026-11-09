@@ -60,6 +60,7 @@ export default function handler(req, res) {
       idType,
       subType,
       dub: dub !== undefined ? dub === "true" || dub === "1" : undefined,
+      embedUrl: serverTitle?.embedUrl,
     });
 
     // Optional legacy HLS mirrors from process.env if configured

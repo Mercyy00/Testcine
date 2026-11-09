@@ -623,8 +623,13 @@ export default function VideoPlayer({
             height="100%"
             frameBorder="0"
             allowFullScreen
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            referrerPolicy="no-referrer-when-downgrade"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"
+            referrerPolicy={
+              activeServer?.id === "playdrive" || activeServer?.provider === "PlayDrive VIP"
+                ? "origin-when-cross-origin"
+                : "no-referrer-when-downgrade"
+            }
+            loading="lazy"
             className={styles.embedIframe}
             onLoad={handleIframeLoad}
           />

@@ -214,6 +214,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         title: t.title,
         backdrop: t.backdrop,
         poster: t.poster,
+        embedUrl: t.embedUrl,
       });
       return {
         loading: false,

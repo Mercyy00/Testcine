@@ -436,3 +436,28 @@ test("Atlas (atlantic) generates movie and TV embed routes", () => {
   assert.ok(atlasTv);
   assert.ok(atlasTv.url.startsWith("https://atlantic.st/embed/tv/1396/1/1"));
 });
+
+test("Ramayana: Rise of a Legend resolves verified PlayDrive (HD) embed server as default", () => {
+  const result = resolveGreekGodSources({
+    id: "ramayana-rise-of-a-legend",
+    type: "movie",
+    tmdbId: 656908,
+  });
+
+  assert.equal(result.default, "playdrive", "PlayDrive should be the default server for Ramayana");
+  const playdrive = result.servers.find((s) => s.id === "playdrive");
+  assert.ok(playdrive, "PlayDrive server should exist in servers list");
+  assert.equal(playdrive.name, "PlayDrive (HD)");
+  assert.equal(playdrive.provider, "PlayDrive VIP");
+  assert.equal(playdrive.type, "embed");
+  assert.equal(playdrive.status, "online");
+  assert.equal(playdrive.url, "https://playdrive.vip/e/AQGrE48AAgDqcw?stream=hd");
+
+  // Ensure standard Greek God servers are also available as fallbacks
+  const poseidon = result.servers.find((s) => s.id === "poseidon");
+  assert.ok(poseidon);
+  const zeus = result.servers.find((s) => s.id === "zeus");
+  assert.ok(zeus);
+  const hera = result.servers.find((s) => s.id === "hera");
+  assert.ok(hera);
+});
