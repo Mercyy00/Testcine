@@ -83,14 +83,19 @@ export default function MediaCard({
   // Lazily fetch logo if this is a wide card without a logo pre-attached
   useEffect(() => {
     if (!wide || !title || title.logo || asyncLogo || logoFailed) return;
-    const tid = title.tmdbId || (typeof title.id === "string" && title.id.match(/\d+$/)?.[0]);
-    if (!tid) return;
+    const tid = title.tmdbId || (typeof title.id === "string" && title.id.match(/^\d+$/)?.[0]);
+    const titleName = title.title || title.name;
+    if (!tid && !titleName) return;
 
     let active = true;
     const mediaType =
       title.type === "series" || title.type === "anime" || title.type === "tv" ? "tv" : "movie";
 
-    fetch(`/api/tmdb/logo?id=${tid}&type=${mediaType}`)
+    const params = new URLSearchParams({ type: mediaType });
+    if (tid && /^\d+$/.test(String(tid))) params.set("id", String(tid));
+    if (titleName) params.set("title", titleName);
+
+    fetch(`/api/tmdb/logo?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (active && data?.logo) {
@@ -102,7 +107,7 @@ export default function MediaCard({
     return () => {
       active = false;
     };
-  }, [wide, title.logo, title.tmdbId, title.id, title.type, asyncLogo, logoFailed]);
+  }, [wide, title.logo, title.tmdbId, title.id, title.title, title.name, title.type, asyncLogo, logoFailed]);
 
   const activeLogo = title.logo || asyncLogo;
 
@@ -351,18 +356,24 @@ export default function MediaCard({
           />
           <span className={styles.shade} />
 
-          {/* Title treatment on the tile (Logo PNG only - no duplicate text) */}
-          {wide && activeLogo && !logoFailed && (
+          {/* Title treatment on the tile (Logo PNG or stylized title text) */}
+          {wide && (
             <span className={styles.tileTitleWrap}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={activeLogo}
-                alt={title.title}
-                className={styles.tileLogo}
-                loading="lazy"
-                decoding="async"
-                onError={() => setLogoFailed(true)}
-              />
+              {activeLogo && !logoFailed ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={activeLogo}
+                  alt={title.title}
+                  className={styles.tileLogo}
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setLogoFailed(true)}
+                />
+              ) : (
+                <span className={styles.tileTitleText}>
+                  {title.title}
+                </span>
+              )}
             </span>
           )}
 

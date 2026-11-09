@@ -6,15 +6,16 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { id, type = "movie" } = req.query;
+  const { id, type = "movie", title } = req.query;
   const targetId = typeof id === "string" ? id.trim() : "";
+  const targetTitle = typeof title === "string" ? title.trim().slice(0, 100) : "";
 
-  if (!targetId || !/^[a-zA-Z0-9_.-]{1,100}$/.test(targetId)) {
-    return res.status(400).json({ error: "Invalid id" });
+  if ((!targetId || !/^[a-zA-Z0-9_.-]{1,100}$/.test(targetId)) && !targetTitle) {
+    return res.status(400).json({ error: "Invalid id or title" });
   }
 
   try {
-    const logo = await fetchLogoForId(targetId, type);
+    const logo = await fetchLogoForId(targetId, type, targetTitle);
     res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800");
     return res.status(200).json({ logo: logo || null });
   } catch (err) {
