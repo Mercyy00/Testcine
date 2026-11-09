@@ -12,48 +12,72 @@
   background: var(--bg, #080808);
 }
 
-/* Fallback: four soft colour blobs that slowly drift */
+/* Fallback: four soft colour blobs that slowly drift behind the player area */
 .glow {
   position: absolute;
-  inset: -30%;
-  width: 160%;
-  height: 160%;
-  opacity: var(--ambient-opacity, 0.75);
+  top: -5%;
+  left: -5%;
+  width: 75%;
+  height: 85%;
+  opacity: var(--ambient-opacity, 0.30);
   background:
-    radial-gradient(70% 70% at 20% 25%, var(--c1, #3b82f6), transparent 75%),
-    radial-gradient(70% 70% at 80% 20%, var(--c2, #8b5cf6), transparent 75%),
-    radial-gradient(75% 75% at 25% 75%, var(--c3, #ec4899), transparent 75%),
-    radial-gradient(75% 75% at 75% 70%, var(--c4, #10b981), transparent 75%);
-  filter: blur(100px) saturate(1.8) brightness(1.2);
-  transition: opacity 0.8s ease;
+    radial-gradient(45% 45% at 20% 25%, var(--c1), transparent 70%),
+    radial-gradient(45% 45% at 70% 20%, var(--c2), transparent 70%),
+    radial-gradient(50% 50% at 25% 70%, var(--c3), transparent 70%),
+    radial-gradient(50% 50% at 70% 65%, var(--c4), transparent 70%);
+  filter: blur(60px) saturate(1.05);
+  transition: --c1 1.2s ease, --c2 1.2s ease, --c3 1.2s ease, --c4 1.2s ease, opacity 0.8s ease;
   animation: drift 26s ease-in-out infinite alternate;
 }
-.glowHidden { opacity: 0; }
 
-/* Live: 32x18 canvas stretched across the screen and heavily blurred */
+.glowHidden {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+/* Live: 32x18 canvas covering only the area behind the player */
 .live {
   position: absolute;
-  inset: -20%;
-  width: 140%;
-  height: 140%;
+  top: -5%;
+  left: -5%;
+  width: 75%;
+  height: 85%;
   opacity: 0;
-  filter: blur(100px) saturate(1.8) brightness(1.2);
+  filter: blur(110px) saturate(1.1) brightness(0.9);
   transition: opacity 0.8s ease;
   image-rendering: auto;
 }
-.liveShown { opacity: var(--ambient-opacity, 0.75); }
 
-/* Keeps the edges dark so text stays readable, but allows radiant glow in the viewing area */
+.liveShown {
+  opacity: 0.30;
+}
+
+/* Vignette: dark base with colour only showing near the video, smoothly fading to dark edges */
 .vignette {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 8, 8, 0.35) 0%, rgba(8, 8, 8, 0) 20%, rgba(8, 8, 8, 0) 70%, rgba(8, 8, 8, 0.8) 100%);
+    radial-gradient(ellipse 70% 60% at 35% 40%, transparent 0%, rgba(8, 8, 8, 0.55) 70%, rgba(8, 8, 8, 0.9) 100%),
+    linear-gradient(180deg, rgba(8, 8, 8, 0.5) 0%, transparent 25%, transparent 55%, rgba(8, 8, 8, 0.85) 100%);
 }
 
 @keyframes drift {
   from { transform: translate3d(-2%, -1%, 0) scale(1); }
   to   { transform: translate3d(2%, 2%, 0) scale(1.08); }
+}
+
+@media (max-width: 1024px) {
+  .glow,
+  .live {
+    width: 110%;
+    left: -5%;
+    height: 70%;
+  }
+  .vignette {
+    background:
+      radial-gradient(ellipse 90% 50% at 50% 30%, transparent 0%, rgba(8, 8, 8, 0.55) 70%, rgba(8, 8, 8, 0.9) 100%),
+      linear-gradient(180deg, rgba(8, 8, 8, 0.5) 0%, transparent 25%, transparent 55%, rgba(8, 8, 8, 0.85) 100%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -538,7 +538,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
   return (
     <>
-      <Ambilight videoEl={videoEl} image={t.backdrop || t.poster} hues={t.hues} intensity={0.8} />
+      <Ambilight videoEl={videoEl} image={t.backdrop || t.poster} intensity={0.3} />
       <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
       <div className={styles.mainCol}>
