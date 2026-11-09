@@ -68,29 +68,48 @@
 }
 
 .chip {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-size: 15px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 9999px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-soft);
-  background-color: rgba(255, 255, 255, 0.08);
-  box-shadow: rgba(255, 255, 255, 0.14) 0 1px 0 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px inset;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  color: var(--text-soft, #ffffff);
+  background-color: rgba(14, 16, 24, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px double rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
 }
 
 .chip:hover {
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
+    0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .chipOn {
-  background-color: var(--primary);
-  color: var(--on-accent);
-  box-shadow: var(--glow-shadow);
+  background-color: #ffffff;
+  color: #080808;
+  font-weight: 700;
+  border-color: #ffffff;
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 1),
+    0 4px 16px rgba(255, 255, 255, 0.28);
 }
 
 .chipOn:hover {
-  background-color: var(--primary-hover);
+  background-color: #f0f0f0;
+  color: #080808;
+  transform: translateY(-2px);
 }
 
 .select {
@@ -103,20 +122,30 @@
 }
 
 .select select {
-  height: 36px;
-  padding: 0 34px 0 14px;
-  border: 0;
-  border-radius: 999px;
-  font-size: 15px;
+  height: 38px;
+  padding: 0 34px 0 16px;
+  border-radius: 9999px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
-  background-color: rgba(255, 255, 255, 0.12);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
-  box-shadow: rgba(255, 255, 255, 0.14) 0 1px 0 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px inset;
+  background-color: rgba(14, 16, 24, 0.45);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px double rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.3);
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
-  background-repeat: no-repeat;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select select:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 .select select option {
@@ -161,37 +190,54 @@
 }
 
 .categoryPill {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 999px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 9999px;
   font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: rgba(14, 16, 24, 0.45);
+  backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
+  border: 1px double rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 14px rgba(0, 0, 0, 0.35);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   white-space: nowrap;
 }
 
 .categoryPill:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.categoryPill:active {
+  transform: scale(0.95);
 }
 
 .categoryPillActive {
   background: #ffffff;
-  color: #000000;
+  color: #080808;
   font-weight: 700;
   border-color: #ffffff;
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 1),
+    0 4px 18px rgba(255, 255, 255, 0.28);
 }
 
 .categoryPillActive:hover {
   background: #f0f0f0;
+  color: #080808;
+  transform: translateY(-2px);
 }
 
 .filterRightSelects {
@@ -206,16 +252,20 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
+  height: 38px;
+  background: rgba(14, 16, 24, 0.45);
+  backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
+  border: 1px double rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 14px rgba(0, 0, 0, 0.35);
+  border-radius: 9999px;
   padding: 0 28px 0 14px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dropdownPill[data-filter="genre"] { width: 86px; }
@@ -226,8 +276,17 @@
 .dropdownPill[data-filter="rating"] { width: 82px; }
 
 .dropdownPill:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
+    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.dropdownPill:active {
+  transform: scale(0.95);
 }
 
 .dropdownSelect {

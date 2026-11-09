@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Play, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
+import LiquidGlassButton from "./LiquidGlassButton";
 import { RatingRing, CertBadge, Dot } from "./Meta";
 import { runtimeLabel } from "../lib/constants";
 import { useSettings } from "../lib/store";
@@ -113,16 +114,19 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
             </div>
             <p className={styles.overview}>{t.overview}</p>
             <div className={styles.actions}>
-              <Link
+              <LiquidGlassButton
                 href={t.type === "movie" ? `/watch/${t.id}` : `/watch/${t.id}?season=1&episode=1`}
-                className="btnHero"
-              >
-                <Play size={22} fill="currentColor" stroke="none" />
-                Play
-              </Link>
-              <Link href={`/title/${t.id}`} className="btnHeroGlass">
-                Details
-              </Link>
+                text="Play"
+                variant="primary"
+                size="md"
+                icon={<Play size={17} fill="currentColor" stroke="none" />}
+              />
+              <LiquidGlassButton
+                href={`/title/${t.id}`}
+                text="Details"
+                variant="glass"
+                size="md"
+              />
             </div>
           </motion.div>
         </AnimatePresence>
