@@ -10,4 +10,5 @@ out
 test-results
 playwright-report
 .DS_Store
+.netlify
 refrence images/
