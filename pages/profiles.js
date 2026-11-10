@@ -118,8 +118,19 @@ export default function Profiles() {
       <main className={styles.pageWrap}>
         {/* Top brand logo */}
         <div className={styles.topBar}>
-          <Link href="/" aria-label="Home" style={{ textDecoration: "none", color: "inherit", fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px" }}>
-            {BRAND?.name || "DIVINE"}
+          <Link href="/" aria-label="Home" style={{ display: "inline-block", textDecoration: "none" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="DIVINE"
+              style={{
+                height: 48,
+                width: "auto",
+                display: "block",
+                filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7))",
+                transition: "transform 0.2s ease",
+              }}
+            />
           </Link>
         </div>
 

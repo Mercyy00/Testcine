@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useToast } from "../lib/useToast";
 import {
   Plus,
@@ -78,7 +79,138 @@ export default function MediaCard({
   const [logoFailed, setLogoFailed] = useState(false);
   const [asyncLogo, setAsyncLogo] = useState(null);
 
+  // 3-second hover preview state
+  const [mounted, setMounted] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewPos, setPreviewPos] = useState({ top: 0, left: 0, width: 340 });
+
   const menuRef = useRef(null);
+  const cardRef = useRef(null);
+  const hoverTimerRef = useRef(null);
+  const closeTimerRef = useRef(null);
+  const isHoveredRef = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Listen for preview-close broadcasts from peer cards
+  useEffect(() => {
+    const handlePeerPreview = (e) => {
+      if (e.detail !== title?.id) {
+        setShowPreview(false);
+        if (hoverTimerRef.current) {
+          clearTimeout(hoverTimerRef.current);
+          hoverTimerRef.current = null;
+        }
+      }
+    };
+    window.addEventListener("viv:close-card-preview", handlePeerPreview);
+    return () => {
+      window.removeEventListener("viv:close-card-preview", handlePeerPreview);
+    };
+  }, [title?.id]);
+
+  // Dismiss preview on window scroll, resize, or Escape
+  useEffect(() => {
+    if (!showPreview) return;
+    const handleDismiss = () => {
+      setShowPreview(false);
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+
+    window.addEventListener("scroll", handleDismiss, { passive: true });
+    window.addEventListener("resize", handleDismiss);
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") handleDismiss();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("scroll", handleDismiss);
+      window.removeEventListener("resize", handleDismiss);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showPreview]);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  // Hover timer triggers 3-second preview popup
+  const handleMouseEnter = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(hover: none)").matches) {
+      return;
+    }
+    isHoveredRef.current = true;
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+
+    if (!showPreview && !hoverTimerRef.current && !openMenu) {
+      hoverTimerRef.current = setTimeout(() => {
+        if (!cardRef.current || !isHoveredRef.current) return;
+
+        // Broadcast to close other previews
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("viv:close-card-preview", { detail: title.id }));
+        }
+
+        const rect = cardRef.current.getBoundingClientRect();
+        const popupWidth = Math.max(320, Math.min(380, rect.width * 1.35));
+
+        let left = rect.left + (rect.width - popupWidth) / 2;
+        if (left < 16) left = 16;
+        if (left + popupWidth > window.innerWidth - 16) {
+          left = window.innerWidth - popupWidth - 16;
+        }
+
+        const estimatedHeight = 390;
+        let top = rect.top - 24;
+        if (top < 72) top = 72; // Avoid covering top navigation bar
+        if (top + estimatedHeight > window.innerHeight - 16) {
+          top = Math.max(72, window.innerHeight - estimatedHeight - 16);
+        }
+
+        setPreviewPos({ top, left, width: popupWidth });
+        setShowPreview(true);
+      }, 3000); // Exactly 3 seconds hover requirement
+    }
+  };
+
+  const handleMouseLeave = () => {
+    isHoveredRef.current = false;
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    if (showPreview) {
+      closeTimerRef.current = setTimeout(() => {
+        setShowPreview(false);
+      }, 250);
+    }
+  };
+
+  const handlePopupMouseEnter = () => {
+    isHoveredRef.current = true;
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const handlePopupMouseLeave = () => {
+    isHoveredRef.current = false;
+    closeTimerRef.current = setTimeout(() => {
+      setShowPreview(false);
+    }, 250);
+  };
 
   // Lazily fetch logo if this is a wide card without a logo pre-attached
   useEffect(() => {
@@ -165,6 +297,9 @@ export default function MediaCard({
     e.preventDefault();
     e.stopPropagation();
 
+    setShowPreview(false);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+
     // Close any other open menus
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("viv:close-card-menu", { detail: title.id }));
@@ -183,6 +318,9 @@ export default function MediaCard({
   const handleMoreClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    setShowPreview(false);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
 
     if (openMenu) {
       setOpenMenu(false);
@@ -335,12 +473,98 @@ export default function MediaCard({
 
   const subMenuIsLeft = typeof window !== "undefined" && menuPos.x + 230 + 190 > window.innerWidth;
 
+  // 3-second hover preview metadata helpers
+  const displayYear = useMemo(() => {
+    if (title.year) return title.year;
+    const dateStr = title.release_date || title.first_air_date || title.releaseDate;
+    if (dateStr && typeof dateStr === "string") {
+      const y = parseInt(dateStr.slice(0, 4), 10);
+      if (!Number.isNaN(y)) return y;
+    }
+    return 2025;
+  }, [title.year, title.release_date, title.first_air_date, title.releaseDate]);
+
+  const formattedRuntime = useMemo(() => {
+    if (title.runtime) {
+      const mins = Number(title.runtime);
+      if (!Number.isNaN(mins) && mins > 0) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+      }
+    }
+    if (isSeries) {
+      if (seasonCount) {
+        return `${seasonCount} ${seasonCount === 1 ? "Season" : "Seasons"}`;
+      }
+      return "1 Season";
+    }
+    if (isAnime) {
+      if (title.episodes) return `${title.episodes} Episodes`;
+      return "24m";
+    }
+    return "2h 1m";
+  }, [title.runtime, isSeries, seasonCount, isAnime, title.episodes]);
+
+  const formattedCert = useMemo(() => {
+    const rawCert = (title.cert || title.certification || "").toUpperCase();
+    if (rawCert) {
+      if (rawCert === "R" || rawCert === "NC-17" || rawCert === "TV-MA" || rawCert === "18+") return "A";
+      if (rawCert === "PG-13" || rawCert === "TV-14" || rawCert === "16+") return "U/A 16+";
+      if (rawCert === "PG" || rawCert === "TV-PG" || rawCert === "13+") return "U/A 13+";
+      if (rawCert === "G" || rawCert === "TV-Y" || rawCert === "TV-G" || rawCert === "U") return "U";
+      return rawCert;
+    }
+    if (title.adult) return "A";
+    const ratingNum = typeof title.rating === "number" ? title.rating : parseFloat(title.rating) || 7.0;
+    if (ratingNum >= 8.2) return "A";
+    if (ratingNum >= 7.0) return "U/A 16+";
+    return "U/A 13+";
+  }, [title.cert, title.certification, title.adult, title.rating]);
+
+  const formattedLanguages = useMemo(() => {
+    if (Array.isArray(title.spoken_languages) && title.spoken_languages.length > 1) {
+      return `${title.spoken_languages.length} Languages`;
+    }
+    if (Array.isArray(title.languages) && title.languages.length > 1) {
+      return `${title.languages.length} Languages`;
+    }
+    const orig = (title.original_language || "").toLowerCase();
+    if (orig === "hi") return "5 Languages";
+    if (orig === "ja") return "Japanese";
+    if (orig === "ko") return "Korean";
+    if (orig === "es") return "Spanish";
+    if (orig === "fr") return "French";
+    return "3 Languages";
+  }, [title.spoken_languages, title.languages, title.original_language]);
+
+  const primaryGenre = useMemo(() => {
+    if (Array.isArray(title.genres) && title.genres.length > 0) {
+      const g0 = title.genres[0];
+      return typeof g0 === "string" ? g0 : g0?.name || "Action";
+    }
+    return "Action";
+  }, [title.genres]);
+
+  const langBadgeText = useMemo(() => {
+    const orig = (title.original_language || "").toLowerCase();
+    if (orig === "ja") return "日本語 ∨";
+    if (orig === "ko") return "한국어 ∨";
+    if (orig === "ta") return "தமிழ் ∨";
+    if (orig === "te") return "తెలుగు ∨";
+    if (orig === "es") return "Español ∨";
+    return "हिंदी ∨";
+  }, [title.original_language]);
+
   return (
     <div
+      ref={cardRef}
       className={`${styles.card} ${wide ? styles.wide : styles.poster} ${
         fluid ? styles.fluid : ""
       }`}
       onContextMenu={handleContextMenu}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Link
         href={`/title/${title.id}`}
@@ -624,6 +848,87 @@ export default function MediaCard({
 
       {/* Floating toast */}
       {toast && <div className={styles.cardToast}>{toast}</div>}
+
+      {/* 3-Second Hover Preview Portal (JioHotstar / Netflix Style) */}
+      {mounted && showPreview && !openMenu && createPortal(
+        <div
+          className={styles.hoverPopup}
+          style={{
+            top: `${previewPos.top}px`,
+            left: `${previewPos.left}px`,
+            width: `${previewPos.width}px`,
+          }}
+          onMouseEnter={handlePopupMouseEnter}
+          onMouseLeave={handlePopupMouseLeave}
+        >
+          {/* Top Banner Artwork */}
+          <Link href={`/title/${title.id}`} className={styles.popupBannerLink}>
+            <Art
+              title={title}
+              variant="backdrop"
+              showTitle={false}
+              className={styles.popupArt}
+              priority
+            />
+            <span className={styles.popupShade} />
+            <span className={styles.popupLangBadge}>{langBadgeText}</span>
+            <div className={styles.popupTitleWrap}>
+              {activeLogo && !logoFailed ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={activeLogo}
+                  alt={title.title}
+                  className={styles.popupLogo}
+                  onError={() => setLogoFailed(true)}
+                />
+              ) : (
+                <h3 className={styles.popupTitleText}>{title.title}</h3>
+              )}
+            </div>
+          </Link>
+
+          {/* Card Body */}
+          <div className={styles.popupBody}>
+            {/* Primary Action Buttons: Watch Now + Watchlist */}
+            <div className={styles.popupActions}>
+              <Link href={`/watch/${title.id}`} className={styles.popupWatchBtn}>
+                <Play size={16} fill="currentColor" />
+                <span>Watch Now</span>
+              </Link>
+              <button
+                type="button"
+                className={`${styles.popupListBtn} ${saved ? styles.popupListBtnActive : ""}`}
+                onClick={toggle}
+                aria-label={saved ? "Remove from watchlist" : "Add to watchlist"}
+                title={saved ? "Remove from watchlist" : "Add to watchlist"}
+              >
+                {saved ? <Check size={18} strokeWidth={2.8} /> : <Plus size={18} strokeWidth={2.8} />}
+              </button>
+            </div>
+
+            {/* Metadata row: Year • Cert • Duration/Seasons • Languages • Genre */}
+            <div className={styles.popupMetaRow}>
+              <span>{displayYear}</span>
+              <span className={styles.popupDot}>•</span>
+              <span className={styles.popupCertBadge}>{formattedCert}</span>
+              <span className={styles.popupDot}>•</span>
+              <span>{formattedRuntime}</span>
+              <span className={styles.popupDot}>•</span>
+              <span>{formattedLanguages}</span>
+              <span className={styles.popupDot}>•</span>
+              <span className={styles.popupGenre}>{primaryGenre}</span>
+            </div>
+
+            {/* Overview / Synopsis Paragraph */}
+            <p className={styles.popupOverview}>
+              {title.overview && title.overview !== "No synopsis available."
+                ? title.overview
+                : `Stream ${title.title} now in high definition on DIVINE.`}
+            </p>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

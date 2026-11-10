@@ -536,6 +536,237 @@
   }
 }
 
+/* ==========================================================================
+   3-Second Hover Preview Popup (JioHotstar / Netflix Style)
+   ========================================================================== */
+.hoverPopup {
+  position: fixed;
+  z-index: 99999;
+  background: #0f1219;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transform-origin: center center;
+  animation: hoverPopupZoom 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes hoverPopupZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.popupBannerLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  text-decoration: none;
+  background: #141720;
+}
+
+.popupArt {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.popupBannerLink:hover .popupArt {
+  transform: scale(1.03);
+}
+
+.popupShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(0, 0, 0, 0) 35%,
+    rgba(15, 18, 25, 0.7) 75%,
+    rgba(15, 18, 25, 1) 100%
+  );
+  pointer-events: none;
+}
+
+.popupLangBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(15, 18, 25, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.popupTitleWrap {
+  position: absolute;
+  bottom: 8px;
+  left: 14px;
+  right: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+  max-height: 48%;
+  overflow: hidden;
+}
+
+.popupLogo {
+  max-width: 68%;
+  max-height: 50px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: bottom left;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.95)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.popupTitleText {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.popupBody {
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #0f1219;
+}
+
+.popupActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popupWatchBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0b0e14;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.popupWatchBtn:hover {
+  background: #e6e8ec;
+  transform: translateY(-1px);
+}
+
+.popupWatchBtn:active {
+  transform: translateY(0);
+}
+
+.popupListBtn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.popupListBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.popupListBtnActive {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.popupMetaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.3;
+}
+
+.popupDot {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+}
+
+.popupCertBadge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.popupGenre {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.popupOverview {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 640px) {
   .card,
   .wide {

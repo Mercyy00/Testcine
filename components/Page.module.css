@@ -71,45 +71,58 @@
   height: 38px;
   padding: 0 18px;
   border-radius: 9999px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--text-soft, #ffffff);
-  background-color: rgba(14, 16, 24, 0.45);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px double rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(14, 16, 24, 0.6);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 0 2px rgba(0, 0, 0, 0.6),
-    0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    inset 1px 1px 1px 0px rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.1),
+    0 6px 20px -4px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   cursor: pointer;
+  user-select: none;
 }
 
 .chip:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(20, 24, 36, 0.7);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
   transform: translateY(-2px);
   box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
-    0 6px 16px rgba(0, 0, 0, 0.4);
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.75),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.2),
+    0 8px 24px -4px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(255, 255, 255, 0.08);
+}
+
+.chip:active {
+  transform: translateY(0) scale(0.96);
 }
 
 .chipOn {
-  background-color: #ffffff;
+  background: #ffffff;
   color: #080808;
   font-weight: 700;
   border-color: #ffffff;
   box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 1),
-    0 4px 16px rgba(255, 255, 255, 0.28);
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    0 6px 24px rgba(255, 255, 255, 0.32),
+    0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 .chipOn:hover {
-  background-color: #f0f0f0;
+  background: #f4f4f6;
   color: #080808;
   transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    0 8px 28px rgba(255, 255, 255, 0.42),
+    0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 .select {
@@ -170,15 +183,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin-bottom: 20px;
-}
-
-.filterBar::-webkit-scrollbar {
-  display: none;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  position: relative;
 }
 
 .filterLeftPills {
@@ -186,7 +194,14 @@
   align-items: center;
   gap: 8px;
   flex-wrap: nowrap;
-  flex: 0 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+  padding: 4px 0;
+}
+
+.filterLeftPills::-webkit-scrollbar {
+  display: none;
 }
 
 .categoryPill {
@@ -195,33 +210,36 @@
   border-radius: 9999px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #ffffff;
-  background: rgba(14, 16, 24, 0.45);
-  backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
-  border: 1px double rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(14, 16, 24, 0.6);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 0 2px rgba(0, 0, 0, 0.6),
-    0 4px 14px rgba(0, 0, 0, 0.35);
+    inset 1px 1px 1px 0px rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.1),
+    0 6px 20px -4px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   white-space: nowrap;
+  user-select: none;
 }
 
 .categoryPill:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(20, 24, 36, 0.7);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
   transform: translateY(-2px);
   box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
-    0 6px 18px rgba(0, 0, 0, 0.45);
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.75),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.2),
+    0 8px 24px -4px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(255, 255, 255, 0.08);
 }
 
 .categoryPill:active {
-  transform: scale(0.95);
+  transform: translateY(0) scale(0.96);
 }
 
 .categoryPillActive {
@@ -230,110 +248,303 @@
   font-weight: 700;
   border-color: #ffffff;
   box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 1),
-    0 4px 18px rgba(255, 255, 255, 0.28);
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    0 6px 24px rgba(255, 255, 255, 0.32),
+    0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 .categoryPillActive:hover {
-  background: #f0f0f0;
+  background: #f4f4f6;
   color: #080808;
   transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    0 8px 28px rgba(255, 255, 255, 0.42),
+    0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 .filterRightSelects {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
-  flex: 0 0 auto;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: relative;
 }
 
-.dropdownPill {
+/* Custom Optical Glass Dropdown */
+.dropdownWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownWrapperOpen {
+  z-index: 130;
+}
+
+.dropdownTrigger {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   height: 38px;
-  background: rgba(14, 16, 24, 0.45);
-  backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
-  border: 1px double rgba(255, 255, 255, 0.16);
-  box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.55),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 0 2px rgba(0, 0, 0, 0.6),
-    0 4px 14px rgba(0, 0, 0, 0.35);
+  padding: 0 14px;
   border-radius: 9999px;
-  padding: 0 28px 0 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(14, 16, 24, 0.6);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px 1px 1px 0px rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.1),
+    0 6px 20px -4px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  outline: none;
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+  user-select: none;
 }
 
-.dropdownPill[data-filter="genre"] { width: 86px; }
-.dropdownPill[data-filter="country"] { width: 98px; }
-.dropdownPill[data-filter="year"] { width: 74px; }
-.dropdownPill[data-filter="service"] { width: 92px; }
-.dropdownPill[data-filter="language"] { width: 98px; }
-.dropdownPill[data-filter="rating"] { width: 82px; }
-
-.dropdownPill:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+.dropdownTrigger:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(20, 24, 36, 0.7);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
   transform: translateY(-2px);
   box-shadow:
-    inset 1px -1px 1px rgba(255, 255, 255, 0.75),
-    inset -1px 1px 1px rgba(255, 255, 255, 0.75),
-    0 6px 18px rgba(0, 0, 0, 0.45);
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.75),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.2),
+    0 8px 24px -4px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(255, 255, 255, 0.08);
 }
 
-.dropdownPill:active {
-  transform: scale(0.95);
+.dropdownTrigger:active {
+  transform: translateY(0) scale(0.96);
 }
 
-.dropdownSelect {
-  width: 100%;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  outline: none;
+.dropdownTriggerOpen {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%), rgba(22, 26, 40, 0.75);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.2),
+    0 0 20px rgba(255, 255, 255, 0.12);
+}
+
+.dropdownTriggerActive {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 100%), rgba(26, 30, 48, 0.8);
+  border-color: rgba(255, 255, 255, 0.5);
   color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
+  box-shadow:
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.9),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.25),
+    0 6px 24px -4px rgba(0, 0, 0, 0.6),
+    0 0 18px rgba(255, 255, 255, 0.18);
 }
 
-.dropdownSelect option {
-  background: #181b22;
-  color: #ffffff;
-}
-
-.dropdownArrow {
-  position: absolute;
-  right: 10px;
-  pointer-events: none;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.shuffleBtn {
-  width: 36px;
-  height: 36px;
+.activeDot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: transform 0.25s ease, background 0.18s ease, border-color 0.18s ease;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.95), 0 0 2px #ffffff;
   flex-shrink: 0;
 }
 
-.shuffleBtn:hover {
-  background: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.35);
+.dropdownLabel {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdownClearBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  margin-left: 2px;
+  margin-right: -2px;
+  flex-shrink: 0;
+}
+
+.dropdownClearBtn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: scale(1.16);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+}
+
+.dropdownChevron {
+  color: rgba(255, 255, 255, 0.65);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), color 0.18s ease;
+  flex-shrink: 0;
+}
+
+.dropdownChevronOpen {
   transform: rotate(180deg);
+  color: #ffffff;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 120;
+  min-width: 185px;
+  max-width: 260px;
+  padding: 7px;
+  border-radius: 18px;
+  background: rgba(10, 12, 18, 0.88);
+  backdrop-filter: blur(40px) saturate(210%) brightness(1.12);
+  -webkit-backdrop-filter: blur(40px) saturate(210%) brightness(1.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.35),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.08),
+    0 24px 64px -12px rgba(0, 0, 0, 0.9),
+    0 8px 24px -4px rgba(0, 0, 0, 0.6);
+  transform-origin: top left;
+  animation: dropdownAnim 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.dropdownMenuRight {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+@keyframes dropdownAnim {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownScrollArea {
+  max-height: 275px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.dropdownScrollArea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdownScrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdownScrollArea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+.dropdownScrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.dropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8.5px 12px;
+  border-radius: 11px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+
+.dropdownItem:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+.dropdownItemActive {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.dropdownItemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdownItemCheck {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 30%, rgba(255, 255, 255, 0.12) 70%, transparent 100%);
+  margin: 5px 4px;
+}
+
+.shuffleBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(14, 16, 24, 0.6);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 1px 1px 1px 0px rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.1),
+    0 6px 20px -4px rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.85);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+  outline: none;
+}
+
+.shuffleBtn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%), rgba(20, 24, 36, 0.7);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+  transform: translateY(-2px) rotate(180deg);
+  box-shadow:
+    inset 1px 1px 1.5px 0px rgba(255, 255, 255, 0.75),
+    inset -1px -1px 1px 0px rgba(255, 255, 255, 0.2),
+    0 8px 24px -4px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(255, 255, 255, 0.12);
+}
+
+.shuffleBtn:active {
+  transform: translateY(0) scale(0.92) rotate(180deg);
 }

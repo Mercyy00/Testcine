@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Layout from "../../components/Layout";
+import LoadingScreen from "../../components/LoadingScreen";
 import { useToast } from "../../lib/useToast";
 import { Shield, ShieldAlert, UserX, UserCheck, ShieldCheck, ArrowLeft, Search } from "lucide-react";
 
@@ -74,9 +75,7 @@ export default function AdminUsersPage() {
   if (status === "loading" || loading) {
     return (
       <Layout title="Admin · Users">
-        <div style={{ textAlign: "center", padding: "120px 20px" }}>
-          <p style={{ color: "rgba(255,255,255,0.6)" }}>Loading administration dashboard...</p>
-        </div>
+        <LoadingScreen minHeight="60vh" message="Loading administration dashboard…" />
       </Layout>
     );
   }

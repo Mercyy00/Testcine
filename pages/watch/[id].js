@@ -30,6 +30,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Layout from "../../components/Layout";
+import LoadingScreen from "../../components/LoadingScreen";
 import Art from "../../components/Art";
 import VideoPlayer from "../../components/VideoPlayer";
 import Ambilight from "../../components/Ambilight";
@@ -1174,13 +1175,7 @@ function WatchForRoute({ initialTitle, id }) {
             <div className="skeleton" style={{ width: 100, height: 28, borderRadius: 14 }} />
           </div>
           <div className={styles.status} style={{ pointerEvents: "none" }}>
-            <div
-              className="skeleton"
-              style={{ width: 48, height: 48, borderRadius: "50%", margin: "0 auto 16px" }}
-            />
-            <p style={{ color: "var(--text-soft)", fontSize: "14px", fontWeight: 500 }}>
-              Preparing stream…
-            </p>
+            <LoadingScreen message="Preparing stream…" minHeight="auto" size="md" />
           </div>
         </div>
       </Layout>

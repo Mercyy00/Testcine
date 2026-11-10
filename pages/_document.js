@@ -6,7 +6,11 @@ export default function Document() {
       <Head>
         <meta charSet="utf-8" />
         <meta name="theme-color" content="#080808" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link
           rel="preload"

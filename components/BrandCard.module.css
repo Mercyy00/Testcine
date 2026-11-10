@@ -9,9 +9,11 @@
   width: 248px;
   height: 148px;
   border-radius: 16px;
-  background: var(--surface-2, #151515);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(16, 20, 30, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.4);
   scroll-snap-align: start;
   text-decoration: none;
   user-select: none;
@@ -23,7 +25,7 @@
 }
 
 .card:focus-visible {
-  outline: 2px solid var(--accent, #6366f1);
+  outline: 2px solid var(--accent, #ff7a30);
   outline-offset: 2px;
 }
 
@@ -107,8 +109,10 @@
 @media (hover: hover) {
   .card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 12px 28px -4px var(--brand-glow, rgba(255, 255, 255, 0.12));
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                0 16px 36px -4px var(--brand-glow, rgba(255, 255, 255, 0.16)),
+                0 0 20px -4px var(--brand-glow, rgba(255, 255, 255, 0.1));
   }
 
   .card:hover .logoImg {

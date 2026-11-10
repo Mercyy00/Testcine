@@ -63,15 +63,6 @@ const COUNTRIES = [
   { value: "AU", label: "Australia" },
 ];
 
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "ja", label: "Japanese" },
-  { value: "ko", label: "Korean" },
-];
-
 const YEARS = [
   "2026",
   "2025",
@@ -93,8 +84,6 @@ export default function Series() {
     genre: "all",
     country: "all",
     year: "all",
-    service: "all",
-    language: "all",
     rating: "all",
   });
   const [shuffleSeed, setShuffleSeed] = useState(0);
@@ -123,8 +112,6 @@ export default function Series() {
       genre: typeof q.genre === "string" ? q.genre : prev.genre,
       country: typeof q.country === "string" ? q.country : prev.country,
       year: typeof q.year === "string" ? q.year : prev.year,
-      service: typeof q.service === "string" ? q.service : prev.service,
-      language: typeof q.language === "string" ? q.language : prev.language,
       rating: typeof q.rating === "string" ? q.rating : prev.rating,
     }));
   }, [router.isReady, router.query]);
@@ -188,8 +175,6 @@ export default function Series() {
       genre: filters.genre,
       country: filters.country,
       year: filters.year,
-      service: filters.service,
-      language: filters.language,
       rating: filters.rating,
     });
     if (network && network !== "all") {
@@ -217,14 +202,10 @@ export default function Series() {
   }, [category, network, filters]);
 
   const filterOptions = useMemo(() => {
-    const services = SERVICES.map((s) => ({ value: s.id, label: s.name }));
-
     return {
       genre: STANDARD_GENRES.map((g) => ({ value: g, label: g })),
       country: COUNTRIES,
       year: YEARS.map((y) => ({ value: y, label: y })),
-      service: services,
-      language: LANGUAGES,
       rating: [
         { value: "8", label: "★ 8.0+" },
         { value: "7", label: "★ 7.0+" },

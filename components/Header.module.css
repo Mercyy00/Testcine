@@ -5,7 +5,7 @@
   --bar-ring: var(--glass-button-ring), var(--shadow-md);
   z-index: var(--z-bar, 200);
   height: var(--bar-h, 64px);
-  grid-template-columns: 415px 600px 415px;
+  grid-template-columns: minmax(auto, 460px) minmax(160px, 600px) minmax(auto, 415px);
   grid-template-rows: 64px;
   justify-content: space-between;
   align-items: center;
@@ -31,12 +31,37 @@
 .barStart {
   flex: none;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   display: flex;
   min-width: 0;
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--text, #ffffff);
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  border-radius: 12px;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
+  user-select: none;
+}
+
+.brandLink:hover {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 12px rgba(255, 110, 40, 0.5));
+}
+
+.brandLogo {
+  height: 42px;
+  width: auto;
+  max-width: 90px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
 }
 
 .links {

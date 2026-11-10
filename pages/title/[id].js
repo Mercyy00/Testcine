@@ -28,6 +28,7 @@ import {
   Share2,
 } from "lucide-react";
 import Layout from "../../components/Layout";
+import LoadingScreen from "../../components/LoadingScreen";
 import { SkeletonHero, SkeletonRow } from "../../components/Skeleton";
 import {
   getService,
@@ -236,10 +237,7 @@ function TitlePageForRoute({ initialTitle, id }) {
   if (router.isFallback || (!t && !error)) {
     return (
       <Layout flush title="Loading Title · DIVINE">
-        <SkeletonHero />
-        <div style={{ maxWidth: "var(--page-max)", margin: "40px auto", padding: "0 var(--page-pad)" }}>
-          <SkeletonRow title="Similar & Recommended" count={6} wide={true} />
-        </div>
+        <LoadingScreen minHeight="85vh" message="Loading title details…" />
       </Layout>
     );
   }

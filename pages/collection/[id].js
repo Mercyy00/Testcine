@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Layout from "../../components/Layout";
+import LoadingScreen from "../../components/LoadingScreen";
 import { runtimeLabel } from "../../lib/constants";
 import { getCollection, getAllCollections, getTitle } from "../../lib/data.server";
 import { fetchLiveCollection } from "../../lib/tmdb";
@@ -95,9 +96,7 @@ export default function CollectionPage({ collection: initialCollection }) {
   if (router.isFallback || (!collection && router.query.id)) {
     return (
       <Layout title="Loading Collection · DIVINE">
-        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-dim)" }}>
-          Loading collection from TMDB...
-        </div>
+        <LoadingScreen minHeight="80vh" message="Loading collection from TMDB…" />
       </Layout>
     );
   }

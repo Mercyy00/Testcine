@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Layout from "../components/Layout";
-import { PageHead, Chips, TitleGrid, Empty } from "../components/Page";
+import { PageHead, Chips, TitleGrid, Empty, FilterDropdown } from "../components/Page";
 import { SkeletonGrid } from "../components/Skeleton";
 import TileRow from "../components/TileRow";
 import { SERVICES, STUDIOS, getService, getStudio } from "../lib/constants";
@@ -34,6 +34,7 @@ export default function Discover() {
   const service = typeof query.service === "string" ? query.service : "all";
   const studio = typeof query.studio === "string" ? query.studio : "all";
   const sortBy = typeof query.sort_by === "string" ? query.sort_by : "popularity.desc";
+  const [sortOpen, setSortOpen] = useState(false);
 
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
@@ -203,38 +204,17 @@ export default function Discover() {
             {items.length > 0 ? `${items.length} titles loaded` : ""}
           </span>
 
-          <label
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-              color: "rgba(255,255,255,0.8)",
-            }}
-          >
-            <span>Sort by:</span>
-            <select
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <FilterDropdown
+              filterKey="Sort"
+              options={SORTS}
               value={sortBy}
-              onChange={(e) => setParam("sort_by", e.target.value)}
-              aria-label="Sort catalog"
-              style={{
-                background: "var(--surface-2, #14171d)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 8,
-                padding: "6px 12px",
-                fontSize: 13,
-                outline: "none",
-                cursor: "pointer",
-              }}
-            >
-              {SORTS.map((s) => (
-                <option key={s.value} value={s.value} style={{ background: "#111" }}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={(_, val) => setParam("sort_by", val)}
+              isOpen={sortOpen}
+              onToggle={() => setSortOpen(!sortOpen)}
+              onClose={() => setSortOpen(false)}
+            />
+          </div>
         </div>
 
         {loading ? (

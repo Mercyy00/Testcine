@@ -1,7 +1,178 @@
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ChevronDown, Shuffle } from "lucide-react";
+import { ChevronDown, Shuffle, Check, X } from "lucide-react";
 import MediaCard from "./MediaCard";
 import styles from "./Page.module.css";
+
+const PLURAL_MAP = {
+  country: "All Countries",
+  category: "All Categories",
+  rating: "All Ratings",
+  service: "All Services",
+  genre: "All Genres",
+  year: "All Years",
+  language: "All Languages",
+};
+
+export function FilterDropdown({
+  filterKey,
+  options = [],
+  value = "all",
+  onChange,
+  isOpen,
+  onToggle,
+  onClose,
+}) {
+  const containerRef = useRef(null);
+  const [alignRight, setAlignRight] = useState(false);
+
+  // Close when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  // Adjust menu alignment so it never overflows off-screen on the right
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const overflowRight = rect.left + 230 > window.innerWidth;
+      setAlignRight(overflowRight);
+    }
+  }, [isOpen]);
+
+  const isSelected = Boolean(value && value !== "all");
+  const selectedOption = options.find((opt) => String(opt.value) === String(value));
+  const defaultLabel = filterKey.charAt(0).toUpperCase() + filterKey.slice(1);
+  const displayLabel = isSelected && selectedOption ? selectedOption.label : defaultLabel;
+  const allOptionLabel = PLURAL_MAP[filterKey.toLowerCase()] || `All ${defaultLabel}s`;
+
+  return (
+    <div
+      ref={containerRef}
+      className={`${styles.dropdownWrapper} ${isOpen ? styles.dropdownWrapperOpen : ""}`}
+    >
+      <button
+        type="button"
+        className={`${styles.dropdownTrigger} ${
+          isSelected ? styles.dropdownTriggerActive : ""
+        } ${isOpen ? styles.dropdownTriggerOpen : ""}`}
+        onClick={onToggle}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`${defaultLabel} filter`}
+      >
+        {isSelected && <span className={styles.activeDot} />}
+        <span className={styles.dropdownLabel} title={displayLabel}>
+          {displayLabel}
+        </span>
+        {isSelected ? (
+          <span
+            role="button"
+            tabIndex={0}
+            className={styles.dropdownClearBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(filterKey, "all");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.stopPropagation();
+                onChange(filterKey, "all");
+              }
+            }}
+            title={`Clear ${defaultLabel}`}
+            aria-label={`Clear ${defaultLabel}`}
+          >
+            <X size={11} strokeWidth={2.5} />
+          </span>
+        ) : null}
+        <ChevronDown
+          size={13}
+          strokeWidth={2.2}
+          className={`${styles.dropdownChevron} ${
+            isOpen ? styles.dropdownChevronOpen : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className={`${styles.dropdownMenu} ${
+            alignRight ? styles.dropdownMenuRight : ""
+          }`}
+          role="listbox"
+          aria-label={defaultLabel}
+        >
+          {/* Reset / All Option */}
+          <button
+            type="button"
+            role="option"
+            aria-selected={!isSelected}
+            className={`${styles.dropdownItem} ${
+              !isSelected ? styles.dropdownItemActive : ""
+            }`}
+            onClick={() => {
+              onChange(filterKey, "all");
+              onClose();
+            }}
+          >
+            <span className={styles.dropdownItemLabel}>{allOptionLabel}</span>
+            {!isSelected && <Check size={14} strokeWidth={2.2} className={styles.dropdownItemCheck} />}
+          </button>
+
+          <div className={styles.dropdownDivider} />
+
+          {/* Options List */}
+          <div className={styles.dropdownScrollArea}>
+            {options.map((opt) => {
+              const active = String(opt.value) === String(value);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  className={`${styles.dropdownItem} ${
+                    active ? styles.dropdownItemActive : ""
+                  }`}
+                  onClick={() => {
+                    onChange(filterKey, opt.value);
+                    onClose();
+                  }}
+                >
+                  <span className={styles.dropdownItemLabel}>{opt.label}</span>
+                  {active && (
+                    <Check
+                      size={14}
+                      strokeWidth={2.2}
+                      className={styles.dropdownItemCheck}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CatalogFilterBar({
   title,
@@ -13,11 +184,13 @@ export function CatalogFilterBar({
   filterOptions = {},
   onShuffle,
 }) {
+  const [openFilterKey, setOpenFilterKey] = useState(null);
+
   return (
     <div className={styles.catalogHeader}>
       <h1 className={styles.catalogTitle}>{title}</h1>
       <div className={styles.filterBar}>
-        {/* Left Pills */}
+        {/* Left Category Pills */}
         <div className={styles.filterLeftPills}>
           {categories.map((c) => (
             <button
@@ -33,27 +206,21 @@ export function CatalogFilterBar({
           ))}
         </div>
 
-        {/* Right Select Dropdowns */}
+        {/* Right Glass Dropdowns */}
         <div className={styles.filterRightSelects}>
           {Object.entries(filterOptions).map(([key, options]) => (
-            <div key={key} className={styles.dropdownPill} data-filter={key}>
-              <select
-                value={filters[key] || "all"}
-                onChange={(e) => onFilterChange(key, e.target.value)}
-                className={styles.dropdownSelect}
-                aria-label={key}
-              >
-                <option value="all">
-                  {key.charAt(0).toUpperCase() + key.slice(1)}
-                </option>
-                {options.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} className={styles.dropdownArrow} />
-            </div>
+            <FilterDropdown
+              key={key}
+              filterKey={key}
+              options={options}
+              value={filters[key] || "all"}
+              onChange={onFilterChange}
+              isOpen={openFilterKey === key}
+              onToggle={() =>
+                setOpenFilterKey((prev) => (prev === key ? null : key))
+              }
+              onClose={() => setOpenFilterKey(null)}
+            />
           ))}
 
           {onShuffle && (

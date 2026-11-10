@@ -38,11 +38,31 @@ export default function Layout({
         <meta name="twitter:title" content={cleanTitle || BRAND.name} />
         <meta name="twitter:description" content={metaDesc} />
         {image && <meta name="twitter:image" content={image} />}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </Head>
       <div className={styles.mood} aria-hidden="true" />
       <Header />
       <main className={`pageShell ${flush ? "" : styles.padded}`}>{children}</main>
       <footer className={styles.footer}>
+        <div style={{ marginBottom: 4 }}>
+          <Link href="/" aria-label="DIVINE Home" style={{ display: "inline-block" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="DIVINE"
+              style={{
+                height: 42,
+                width: "auto",
+                display: "block",
+                filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))",
+              }}
+            />
+          </Link>
+        </div>
         <div className={styles.links}>
           <Link href="/discover">Discover</Link>
           <Link href="/schedule">Schedule</Link>

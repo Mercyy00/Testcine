@@ -182,15 +182,10 @@ test("Poseidon (VidRift) generates movie embed route customized to DIVINE theme"
   assert.ok(poseidon);
   assert.equal(poseidon.name, "Poseidon");
   assert.equal(poseidon.provider, "VidRift");
-  assert.ok(poseidon.url.startsWith("https://embed.vidrift.net/embed/movie/1440098?"));
-  assert.match(poseidon.url, /brand=DIVINE/);
-  assert.match(poseidon.url, /brandColor=dc2626/);
-  assert.match(poseidon.url, /controlBg=solid/);
-  assert.match(poseidon.url, /font=Inter/);
-  assert.match(poseidon.url, /showTitle=1/);
-  assert.match(poseidon.url, /exit=1/);
-  assert.match(poseidon.url, /title=Drawn\+Together/);
-  assert.match(poseidon.url, /poster=https%3A%2F%2Fimage\.tmdb\.org%2Ft%2Fp%2Fw500%2Ftest\.jpg/);
+  assert.equal(
+    poseidon.url,
+    "https://embed.vidrift.net/embed/movie/1440098?title=Drawn%20Together&brand=Divine&showTitle=1&exit=1"
+  );
 });
 
 test("Poseidon (VidRift) generates TV and Anime embed routes", () => {

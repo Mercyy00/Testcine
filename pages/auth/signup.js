@@ -36,6 +36,16 @@ export default function SignUp() {
     <Layout title="Create account" flush>
       <div className={styles.wrap}>
         <form className={styles.card} onSubmit={submit}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <Link href="/" aria-label="DIVINE Home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="DIVINE"
+                style={{ height: 52, width: "auto", display: "block", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.6))" }}
+              />
+            </Link>
+          </div>
           <h1 className={styles.title}>Create account</h1>
           {error && <p className={styles.error} role="alert">{error}</p>}
           <label className={styles.field}>Username

@@ -748,6 +748,17 @@ export default function VideoPlayer({
             </div>
           ) : player.buffering ? (
             <div className={styles.status} role="status">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/loader-leaf.gif"
+                alt=""
+                style={{
+                  width: 68,
+                  height: "auto",
+                  display: "block",
+                  filter: "drop-shadow(0 4px 16px rgba(235, 94, 40, 0.5))",
+                }}
+              />
               <p>{player.ready ? "Buffering…" : "Loading stream…"}</p>
             </div>
           ) : null}

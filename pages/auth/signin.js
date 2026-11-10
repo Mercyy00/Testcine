@@ -38,6 +38,16 @@ export default function SignIn() {
     <Layout title="Sign in" flush>
       <div className={styles.wrap}>
         <form className={styles.card} onSubmit={submit}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <Link href="/" aria-label="DIVINE Home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="DIVINE"
+                style={{ height: 52, width: "auto", display: "block", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.6))" }}
+              />
+            </Link>
+          </div>
           <h1 className={styles.title}>Sign in</h1>
           <p className={styles.sub}>Sync your history and lists across devices.</p>
           {error && <p className={styles.error} role="alert">{error}</p>}

@@ -219,8 +219,12 @@ export default function Header() {
 
   return (
     <header className={styles.bar} data-dock="true">
-      {/* 1. Bar Start: Capsule with sliding link pill and links */}
+      {/* 1. Bar Start: Brand Logo + Capsule with sliding link pill and links */}
       <div className={styles.barStart}>
+        <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
+        </Link>
         <nav className={styles.links} aria-label="Main" ref={navRef}>
           <span
             className={styles.linkPill}

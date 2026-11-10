@@ -32,22 +32,23 @@
 
 /* Tokens measured from the reference page. Keep names verbatim. */
 :root {
-  --bg: #080808;
-  --bg-rgb: 8, 8, 8;
+  --bg: #07090e;
+  --bg-rgb: 7, 9, 14;
   --bar-h: 64px;
   --bar-ctl: 46px;
   --radius-round: 999px;
   --radius-float: 999px;
-  --bar-glass: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, .12), rgba(255, 255, 255, .12)) #0c0c0e38;
-  --bar-glass-hover: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, .18), rgba(255, 255, 255, .18)) #0c0c0e38;
-  --bar-fill: var(--bar-glass);
-  --bar-fill-hover: var(--bar-glass-hover);
-  --glass-control-blur: blur(30px) saturate(1.8);
+  --brand-amber: #ff7a30;
+  --brand-gold: #f59e0b;
+  --brand-glow: rgba(255, 122, 48, 0.35);
+  --bar-glass: rgba(14, 18, 28, 0.55);
+  --bar-glass-hover: rgba(20, 26, 38, 0.65);
+  --glass-control-blur: blur(28px) saturate(190%) brightness(1.08);
   --bar-glass-blur: var(--glass-control-blur);
-  --glass-button-ring: inset 0 0 0 1px rgba(255, 255, 255, .19);
-  --bar-ring: inset 0 0 0 1px rgba(255, 255, 255, .19), 0 12px 32px -12px #0009;
-  --bar-shadow: 0 3px 12px #0000008c, 0 1px 3px #00000073;
-  --shadow-md: 0 12px 32px -12px #0009;
+  --glass-button-ring: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  --bar-ring: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+  --bar-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 14px 36px -10px rgba(0, 0, 0, 0.65);
   --fill-1: rgba(255, 255, 255, .07);
   --fill-2: rgba(255, 255, 255, .12);
   --fill-3: rgba(255, 255, 255, .18);
@@ -74,9 +75,9 @@
   --mood-near: 34vh;
   --mood-mid-a: 0.42;
   --mood-end-a: 0.09;
-  --surface-1: #0f0f0f;
-  --surface-2: #151515;
-  --surface-3: #1c1c1c;
+  --surface-1: #0a0d14;
+  --surface-2: #10141e;
+  --surface-3: #161b28;
   --raise-rgb: 255, 255, 255;
   --on-accent: #080808;
   --tip-bg: #0a0a0af7;
@@ -90,13 +91,13 @@
   --cert-none: #4b4b4b;
   --cert-ink: #fff;
   --cert-ink-dark: #111;
-  --primary: #e6e6e6;
-  --primary-dim: #e6e6e640;
-  --accent: #e6e6e6;
-  --glow: #ffffff47;
+  --primary: #ffffff;
+  --primary-dim: rgba(255, 255, 255, 0.4);
+  --accent: #ff7a30;
+  --glow: rgba(255, 122, 48, 0.35);
   --glow-shadow: 0 10px 36px -10px var(--glow);
   --poster-shadow: 0 14px 30px -16px #000000d9;
-  --primary-hover: #ebebeb;
+  --primary-hover: #f4f4f5;
   --danger: #f4776b;
   --danger-lift: #ff8a8a;
   --danger-soft: #f4776b1f;
@@ -232,8 +233,135 @@ select:focus-visible {
 }
 
 ::selection {
-  background: #ffffff40;
+  background: rgba(255, 122, 48, 0.35);
+  color: #ffffff;
 }
+
+/* ==========================================================================
+   COMPLETE BUTTON DESIGN SYSTEM
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: 9999px;
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  outline: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.22s ease,
+              color 0.2s ease,
+              filter 0.2s ease;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 16px rgba(255, 122, 48, 0.5) !important;
+  outline: none;
+}
+
+.btn:active {
+  transform: scale(0.96) !important;
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Button Variants */
+.btnPrimary {
+  background: #ffffff;
+  color: #080a0f;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.btnPrimary:hover {
+  background: #f4f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.btnSecondary,
+.btnGlass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: var(--glass-control-blur);
+  -webkit-backdrop-filter: var(--glass-control-blur);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.btnSecondary:hover,
+.btnGlass:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 14px rgba(255, 255, 255, 0.1);
+}
+
+.btnAccent {
+  background: linear-gradient(135deg, #ff7a30 0%, #ea580c 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(235, 94, 40, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btnAccent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(235, 94, 40, 0.65);
+  filter: brightness(1.08);
+}
+
+.btnGhost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid transparent;
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btnDestructive {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
+}
+
+.btnDestructive:hover {
+  background: rgba(239, 68, 68, 0.24);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* Button Sizes */
+.btnSm { height: 32px; padding: 0 14px; font-size: 13px; gap: 6px; }
+.btnMd { height: 42px; padding: 0 20px; font-size: 14px; gap: 8px; }
+.btnLg { height: 50px; padding: 0 28px; font-size: 16px; gap: 10px; font-weight: 700; }
+.btnXl { height: 60px; padding: 0 38px; font-size: 18px; gap: 12px; font-weight: 700; }
+.btnIcon { width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+.btnIconSm { width: 32px; height: 32px; padding: 0; border-radius: 50%; }
+.btnIconLg { width: 48px; height: 48px; padding: 0; border-radius: 50%; }
 
 /* Shared button recipes, measured with optical liquid glass */
 .btnHero,

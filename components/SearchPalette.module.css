@@ -206,14 +206,12 @@
 .row {
   text-align: left;
   width: 100%;
-  height: 46px;
-  min-height: 46px;
   color: var(--text, #fff);
-  transition: background var(--t-fast);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   flex: 0 0 auto;
   align-items: center;
   gap: 12px;
-  padding: 0 14px;
+  padding: 8px 14px;
   font-weight: 500;
   font-size: var(--fs-md, 15px);
   display: flex;
@@ -221,11 +219,93 @@
   background: transparent;
   cursor: pointer;
   text-decoration: none;
+  border-radius: 10px;
 }
 
 .row:hover,
 .rowOn {
-  background: var(--fill-1, rgba(255, 255, 255, 0.07));
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.resultPoster {
+  width: 38px;
+  height: 52px;
+  flex: 0 0 38px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-3, #151922);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.row:hover .resultPoster {
+  transform: scale(1.05);
+}
+
+.resultInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.resultTitle {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.resultDot {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 11px;
+}
+
+.resultType {
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+.resultRating {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.resultArrow {
+  color: rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.row:hover .resultArrow {
+  color: #ffffff;
+  transform: translateX(2px);
 }
 
 .lead {

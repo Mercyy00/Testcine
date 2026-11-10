@@ -337,21 +337,25 @@
   align-items: center;
   gap: 8px;
   background: #ffffff;
-  color: #000000;
+  color: #07090e;
   font-size: 15px;
   font-weight: 700;
   padding: 11px 24px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22);
 }
 
 .playBtn:hover {
   transform: translateY(-2px);
-  background: #f0f0f0;
-  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.32);
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(255, 122, 48, 0.35), 0 0 16px rgba(255, 255, 255, 0.35);
+}
+
+.playBtn:active {
+  transform: scale(0.96);
 }
 
 .glassBtn {
@@ -697,8 +701,9 @@
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: #fff;
+  background: linear-gradient(90deg, #ff944d, #ff6a00);
   border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 122, 48, 0.6);
 }
 
 .tabMuteBtn {

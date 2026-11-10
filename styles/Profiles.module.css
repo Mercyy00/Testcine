@@ -306,9 +306,9 @@
 }
 
 .avatarChoiceActive {
-  border-color: #ffffff;
+  border-color: var(--brand-amber, #ff7a30);
   transform: scale(1.15);
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(255, 122, 48, 0.5);
 }
 
 .avatarChoiceImg {
@@ -345,8 +345,9 @@
 }
 
 .input:focus {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 122, 48, 0.6);
+  box-shadow: 0 0 12px rgba(255, 122, 48, 0.25);
 }
 
 .modalActions {
@@ -374,13 +375,17 @@
   color: #ffffff;
 }
 
+.cancelBtn:active {
+  transform: scale(0.96);
+}
+
 .saveBtn {
   height: 40px;
-  padding: 0 20px;
+  padding: 0 22px;
   border-radius: 999px;
   background: #ffffff;
   border: none;
-  color: #000000;
+  color: #07090e;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -389,17 +394,22 @@
 }
 
 .saveBtn:hover {
-  background: #f0f0f0;
+  background: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 122, 48, 0.35);
+}
+
+.saveBtn:active {
+  transform: scale(0.96);
 }
 
 .deleteBtn {
   height: 40px;
-  padding: 0 16px;
+  padding: 0 18px;
   border-radius: 999px;
-  background: rgba(244, 67, 54, 0.12);
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  color: #ff6b6b;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -408,8 +418,12 @@
 }
 
 .deleteBtn:hover {
-  background: rgba(244, 67, 54, 0.25);
+  background: rgba(239, 68, 68, 0.25);
   color: #ffffff;
+}
+
+.deleteBtn:active {
+  transform: scale(0.96);
 }
 
 @keyframes fadeIn {

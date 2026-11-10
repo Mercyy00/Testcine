@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
-import { Search, Clock, X } from "lucide-react";
+import { Search, Clock, X, ChevronRight } from "lucide-react";
 import Art from "./Art";
 import { TYPE_LABEL } from "../lib/constants";
 import { useSearches } from "../lib/store";
@@ -260,21 +260,38 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
                     onMouseEnter={() => setActive(i)}
                     onClick={() => go(row)}
                   >
-                    <span className={styles.lead}>
-                      {row.kind === "recent" ? <Clock size={18} /> : <Search size={18} />}
-                    </span>
                     {row.kind === "recent" ? (
-                      <span className={styles.label}>{row.text}</span>
-                    ) : (
                       <>
-                        <span className={styles.label}>{row.t.title}</span>
-                        <span className={styles.sub}>
-                          {row.t.year} {TYPE_LABEL[row.t.type]}
+                        <span className={styles.lead}>
+                          <Clock size={16} />
                         </span>
-                        <span className={styles.art}>
-                          <Art title={row.t} showTitle={false} />
-                        </span>
+                        <span className={styles.label}>{row.text}</span>
                       </>
+                    ) : (
+                      <div className={styles.resultItem}>
+                        <div className={styles.resultPoster}>
+                          <Art title={row.t} variant="poster" showTitle={false} />
+                        </div>
+                        <div className={styles.resultInfo}>
+                          <span className={styles.resultTitle}>{row.t.title}</span>
+                          <div className={styles.resultMeta}>
+                            {row.t.year && <span>{row.t.year}</span>}
+                            {row.t.year && <span className={styles.resultDot}>•</span>}
+                            <span className={styles.resultType}>
+                              {TYPE_LABEL[row.t.type] || (row.t.type ? row.t.type.toUpperCase() : "MOVIE")}
+                            </span>
+                            {row.t.rating ? (
+                              <>
+                                <span className={styles.resultDot}>•</span>
+                                <span className={styles.resultRating}>★ {Number(row.t.rating).toFixed(1)}</span>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                        <span className={styles.resultArrow} aria-hidden="true">
+                          <ChevronRight size={16} strokeWidth={2.4} />
+                        </span>
+                      </div>
                     )}
                   </button>
                 </li>
