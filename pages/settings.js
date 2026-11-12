@@ -39,6 +39,7 @@ import styles from "../styles/Settings.module.css";
 // 10 Themes matching Image 4
 const THEMES = [
   { id: "dark", name: "Dark", styleClass: "" },
+  { id: "performance", name: "Performance", styleClass: styles.themeOnyx },
   { id: "onyx", name: "Onyx", styleClass: styles.themeOnyx },
   { id: "ash", name: "Ash", styleClass: styles.themeAsh },
   { id: "midnight", name: "Midnight", styleClass: styles.themeMidnight },
@@ -165,10 +166,12 @@ export default function SettingsPage() {
     if (typeof document !== "undefined") {
       const t = settings.theme || "dark";
       document.documentElement.dataset.theme = t;
-      const intensity = (settings.bgIntensity ?? 85) / 100;
+      const themeMode = settings.themeMode || (t === "performance" ? "performance" : "default");
+      document.documentElement.dataset.themeMode = themeMode;
+      const intensity = themeMode === "performance" ? 0 : (settings.bgIntensity ?? 85) / 100;
       document.documentElement.style.setProperty("--mood-bright", String(intensity));
     }
-  }, [settings.theme, settings.bgIntensity]);
+  }, [settings.theme, settings.themeMode, settings.bgIntensity]);
 
   // Function hoisted before useEffect to prevent TDZ error
   function handleClose() {
@@ -1013,9 +1016,63 @@ export default function SettingsPage() {
             {activeTab === "appearance" && (
               <>
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Theme</h2>
+                  <h2 className={styles.sectionTitle}>Theme Mode</h2>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 28 }}>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "16px 20px",
+                        borderRadius: 16,
+                        border: (settings.themeMode || "default") === "default" ? "2px solid #fff" : "1px solid rgba(255, 255, 255, 0.12)",
+                        background: (settings.themeMode || "default") === "default" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
+                        color: "#fff",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => {
+                        setSettings((s) => ({ ...s, themeMode: "default" }));
+                        showToast("Activated Default (Liquid Glass) mode");
+                      }}
+                    >
+                      <span style={{ fontSize: 16, fontWeight: 700 }}>✨ Default (Liquid Glass)</span>
+                      <span style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4 }}>
+                        Floating frosted glass capsule dock, specular highlights, and ambient glow
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "16px 20px",
+                        borderRadius: 16,
+                        border: settings.themeMode === "performance" ? "2px solid #fff" : "1px solid rgba(255, 255, 255, 0.12)",
+                        background: settings.themeMode === "performance" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
+                        color: "#fff",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => {
+                        setSettings((s) => ({ ...s, themeMode: "performance" }));
+                        showToast("Activated Performance Mode (Solid & Fast)");
+                      }}
+                    >
+                      <span style={{ fontSize: 16, fontWeight: 700 }}>⚡ Performance Mode</span>
+                      <span style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4 }}>
+                        Full-width solid top bar, zero GPU blur filters, streamlined for 120fps
+                      </span>
+                    </button>
+                  </div>
 
-                  {/* 10 Themes Grid (5 cols x 2 rows) */}
+                  <h2 className={styles.sectionTitle}>Theme Preset</h2>
+
+                  {/* Themes Grid */}
                   <div className={styles.themeGrid}>
                     {THEMES.map((th) => {
                       const isActive = (settings.theme || "dark") === th.id;
@@ -1027,7 +1084,8 @@ export default function SettingsPage() {
                             isActive ? styles.themeCardActive : ""
                           }`}
                           onClick={() => {
-                            setSettings((s) => ({ ...s, theme: th.id }));
+                            const newThemeMode = th.id === "performance" ? "performance" : settings.themeMode;
+                            setSettings((s) => ({ ...s, theme: th.id, themeMode: newThemeMode }));
                             showToast(`Applied ${th.name} theme`);
                           }}
                         >

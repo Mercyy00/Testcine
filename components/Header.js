@@ -24,6 +24,8 @@ import {
   CheckCheck,
   X,
   Shield,
+  ChevronDown,
+  ArrowLeft,
 } from "lucide-react";
 import SearchPalette from "./SearchPalette";
 import Popover from "./Popover";
@@ -91,7 +93,7 @@ export function Avatar({
   );
 }
 
-export default function Header() {
+export default function Header({ watchTitle = null }) {
   const router = useRouter();
   const [settings] = useSettings();
   const [profiles] = useProfiles();
@@ -108,6 +110,44 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
+
+  const isPerformance = settings?.themeMode === "performance";
+  const shouldHide = isPerformance ? false : hidden;
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [showBrowseMenu, setShowBrowseMenu] = useState(false);
+  const browseMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleGlobalKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        if (isPerformance) {
+          e.preventDefault();
+          setSearchModalOpen(true);
+        }
+      } else if (e.key === "Escape") {
+        setSearchModalOpen(false);
+        setShowBrowseMenu(false);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, [isPerformance]);
+
+  useEffect(() => {
+    if (!showBrowseMenu) return;
+    const handleClickOutside = (e) => {
+      if (browseMenuRef.current && !browseMenuRef.current.contains(e.target)) {
+        setShowBrowseMenu(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [showBrowseMenu]);
+
+  useEffect(() => {
+    setSearchModalOpen(false);
+    setShowBrowseMenu(false);
+  }, [router.asPath]);
 
   useEffect(() => {
     let ticking = false;
@@ -272,46 +312,515 @@ export default function Header() {
     };
   }, [updatePill]);
 
-  return (
-    <header className={`${styles.bar} ${scrolled ? styles.barScrolled : ""} ${hidden ? styles.barHidden : ""}`} data-dock="true">
-      {/* 1. Bar Start: Brand Logo + Capsule with sliding link pill and links */}
-      <div className={styles.barStart}>
-        <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
+  const notificationsPanelContent = (
+    <>
+      {/* Header Row: Title + CheckCheck mark all read icon button */}
+      <div className={styles.notesHead}>
+        <h2 className={styles.notesTitle}>Notifications</h2>
+        <button
+          type="button"
+          className={styles.markAllBtn}
+          onClick={handleMarkAllRead}
+          title="Mark all as read"
+          aria-label="Mark all as read"
+        >
+          <CheckCheck size={19} />
+        </button>
+      </div>
+
+      {/* Filter Tabs: All | Unread | Mentions */}
+      <div className={styles.notesTabs} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={notifTab === "all"}
+          className={`${styles.notesTabBtn} ${notifTab === "all" ? styles.notesTabBtnActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setNotifTab("all");
+          }}
+        >
+          All
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={notifTab === "unread"}
+          className={`${styles.notesTabBtn} ${notifTab === "unread" ? styles.notesTabBtnActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setNotifTab("unread");
+          }}
+        >
+          Unread
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={notifTab === "mentions"}
+          className={`${styles.notesTabBtn} ${notifTab === "mentions" ? styles.notesTabBtnActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setNotifTab("mentions");
+          }}
+        >
+          Mentions
+        </button>
+      </div>
+
+      {/* Notifications List */}
+      <div className={styles.notesList}>
+        {totalDisplayed === 0 ? (
+          <div className={styles.emptyNotifs}>
+            {notifTab === "mentions"
+              ? "No mentions yet"
+              : notifTab === "unread"
+              ? "No unread notifications"
+              : "No notifications"}
+          </div>
+        ) : (
+          <>
+            {/* Group: Today */}
+            {displayToday.length > 0 && (
+              <div>
+                <h3 className={styles.notesSectionHeader}>Today</h3>
+                {displayToday.map((item) => (
+                  <div
+                    key={item.id}
+                    className={styles.notifItem}
+                    onClick={() => handleNotifClick(item)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.poster}
+                      alt={item.title}
+                      className={styles.notifPoster}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className={styles.notifBody}>
+                      <span className={styles.notifTitle}>{item.title}</span>
+                      <span className={styles.notifSub}>{item.subtitle}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.dismissNotifBtn}
+                      onClick={(e) => handleDismissNotif(e, item.id)}
+                      aria-label={`Dismiss notification for ${item.title}`}
+                      title="Dismiss"
+                    >
+                      <X size={13} strokeWidth={2.4} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Group: This week */}
+            {displayThisWeek.length > 0 && (
+              <div>
+                <h3 className={styles.notesSectionHeader}>This week</h3>
+                {displayThisWeek.map((item) => (
+                  <div
+                    key={item.id}
+                    className={styles.notifItem}
+                    onClick={() => handleNotifClick(item)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.poster}
+                      alt={item.title}
+                      className={styles.notifPoster}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className={styles.notifBody}>
+                      <span className={styles.notifTitle}>{item.title}</span>
+                      <span className={styles.notifSub}>{item.subtitle}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.dismissNotifBtn}
+                      onClick={(e) => handleDismissNotif(e, item.id)}
+                      aria-label={`Dismiss notification for ${item.title}`}
+                      title="Dismiss"
+                    >
+                      <X size={13} strokeWidth={2.4} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  const accountMenuContent = (
+    <>
+      <Link href={profileHref} className={styles.menuHead} role="menuitem">
+        <div className={styles.menuAvatar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
-        </Link>
-        <nav className={styles.links} aria-label="Main" ref={navRef}>
-          <span
-            className={styles.linkPill}
-            aria-hidden="true"
-            style={{
-              width: pillStyle.width ? `${pillStyle.width}px` : undefined,
-              transform: `translateX(${pillStyle.left}px)`,
-              opacity: pillStyle.opacity,
+          <img
+            src={avatarImage}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_AVATAR;
             }}
           />
-          {NAV.map((item) => {
-            const active = isActive(router.pathname, item);
-            const { href, label, Icon } = item;
-            return (
-              <Link
-                key={href}
-                href={href}
-                ref={(el) => (linkRefs.current[href] = el)}
-                className={`${styles.link} ${active ? styles.linkOn : ""}`}
-                aria-current={active ? "page" : undefined}
-                onClick={updatePill}
+        </div>
+        <div className={styles.menuInfo}>
+          <div className={styles.menuName}>{name}</div>
+          <div className={styles.menuEmail}>{email}</div>
+        </div>
+      </Link>
+      <button
+        type="button"
+        role="menuitem"
+        className={`${styles.menuItem} ${styles.menuBad}`}
+        onClick={() => (signedIn ? signOut({ callbackUrl: "/" }) : router.push("/auth/signin"))}
+      >
+        <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
+          {signedIn ? <LogOut size={17} strokeWidth={1.8} /> : <LogIn size={17} strokeWidth={1.8} />}
+        </span>
+        {signedIn ? "Log out" : "Sign in"}
+      </button>
+      <span className={styles.menuDivide} />
+      <Link href="/profiles" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <UserRound size={17} strokeWidth={1.8} />
+        </span>
+        Switch profiles
+      </Link>
+      <Link href="/watchlist" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Bookmark size={17} strokeWidth={1.8} />
+        </span>
+        Lists
+      </Link>
+      <Link href="/history" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Clock size={17} strokeWidth={1.8} />
+        </span>
+        History
+      </Link>
+      <Link href="/downloads" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Download size={17} strokeWidth={1.8} />
+        </span>
+        Downloads
+      </Link>
+      <Link href="/schedule" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <CalendarClock size={17} strokeWidth={1.8} />
+        </span>
+        Schedule
+      </Link>
+      <Link href="/discover" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Compass size={17} strokeWidth={1.8} />
+        </span>
+        Discover
+      </Link>
+      <Link href="/watch-party" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Users size={17} strokeWidth={1.8} />
+        </span>
+        Watch party
+      </Link>
+      <Link href="/settings" role="menuitem" className={styles.menuItem}>
+        <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
+          <Settings size={17} strokeWidth={1.8} />
+        </span>
+        Settings
+      </Link>
+      {session?.user?.role === "ADMIN" && (
+        <Link href="/admin/users" role="menuitem" className={styles.menuItem}>
+          <span style={{ display: "inline-flex", flex: "0 0 auto", color: "var(--primary, #00e599)" }}>
+            <Shield size={17} strokeWidth={1.8} />
+          </span>
+          Admin Dashboard
+        </Link>
+      )}
+      {BRAND.discord && (
+        <a href={BRAND.discord} target="_blank" rel="noreferrer" role="menuitem" className={styles.menuItem}>
+          <Discord />
+          Discord
+        </a>
+      )}
+    </>
+  );
+
+  const airingToastContent = activeToastNotif && (
+    <div className={styles.airingToast} role="alert">
+      {activeToastNotif.poster && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={activeToastNotif.poster}
+          alt={activeToastNotif.title}
+          className={styles.airingToastPoster}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      )}
+      <div
+        className={styles.airingToastBody}
+        onClick={() => handleNotifClick(activeToastNotif)}
+      >
+        <div className={styles.airingToastHead}>
+          <span className={styles.airingToastBadge}>Airing Today</span>
+          {activeToastNotif.network && (
+            <span className={styles.airingToastTime}>{activeToastNotif.network}</span>
+          )}
+        </div>
+        <b className={styles.airingToastTitle}>{activeToastNotif.title}</b>
+        <p className={styles.airingToastSub}>{activeToastNotif.subtitle}</p>
+      </div>
+      <button
+        type="button"
+        className={styles.airingToastClose}
+        onClick={(e) => {
+          handleDismissNotif(e, activeToastNotif.id);
+          setActiveToastNotif(null);
+        }}
+        aria-label={`Dismiss notification for ${activeToastNotif.title}`}
+        title="Dismiss / Skip"
+      >
+        <X size={14} strokeWidth={2.4} />
+      </button>
+    </div>
+  );
+
+  if (isPerformance) {
+    return (
+      <header
+        className={`${styles.bar} ${styles.barPerformance} ${scrolled ? styles.barScrolled : ""} ${shouldHide ? styles.barHidden : ""}`}
+        data-dock="true"
+      >
+        {/* 1. Bar Start: Brand Logo or Watch Breadcrumbs + Plain Text Nav */}
+        <div className={styles.barStart}>
+          {watchTitle ? (
+            <div className={styles.watchBreadcrumbs}>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className={styles.watchBackBtn}
+                aria-label="Back"
               >
-                <span className={styles.linkIcon}>
-                  <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
-                    <Icon size={22} strokeWidth={2} />
-                  </span>
-                </span>
-                {label}
+                <ArrowLeft size={18} strokeWidth={2.4} />
+              </button>
+              <Link href="/" className={styles.breadcrumbLink}>Home</Link>
+              <span className={styles.breadcrumbSep}>&gt;</span>
+              <Link href="/browse/movie" className={styles.breadcrumbLink}>Movies</Link>
+              <span className={styles.breadcrumbSep}>&gt;</span>
+              <span className={styles.breadcrumbCurrent} title={watchTitle}>{watchTitle}</span>
+            </div>
+          ) : (
+            <>
+              <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
               </Link>
-            );
-          })}
-        </nav>
+              <nav className={styles.perfNav} aria-label="Main">
+                {NAV.map((item) => {
+                  const active = isActive(router.pathname, item);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.perfLink} ${active ? styles.perfLinkActive : ""}`}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                {/* Browse dropdown with chevron */}
+                <div className={styles.perfBrowseWrap} ref={browseMenuRef}>
+                  <button
+                    type="button"
+                    className={`${styles.perfLink} ${showBrowseMenu ? styles.perfLinkActive : ""}`}
+                    onClick={() => setShowBrowseMenu((v) => !v)}
+                    aria-haspopup="true"
+                    aria-expanded={showBrowseMenu}
+                  >
+                    <span>Browse</span>
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={2.4}
+                      className={`${styles.perfChevron} ${showBrowseMenu ? styles.perfChevronOpen : ""}`}
+                    />
+                  </button>
+                  {showBrowseMenu && (
+                    <div className={styles.perfBrowseDropdown}>
+                      <Link href="/discover" className={styles.menuItem} onClick={() => setShowBrowseMenu(false)}>
+                        <Compass size={16} strokeWidth={1.8} />
+                        <span>Discover</span>
+                      </Link>
+                      <Link href="/schedule" className={styles.menuItem} onClick={() => setShowBrowseMenu(false)}>
+                        <CalendarClock size={16} strokeWidth={1.8} />
+                        <span>Schedule</span>
+                      </Link>
+                      <Link href="/watchlist" className={styles.menuItem} onClick={() => setShowBrowseMenu(false)}>
+                        <Bookmark size={16} strokeWidth={1.8} />
+                        <span>Watchlist</span>
+                      </Link>
+                      <Link href="/history" className={styles.menuItem} onClick={() => setShowBrowseMenu(false)}>
+                        <Clock size={16} strokeWidth={1.8} />
+                        <span>History</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </nav>
+            </>
+          )}
+        </div>
+
+        {/* 2. Bar End: Bare icon buttons (Search trigger, Watch party, Notifications bell, Profile avatar) */}
+        <div className={styles.perfActions}>
+          <button
+            type="button"
+            className={styles.perfRound}
+            onClick={() => setSearchModalOpen(true)}
+            aria-label="Search"
+            title="Search (Ctrl+K)"
+          >
+            <Search size={20} strokeWidth={1.8} />
+          </button>
+
+          <Link href="/watch-party" className={styles.perfRound} aria-label="Chat" title="Watch Party & Chat">
+            <MessageCircle size={20} strokeWidth={1.8} />
+          </Link>
+
+          {/* Notifications */}
+          <Popover
+            label="Notifications"
+            trigger={
+              <span
+                className={styles.perfRound}
+                aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+              >
+                <Bell size={20} strokeWidth={1.8} />
+                {unread > 0 && <span className={styles.notifDot} aria-hidden="true" />}
+              </span>
+            }
+            panelClass={styles.notes}
+          >
+            {notificationsPanelContent}
+          </Popover>
+
+          {/* Account Menu */}
+          <Popover
+            label="Account"
+            trigger={
+              <span className={styles.perfAvatarBtn} aria-label="Account">
+                <Avatar name={name} image={avatarImage} size={36} />
+              </span>
+            }
+            panelClass={styles.menu}
+          >
+            {accountMenuContent}
+          </Popover>
+        </div>
+
+        {/* Spotlight Search Modal (Performance theme) */}
+        {searchModalOpen && (
+          <div
+            className={styles.searchModalOverlay}
+            onClick={() => setSearchModalOpen(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Spotlight Search"
+          >
+            <div className={styles.searchModalBox} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.searchModalBar}>
+                <SearchPalette autoFocus wide />
+                <button
+                  type="button"
+                  className={styles.searchModalCloseBtn}
+                  onClick={() => setSearchModalOpen(false)}
+                  aria-label="Close search"
+                >
+                  <X size={18} strokeWidth={2.4} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* In-app airing toast */}
+        {airingToastContent}
+      </header>
+    );
+  }
+
+  return (
+    <header className={`${styles.bar} ${scrolled ? styles.barScrolled : ""} ${shouldHide ? styles.barHidden : ""}`} data-dock="true">
+      {/* 1. Bar Start: Brand Logo or Watch Breadcrumbs + Capsule with sliding link pill */}
+      <div className={styles.barStart}>
+        {watchTitle ? (
+          <div className={styles.watchBreadcrumbs}>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className={styles.watchBackBtn}
+              aria-label="Back"
+            >
+              <ArrowLeft size={18} strokeWidth={2.4} />
+            </button>
+            <Link href="/" className={styles.breadcrumbLink}>Home</Link>
+            <span className={styles.breadcrumbSep}>&gt;</span>
+            <Link href="/browse/movie" className={styles.breadcrumbLink}>Movies</Link>
+            <span className={styles.breadcrumbSep}>&gt;</span>
+            <span className={styles.breadcrumbCurrent} title={watchTitle}>{watchTitle}</span>
+          </div>
+        ) : (
+          <>
+            <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
+            </Link>
+            <nav className={styles.links} aria-label="Main" ref={navRef}>
+              <span
+                className={styles.linkPill}
+                aria-hidden="true"
+                style={{
+                  width: pillStyle.width ? `${pillStyle.width}px` : undefined,
+                  transform: `translateX(${pillStyle.left}px)`,
+                  opacity: pillStyle.opacity,
+                }}
+              />
+              {NAV.map((item) => {
+                const active = isActive(router.pathname, item);
+                const { href, label, Icon } = item;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    ref={(el) => (linkRefs.current[href] = el)}
+                    className={`${styles.link} ${active ? styles.linkOn : ""}`}
+                    aria-current={active ? "page" : undefined}
+                    onClick={updatePill}
+                  >
+                    <span className={styles.linkIcon}>
+                      <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
+                        <Icon size={22} strokeWidth={2} />
+                      </span>
+                    </span>
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </>
+        )}
       </div>
 
       {/* 2. Center: Docked Search Palette */}
@@ -347,150 +856,7 @@ export default function Header() {
             }
             panelClass={styles.notes}
           >
-            {/* Header Row: Title + CheckCheck mark all read icon button */}
-            <div className={styles.notesHead}>
-              <h2 className={styles.notesTitle}>Notifications</h2>
-              <button
-                type="button"
-                className={styles.markAllBtn}
-                onClick={handleMarkAllRead}
-                title="Mark all as read"
-                aria-label="Mark all as read"
-              >
-                <CheckCheck size={19} />
-              </button>
-            </div>
-
-            {/* Filter Tabs: All | Unread | Mentions */}
-            <div className={styles.notesTabs} role="tablist">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={notifTab === "all"}
-                className={`${styles.notesTabBtn} ${notifTab === "all" ? styles.notesTabBtnActive : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNotifTab("all");
-                }}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={notifTab === "unread"}
-                className={`${styles.notesTabBtn} ${notifTab === "unread" ? styles.notesTabBtnActive : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNotifTab("unread");
-                }}
-              >
-                Unread
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={notifTab === "mentions"}
-                className={`${styles.notesTabBtn} ${notifTab === "mentions" ? styles.notesTabBtnActive : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNotifTab("mentions");
-                }}
-              >
-                Mentions
-              </button>
-            </div>
-
-            {/* Notifications List */}
-            <div className={styles.notesList}>
-              {totalDisplayed === 0 ? (
-                <div className={styles.emptyNotifs}>
-                  {notifTab === "mentions"
-                    ? "No mentions yet"
-                    : notifTab === "unread"
-                    ? "No unread notifications"
-                    : "No notifications"}
-                </div>
-              ) : (
-                <>
-                  {/* Group: Today */}
-                  {displayToday.length > 0 && (
-                    <div>
-                      <h3 className={styles.notesSectionHeader}>Today</h3>
-                      {displayToday.map((item) => (
-                        <div
-                          key={item.id}
-                          className={styles.notifItem}
-                          onClick={() => handleNotifClick(item)}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.poster}
-                            alt={item.title}
-                            className={styles.notifPoster}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                          <div className={styles.notifBody}>
-                            <span className={styles.notifTitle}>{item.title}</span>
-                            <span className={styles.notifSub}>{item.subtitle}</span>
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.dismissNotifBtn}
-                            onClick={(e) => handleDismissNotif(e, item.id)}
-                            aria-label={`Dismiss notification for ${item.title}`}
-                            title="Dismiss"
-                          >
-                            <X size={13} strokeWidth={2.4} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Group: This week */}
-                  {displayThisWeek.length > 0 && (
-                    <div>
-                      <h3 className={styles.notesSectionHeader}>This week</h3>
-                      {displayThisWeek.map((item) => (
-                        <div
-                          key={item.id}
-                          className={styles.notifItem}
-                          onClick={() => handleNotifClick(item)}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.poster}
-                            alt={item.title}
-                            className={styles.notifPoster}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                          <div className={styles.notifBody}>
-                            <span className={styles.notifTitle}>{item.title}</span>
-                            <span className={styles.notifSub}>{item.subtitle}</span>
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.dismissNotifBtn}
-                            onClick={(e) => handleDismissNotif(e, item.id)}
-                            aria-label={`Dismiss notification for ${item.title}`}
-                            title="Dismiss"
-                          >
-                            <X size={13} strokeWidth={2.4} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            {notificationsPanelContent}
           </Popover>
         </span>
 
@@ -505,141 +871,13 @@ export default function Header() {
             }
             panelClass={styles.menu}
           >
-            <Link href={profileHref} className={styles.menuHead} role="menuitem">
-              <div className={styles.menuAvatar}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={avatarImage}
-                  alt=""
-                  onError={(e) => {
-                    e.currentTarget.src = DEFAULT_AVATAR;
-                  }}
-                />
-              </div>
-              <div className={styles.menuInfo}>
-                <div className={styles.menuName}>{name}</div>
-                <div className={styles.menuEmail}>{email}</div>
-              </div>
-            </Link>
-            <button
-              type="button"
-              role="menuitem"
-              className={`${styles.menuItem} ${styles.menuBad}`}
-              onClick={() => (signedIn ? signOut({ callbackUrl: "/" }) : router.push("/auth/signin"))}
-            >
-              <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
-                {signedIn ? <LogOut size={17} strokeWidth={1.8} /> : <LogIn size={17} strokeWidth={1.8} />}
-              </span>
-              {signedIn ? "Log out" : "Sign in"}
-            </button>
-            <span className={styles.menuDivide} />
-            <Link href="/profiles" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <UserRound size={17} strokeWidth={1.8} />
-              </span>
-              Switch profiles
-            </Link>
-            <Link href="/watchlist" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Bookmark size={17} strokeWidth={1.8} />
-              </span>
-              Lists
-            </Link>
-            <Link href="/history" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Clock size={17} strokeWidth={1.8} />
-              </span>
-              History
-            </Link>
-            <Link href="/downloads" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Download size={17} strokeWidth={1.8} />
-              </span>
-              Downloads
-            </Link>
-            <Link href="/schedule" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <CalendarClock size={17} strokeWidth={1.8} />
-              </span>
-              Schedule
-            </Link>
-            <Link href="/discover" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Compass size={17} strokeWidth={1.8} />
-              </span>
-              Discover
-            </Link>
-            <Link href="/watch-party" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Users size={17} strokeWidth={1.8} />
-              </span>
-              Watch party
-            </Link>
-            <Link href="/settings" role="menuitem" className={styles.menuItem}>
-              <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-                <Settings size={17} strokeWidth={1.8} />
-              </span>
-              Settings
-            </Link>
-            {session?.user?.role === "ADMIN" && (
-              <Link href="/admin/users" role="menuitem" className={styles.menuItem}>
-                <span style={{ display: "inline-flex", flex: "0 0 auto", color: "var(--primary, #00e599)" }}>
-                  <Shield size={17} strokeWidth={1.8} />
-                </span>
-                Admin Dashboard
-              </Link>
-            )}
-            {BRAND.discord && (
-              <a href={BRAND.discord} target="_blank" rel="noreferrer" role="menuitem" className={styles.menuItem}>
-                <Discord />
-                Discord
-              </a>
-            )}
+            {accountMenuContent}
           </Popover>
         </div>
       </div>
 
       {/* 4. Active In-App Airing Today Toast / Alert */}
-      {activeToastNotif && (
-        <div className={styles.airingToast} role="alert">
-          {activeToastNotif.poster && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={activeToastNotif.poster}
-              alt={activeToastNotif.title}
-              className={styles.airingToastPoster}
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          )}
-          <div
-            className={styles.airingToastBody}
-            onClick={() => handleNotifClick(activeToastNotif)}
-          >
-            <div className={styles.airingToastHead}>
-              <span className={styles.airingToastBadge}>Airing Today</span>
-              {activeToastNotif.network && (
-                <span className={styles.airingToastTime}>{activeToastNotif.network}</span>
-              )}
-            </div>
-            <b className={styles.airingToastTitle}>{activeToastNotif.title}</b>
-            <p className={styles.airingToastSub}>{activeToastNotif.subtitle}</p>
-          </div>
-          <button
-            type="button"
-            className={styles.airingToastClose}
-            onClick={(e) => {
-              handleDismissNotif(e, activeToastNotif.id);
-              setActiveToastNotif(null);
-            }}
-            aria-label={`Dismiss notification for ${activeToastNotif.title}`}
-            title="Dismiss / Skip"
-          >
-            <X size={14} strokeWidth={2.4} />
-          </button>
-        </div>
-      )}
+      {airingToastContent}
     </header>
   );
 }

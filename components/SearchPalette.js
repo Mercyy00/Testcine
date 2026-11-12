@@ -118,9 +118,14 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
     };
     const onKey = (e) => {
       const typing = /input|textarea/i.test(document.activeElement?.tagName || "");
-      if (e.key === "/" && !typing) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         input.current?.focus();
+        setOpen(true);
+      } else if (e.key === "/" && !typing) {
+        e.preventDefault();
+        input.current?.focus();
+        setOpen(true);
       }
     };
     document.addEventListener("pointerdown", onDown);
@@ -178,13 +183,16 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
 
   return (
     <div className={`${styles.dock} ${wide ? styles.wide : ""}`} ref={wrap}>
-      <div className={styles.dockField}>
+      <div className={styles.dockField} onClick={() => input.current?.focus()}>
+        <span className={styles.searchIconLeft} aria-hidden="true">
+          <Search size={16} strokeWidth={2.2} />
+        </span>
         <input
           ref={input}
           id="site-search"
           className={styles.input}
           type="search"
-          placeholder="Search"
+          placeholder="Search movies, series, anime..."
           value={q}
           autoComplete="off"
           autoCorrect="off"
@@ -206,11 +214,12 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           }}
           onKeyDown={onKeyDown}
         />
-        {q && (
+        {q ? (
           <button
             type="button"
             className={styles.wipe}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setQ("");
               if (router.pathname === "/search") {
                 router.replace({ pathname: "/search" }, undefined, { shallow: true });
@@ -219,18 +228,11 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
             }}
             aria-label="Clear search"
           >
-            <X size={16} strokeWidth={2.4} />
+            <X size={15} strokeWidth={2.4} />
           </button>
+        ) : (
+          <kbd className={styles.shortcut}>Ctrl K</kbd>
         )}
-        <button
-          type="button"
-          className={styles.go}
-          onClick={submit}
-          tabIndex={-1}
-          aria-label="Search"
-        >
-          <Search size={18} strokeWidth={2.2} />
-        </button>
       </div>
 
       {open && (

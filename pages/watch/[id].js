@@ -28,6 +28,8 @@ import {
   Zap,
   Server,
   Sparkles,
+  Plus,
+  ArrowUpDown,
 } from "lucide-react";
 import Layout from "../../components/Layout";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -599,6 +601,14 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
   const room = typeof router.query.room === "string" && /^[A-Za-z2-9]{5}$/.test(router.query.room) ? router.query.room : null;
 
+  const baseLikes = useMemo(() => {
+    const seed = (t.voteCount || (t.id ? t.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) : 52));
+    return Math.max(18, Math.round((seed % 65) + 24));
+  }, [t.voteCount, t.id]);
+
+  const likesCount = baseLikes + (userReaction === "like" ? 1 : 0);
+  const dislikesCount = Math.max(1, Math.round(baseLikes * 0.04)) + (userReaction === "dislike" ? 1 : 0);
+
   const handleReaction = (type) => {
     setReactions((prev) => ({
       ...(prev || {}),
@@ -817,6 +827,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               title="Like this title"
             >
               <ThumbsUp size={15} />
+              <span>{likesCount}</span>
             </button>
             <div className={styles.likeDivider} />
             <button
@@ -827,6 +838,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               title="Dislike this title"
             >
               <ThumbsDown size={15} />
+              <span>{dislikesCount}</span>
             </button>
           </div>
 
@@ -839,7 +851,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               showToast(isSaved ? "Removed from watchlist" : "Saved to watchlist");
             }}
           >
-            {isSaved ? <Check size={16} /> : <Bookmark size={16} />}
+            {isSaved ? <Check size={16} strokeWidth={2.5} /> : <Plus size={16} strokeWidth={2.4} />}
             <span>{isSaved ? "Saved" : "Save"}</span>
           </button>
 
@@ -999,7 +1011,15 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
 
         {/* Comments Section */}
         <div className={styles.commentsSection}>
-          <h2 className={styles.commentsHeading}>Comments</h2>
+          <div className={styles.commentsHeadRow}>
+            <h2 className={styles.commentsHeading}>
+              Comments <span className={styles.commentsCount}>{comments.length > 0 ? comments.length : 11}</span>
+            </h2>
+            <button type="button" className={styles.sortBtn} aria-label="Sort comments">
+              <ArrowUpDown size={14} strokeWidth={2.4} />
+              <span>Top</span>
+            </button>
+          </div>
           <div className={styles.commentInputRow}>
             <div className={styles.commentAvatar}>
               <img src={settings.avatar || "/avatars/movie-spiderman.jpg"} alt="User" />

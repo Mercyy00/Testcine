@@ -958,3 +958,247 @@
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
+
+/* ==========================================================================
+   PERFORMANCE THEME MODE HEADER (Exact Vivarium su reference)
+   ========================================================================== */
+.barPerformance {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 68px !important;
+  padding: 0 clamp(20px, 4vw, 48px) !important;
+  background: transparent;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.barPerformance.barScrolled {
+  background: rgba(10, 11, 15, 0.98) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.perfNav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: 12px;
+}
+
+.perfLink {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  user-select: none;
+}
+
+.perfLink:hover {
+  color: #ffffff;
+}
+
+.perfLinkActive {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.perfLinkActive::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
+.perfBrowseWrap {
+  position: relative;
+}
+
+.perfChevron {
+  transition: transform 0.2s ease;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.perfChevronOpen {
+  transform: rotate(180deg);
+}
+
+.perfBrowseDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 190px;
+  padding: 6px;
+  background: #12141c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 250;
+  animation: popInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.perfActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.perfRound {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.perfRound:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.perfRound:active {
+  transform: scale(0.94);
+}
+
+.perfAvatarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+  transition: transform 0.15s ease;
+}
+
+.perfAvatarBtn:hover {
+  transform: scale(1.05);
+}
+
+/* Spotlight Search Modal (Performance theme) */
+.searchModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 500;
+  display: flex;
+  justify-content: center;
+  padding-top: clamp(60px, 12vh, 120px);
+  padding-inline: 20px;
+  animation: fadeIn 0.15s ease backwards;
+}
+
+.searchModalBox {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  animation: popInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.searchModalBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.searchModalCloseBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.searchModalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Watch page breadcrumbs in header (Vivarium su parity) */
+.watchBreadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: clamp(260px, 48vw, 680px);
+}
+
+.watchBackBtn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.watchBackBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(-2px);
+}
+
+.breadcrumbLink {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.breadcrumbLink:hover {
+  color: #ffffff;
+}
+
+.breadcrumbSep {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+}
+
+.breadcrumbCurrent {
+  color: #ffffff;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

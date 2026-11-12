@@ -50,13 +50,16 @@ export default function App({ Component, pageProps }) {
       const theme = settings.theme || "dark";
       document.documentElement.dataset.theme = theme;
 
+      const themeMode = settings.themeMode || (theme === "performance" ? "performance" : "default");
+      document.documentElement.dataset.themeMode = themeMode;
+
       const intensity =
-        settings.showBackground !== false
+        settings.showBackground !== false && themeMode !== "performance"
           ? (settings.bgIntensity ?? 85) / 100
           : 0;
       document.documentElement.style.setProperty("--mood-bright", String(intensity));
     }
-  }, [settings.theme, settings.bgIntensity, settings.showBackground]);
+  }, [settings.theme, settings.themeMode, settings.bgIntensity, settings.showBackground]);
 
   return (
     <div className={`${bebasNeue.variable} appRoot`}>

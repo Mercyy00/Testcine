@@ -114,19 +114,19 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
             </div>
             <p className={styles.overview}>{t.overview}</p>
             <div className={styles.actions}>
-              <LiquidGlassButton
+              <Link
                 href={t.type === "movie" ? `/watch/${t.id}` : `/watch/${t.id}?season=1&episode=1`}
-                text="Play"
-                variant="primary"
-                size="md"
-                icon={<Play size={17} fill="currentColor" stroke="none" />}
-              />
-              <LiquidGlassButton
+                className={styles.playBtn}
+              >
+                <Play size={16} fill="currentColor" stroke="none" />
+                <span>Play</span>
+              </Link>
+              <Link
                 href={`/title/${t.id}`}
-                text="Details"
-                variant="glass"
-                size="md"
-              />
+                className={styles.detailsBtn}
+              >
+                <span>Details</span>
+              </Link>
             </div>
           </motion.div>
         </AnimatePresence>
