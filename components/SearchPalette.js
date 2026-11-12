@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
-import { Search, Clock, X, ChevronRight } from "lucide-react";
+import { Search, Clock, X } from "lucide-react";
 import Art from "./Art";
 import { TYPE_LABEL } from "../lib/constants";
 import { useSearches } from "../lib/store";
@@ -13,44 +13,74 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   const [active, setActive] = useState(-1);
   const [searches, setSearches] = useSearches();
   const [liveResults, setLiveResults] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [didYouMean, setDidYouMean] = useState(null);
+  const [loading, setLoading] = useState(false);
   const wrap = useRef(null);
   const input = useRef(null);
 
+  // Sync search input with URL query when on /search page
+  useEffect(() => {
+    if (router.isReady && router.pathname === "/search" && typeof router.query.q === "string") {
+      setQ(router.query.q);
+    }
+  }, [router.isReady, router.pathname, router.query.q]);
+
+  // Fetch top trending titles for default suggestions when input is empty & no history
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/tmdb/discover?category=trending&type=movie&time_window=week")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          setTrending(data.slice(0, 8));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
-    if (!q.trim()) {
-      setTimeout(() => {
-        if (active) {
-          setLiveResults([]);
-          setDidYouMean(null);
-        }
-      }, 0);
+    const query = q.trim();
+    if (!query) {
+      setLiveResults([]);
+      setDidYouMean(null);
+      setLoading(false);
       return;
     }
+
+    setLoading(true);
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}&limit=8`, {
+      fetch(`/api/tmdb/search?q=${encodeURIComponent(query)}&limit=8`, {
         signal: controller.signal,
       })
         .then(async (r) => {
+          if (!active || controller.signal.aborted) return null;
           const suggestion = r.headers.get("X-Did-You-Mean");
           const data = r.ok ? await r.json() : [];
           return { data, suggestion };
         })
-        .then(({ data, suggestion }) => {
+        .then((res) => {
+          if (!res) return;
+          const { data, suggestion } = res;
           if (active && !controller.signal.aborted) {
             const items = Array.isArray(data) ? data : data?.results || [];
             setLiveResults(items);
             setDidYouMean(suggestion || data?.didYouMean || null);
+            setLoading(false);
           }
         })
         .catch((err) => {
-          if (err.name !== "AbortError") {
-            // Ignore aborts
+          if (err.name !== "AbortError" && active) {
+            setLoading(false);
           }
         });
-    }, 180);
+    }, 200);
+
     return () => {
       active = false;
       clearTimeout(timer);
@@ -64,14 +94,16 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   }, [q, liveResults]);
 
   const recents = searches.slice(0, 10);
-  // Flat list of rows so arrow keys can move across both sections.
+
+  // Flat list of rows: search results, or recent searches, or trending suggestions
   const rows = useMemo(() => {
     if (q.trim()) return results.map((t) => ({ kind: "title", t }));
-    return recents.map((text) => ({ kind: "recent", text }));
-  }, [q, results, recents]);
+    if (recents.length > 0) return recents.map((text) => ({ kind: "recent", text }));
+    return trending.map((t) => ({ kind: "title", t }));
+  }, [q, results, recents, trending]);
 
   useEffect(() => {
-    setTimeout(() => setActive(-1), 0);
+    setActive(-1);
   }, [q, open]);
 
   useEffect(() => {
@@ -180,11 +212,14 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
             className={styles.wipe}
             onClick={() => {
               setQ("");
+              if (router.pathname === "/search") {
+                router.replace({ pathname: "/search" }, undefined, { shallow: true });
+              }
               input.current?.focus();
             }}
             aria-label="Clear search"
           >
-            <X size={18} strokeWidth={2.4} />
+            <X size={16} strokeWidth={2.4} />
           </button>
         )}
         <button
@@ -194,23 +229,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           tabIndex={-1}
           aria-label="Search"
         >
-          <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              width="20"
-              height="20"
-              style={{ transform: "none" }}
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.3-4.3"></path>
-            </svg>
-          </span>
+          <Search size={18} strokeWidth={2.2} />
         </button>
       </div>
 
@@ -248,7 +267,9 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
               </button>
             </div>
           )}
-          {rows.length === 0 && q.trim() ? (
+          {loading && rows.length === 0 ? (
+            <p className={styles.none}>Searching...</p>
+          ) : rows.length === 0 && q.trim() ? (
             <p className={styles.none}>No titles match “{q.trim()}”. Try a genre or a year.</p>
           ) : (
             <ul className={styles.list}>
@@ -269,28 +290,19 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
                       </>
                     ) : (
                       <div className={styles.resultItem}>
+                        <span className={styles.lead}>
+                          <Search size={16} strokeWidth={2} />
+                        </span>
+                        <div className={styles.resultContent}>
+                          <span className={styles.resultTitle}>{row.t.title}</span>
+                          <span className={styles.resultMeta}>
+                            {row.t.year ? `${row.t.year} ` : ""}
+                            {TYPE_LABEL[row.t.type] || (row.t.type === "tv" ? "Series" : "Movie")}
+                          </span>
+                        </div>
                         <div className={styles.resultPoster}>
                           <Art title={row.t} variant="poster" showTitle={false} />
                         </div>
-                        <div className={styles.resultInfo}>
-                          <span className={styles.resultTitle}>{row.t.title}</span>
-                          <div className={styles.resultMeta}>
-                            {row.t.year && <span>{row.t.year}</span>}
-                            {row.t.year && <span className={styles.resultDot}>•</span>}
-                            <span className={styles.resultType}>
-                              {TYPE_LABEL[row.t.type] || (row.t.type ? row.t.type.toUpperCase() : "MOVIE")}
-                            </span>
-                            {row.t.rating ? (
-                              <>
-                                <span className={styles.resultDot}>•</span>
-                                <span className={styles.resultRating}>★ {Number(row.t.rating).toFixed(1)}</span>
-                              </>
-                            ) : null}
-                          </div>
-                        </div>
-                        <span className={styles.resultArrow} aria-hidden="true">
-                          <ChevronRight size={16} strokeWidth={2.4} />
-                        </span>
                       </div>
                     )}
                   </button>

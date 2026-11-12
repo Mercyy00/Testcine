@@ -249,8 +249,34 @@ export default function UserProfile({ cardMap = {} }) {
     showToast("Profile link copied to clipboard");
   };
 
+  // Effective history: remote user history when viewing another user, otherwise local history
+  const effectiveHistory = useMemo(() => {
+    if (remoteUser && !isOwner) {
+      return (remoteUser.watchHistory || []).map((h) => ({
+        id: h.titleId,
+        at: h.watchedAt ? new Date(h.watchedAt).getTime() : Date.now(),
+        progress: h.progress ?? 1,
+      }));
+    }
+    return history || [];
+  }, [remoteUser, isOwner, history]);
+
   // 1. Watched History Titles
   const watchedEntries = useMemo(() => {
+    if (remoteUser && !isOwner) {
+      return (remoteUser.watchHistory || [])
+        .map((h) => {
+          const t = h.titleData || resolveTitle(h.titleId);
+          if (!t) return null;
+          return {
+            ...h,
+            id: h.titleId,
+            at: h.watchedAt ? new Date(h.watchedAt).getTime() : Date.now(),
+            title: t,
+          };
+        })
+        .filter(Boolean);
+    }
     const raw = history || [];
     return raw
       .map((h) => {
@@ -259,7 +285,7 @@ export default function UserProfile({ cardMap = {} }) {
         return { ...h, title: t };
       })
       .filter(Boolean);
-  }, [history, cardMap]);
+  }, [remoteUser, isOwner, history, cardMap]);
 
   // 2. Liked Titles
   const likedEntries = useMemo(() => {
@@ -273,9 +299,14 @@ export default function UserProfile({ cardMap = {} }) {
 
   // 3. Watchlist Titles
   const watchlistEntries = useMemo(() => {
+    if (remoteUser && !isOwner) {
+      return (remoteUser.watchlist || [])
+        .map((w) => w.titleData || resolveTitle(w.titleId))
+        .filter(Boolean);
+    }
     const sourceWatchlist = watchlist || [];
     return sourceWatchlist.map(resolveTitle).filter(Boolean);
-  }, [watchlist, cardMap]);
+  }, [remoteUser, isOwner, watchlist, cardMap]);
 
   // Dynamic Genre Analytics Calculation
   const genreStats = useMemo(() => {
@@ -338,7 +369,7 @@ export default function UserProfile({ cardMap = {} }) {
   }, [watchedEntries]);
 
   // Heatmap Grid
-  const heatmapData = useMemo(() => generateHeatmap(history), [history]);
+  const heatmapData = useMemo(() => generateHeatmap(effectiveHistory), [effectiveHistory]);
 
   const displayName = profile.name || "Guest";
   const displayAvatar = profile.avatar || DEFAULT_AVATAR;
@@ -360,7 +391,7 @@ export default function UserProfile({ cardMap = {} }) {
     const totalWatched = watchedEntries.length;
     const dateMap = new Set();
     const dayMs = 24 * 60 * 60 * 1000;
-    (history || []).forEach((h) => {
+    (effectiveHistory || []).forEach((h) => {
       if (h.at) {
         dateMap.add(new Date(h.at).toDateString());
       }

@@ -11,6 +11,9 @@ import {
   Settings as SettingsIcon,
   Tv,
   Sparkles,
+  Captions,
+  RectangleHorizontal,
+  Check,
 } from "lucide-react";
 import useVideoPlayback from "./useVideoPlayback";
 import { joinRoom } from "../lib/watchParty";
@@ -40,6 +43,8 @@ export default function VideoPlayer({
   onWatched,
   onVideoElement,
   recommendations = [],
+  isTheater = false,
+  onToggleTheater,
   children,
 }) {
   const stageRef = useRef(null);
@@ -55,6 +60,8 @@ export default function VideoPlayer({
   const [switchNotice, setSwitchNotice] = useState("");
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showSubtitlesMenu, setShowSubtitlesMenu] = useState(false);
+  const [selectedSubLanguage, setSelectedSubLanguage] = useState("off");
   const [showRecsDrawer, setShowRecsDrawer] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(
     initialProgress > 0.02 && initialProgress < 0.9
@@ -866,7 +873,7 @@ export default function VideoPlayer({
                 </span>
               </div>
 
-              {/* Controls Right: PiP, Settings Gear, Fullscreen */}
+              {/* Controls Right: PiP, Subtitles, Settings Gear, Theater, Fullscreen */}
               <div className={styles.controlsRight}>
                 <button
                   type="button"
@@ -878,6 +885,73 @@ export default function VideoPlayer({
                   <PictureInPicture2 size={19} />
                 </button>
 
+                {/* Subtitles & Captions Popover */}
+                <div className={styles.srvWrap}>
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${showSubtitlesMenu || selectedSubLanguage !== "off" ? styles.btnActive : ""}`}
+                    onClick={() => {
+                      setShowSubtitlesMenu((v) => !v);
+                      setShowSettingsMenu(false);
+                      setShowRecsDrawer(false);
+                    }}
+                    title="Subtitles & Captions"
+                    aria-label="Subtitles & Captions"
+                  >
+                    <Captions size={19} />
+                  </button>
+
+                  {showSubtitlesMenu && (
+                    <div className={styles.srvMenu} role="menu" aria-label="Subtitles & Captions">
+                      <span className={styles.srvMenuTitle}>Subtitles</span>
+                      <button
+                        type="button"
+                        className={`${styles.srvItem} ${selectedSubLanguage === "off" ? styles.srvActive : ""}`}
+                        onClick={() => {
+                          setSelectedSubLanguage("off");
+                          player.chooseSubtitleTrack?.(-1);
+                          setShowSubtitlesMenu(false);
+                        }}
+                      >
+                        <span>Off</span>
+                        {selectedSubLanguage === "off" && <Check size={14} />}
+                      </button>
+                      {player.subtitleTracks?.length > 0 ? (
+                        player.subtitleTracks.map((tr) => (
+                          <button
+                            key={tr.id}
+                            type="button"
+                            className={`${styles.srvItem} ${player.selectedSubtitleTrack === tr.id ? styles.srvActive : ""}`}
+                            onClick={() => {
+                              setSelectedSubLanguage(tr.lang || tr.label);
+                              player.chooseSubtitleTrack?.(tr.id);
+                              setShowSubtitlesMenu(false);
+                            }}
+                          >
+                            <span>{tr.label}</span>
+                            {player.selectedSubtitleTrack === tr.id && <Check size={14} />}
+                          </button>
+                        ))
+                      ) : (
+                        ["English", "Spanish", "French", "German", "Hindi"].map((lang) => (
+                          <button
+                            key={lang}
+                            type="button"
+                            className={`${styles.srvItem} ${selectedSubLanguage === lang.toLowerCase() ? styles.srvActive : ""}`}
+                            onClick={() => {
+                              setSelectedSubLanguage(lang.toLowerCase());
+                              setShowSubtitlesMenu(false);
+                            }}
+                          >
+                            <span>{lang}</span>
+                            {selectedSubLanguage === lang.toLowerCase() && <Check size={14} />}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* More Like This Popover / Drawer */}
                 {recommendations && recommendations.length > 0 && (
                   <button
@@ -886,6 +960,7 @@ export default function VideoPlayer({
                     onClick={() => {
                       setShowRecsDrawer((v) => !v);
                       setShowSettingsMenu(false);
+                      setShowSubtitlesMenu(false);
                     }}
                     title="More like this"
                     aria-label="More like this"
@@ -899,7 +974,11 @@ export default function VideoPlayer({
                   <button
                     type="button"
                     className={styles.btn}
-                    onClick={() => setShowSettingsMenu((v) => !v)}
+                    onClick={() => {
+                      setShowSettingsMenu((v) => !v);
+                      setShowSubtitlesMenu(false);
+                      setShowRecsDrawer(false);
+                    }}
                     title="Playback Settings"
                     aria-label="Playback Settings"
                   >
@@ -982,6 +1061,17 @@ export default function VideoPlayer({
                     </div>
                   )}
                 </div>
+
+                {/* Theater Mode */}
+                <button
+                  type="button"
+                  className={`${styles.btn} ${isTheater ? styles.btnActive : ""}`}
+                  onClick={() => onToggleTheater?.()}
+                  title={isTheater ? "Exit Theater Mode" : "Theater Mode"}
+                  aria-label="Theater Mode"
+                >
+                  <RectangleHorizontal size={19} />
+                </button>
 
                 <button type="button" className={styles.btn} onClick={fullscreen} aria-label="Fullscreen">
                   <Maximize size={20} />

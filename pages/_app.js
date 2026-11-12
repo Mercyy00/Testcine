@@ -6,6 +6,7 @@ import SyncManager from "../components/SyncManager";
 import LoadingScreen from "../components/LoadingScreen";
 import { Bebas_Neue } from "next/font/google";
 import { useSettings } from "../lib/store";
+import "../lib/env";
 import "../styles/globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -70,7 +71,9 @@ export default function App({ Component, pageProps }) {
       <SessionProvider session={pageProps.session} refetchOnWindowFocus={false}>
         <SyncManager />
         {routeLoading && <LoadingScreen fullScreen message="Loading DIVINE…" />}
-        <Component {...pageProps} />
+        <div key={router.asPath.split("?")[0]} className="pageTransitionWrap">
+          <Component {...pageProps} />
+        </div>
       </SessionProvider>
     </div>
   );

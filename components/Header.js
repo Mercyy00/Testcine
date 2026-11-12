@@ -34,6 +34,7 @@ import {
   useActiveProfileId,
   useHistory,
   useList,
+  useSchedule,
   useReadNotifications,
   useDismissedNotifications,
 } from "../lib/store";
@@ -97,11 +98,45 @@ export default function Header() {
   const [activeProfileId] = useActiveProfileId();
   const [history] = useHistory();
   const [watchlist] = useList();
+  const [schedule] = useSchedule();
   const [readIds, setReadIds] = useReadNotifications();
   const [dismissedIds, setDismissedIds] = useDismissedNotifications();
+  const [activeToastNotif, setActiveToastNotif] = useState(null);
 
   // Notification Filter Tab: "all" | "unread" | "mentions"
   const [notifTab, setNotifTab] = useState("all");
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          setScrolled(currentY > 16);
+
+          if (currentY <= 64) {
+            setHidden(false);
+          } else if (currentY > lastScrollY.current + 10) {
+            // Scrolling down
+            setHidden(true);
+          } else if (currentY < lastScrollY.current - 10) {
+            // Scrolling up
+            setHidden(false);
+          }
+          lastScrollY.current = Math.max(0, currentY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { data: session, status: authStatus } = useSession();
   const signedIn = authStatus === "authenticated";
@@ -127,12 +162,32 @@ export default function Header() {
     return buildDynamicNotifications({
       history,
       watchlist,
+      schedule,
       readIds,
       dismissedIds,
     });
-  }, [history, watchlist, readIds, dismissedIds]);
+  }, [history, watchlist, schedule, readIds, dismissedIds]);
 
   const unread = notificationsData.unreadCount;
+
+  // In-app alert when opening website on airing day
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const todayUnread = (notificationsData.today || []).find((n) => n.unread);
+    if (!todayUnread) {
+      setActiveToastNotif(null);
+      return;
+    }
+    const sessionKey = `viv:airing_today_alert_${todayUnread.id}`;
+    if (!sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, "1");
+      setActiveToastNotif(todayUnread);
+      const timer = setTimeout(() => {
+        setActiveToastNotif(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [notificationsData.today]);
 
   const profileUsername = (activeProfile?.name || name).toLowerCase().replace(/\s+/g, "");
   const profileHref = `/u/${profileUsername || "guest"}`;
@@ -218,7 +273,7 @@ export default function Header() {
   }, [updatePill]);
 
   return (
-    <header className={styles.bar} data-dock="true">
+    <header className={`${styles.bar} ${scrolled ? styles.barScrolled : ""} ${hidden ? styles.barHidden : ""}`} data-dock="true">
       {/* 1. Bar Start: Brand Logo + Capsule with sliding link pill and links */}
       <div className={styles.barStart}>
         <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
@@ -280,11 +335,14 @@ export default function Header() {
           <Popover
             label="Notifications"
             trigger={
-              <span className={styles.round} aria-label="Notifications">
+              <span
+                className={styles.round}
+                aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+              >
                 <span style={{ display: "inline-flex", flex: "0 0 auto" }}>
                   <Bell size={20} strokeWidth={1.8} />
                 </span>
-                {unread > 0 && <span className={styles.badge}>{unread}</span>}
+                {unread > 0 && <span className={styles.notifDot} aria-hidden="true" />}
               </span>
             }
             panelClass={styles.notes}
@@ -540,6 +598,48 @@ export default function Header() {
           </Popover>
         </div>
       </div>
+
+      {/* 4. Active In-App Airing Today Toast / Alert */}
+      {activeToastNotif && (
+        <div className={styles.airingToast} role="alert">
+          {activeToastNotif.poster && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={activeToastNotif.poster}
+              alt={activeToastNotif.title}
+              className={styles.airingToastPoster}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          )}
+          <div
+            className={styles.airingToastBody}
+            onClick={() => handleNotifClick(activeToastNotif)}
+          >
+            <div className={styles.airingToastHead}>
+              <span className={styles.airingToastBadge}>Airing Today</span>
+              {activeToastNotif.network && (
+                <span className={styles.airingToastTime}>{activeToastNotif.network}</span>
+              )}
+            </div>
+            <b className={styles.airingToastTitle}>{activeToastNotif.title}</b>
+            <p className={styles.airingToastSub}>{activeToastNotif.subtitle}</p>
+          </div>
+          <button
+            type="button"
+            className={styles.airingToastClose}
+            onClick={(e) => {
+              handleDismissNotif(e, activeToastNotif.id);
+              setActiveToastNotif(null);
+            }}
+            aria-label={`Dismiss notification for ${activeToastNotif.title}`}
+            title="Dismiss / Skip"
+          >
+            <X size={14} strokeWidth={2.4} />
+          </button>
+        </div>
+      )}
     </header>
   );
 }

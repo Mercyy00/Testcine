@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Layout from "../../components/Layout";
 import LoadingScreen from "../../components/LoadingScreen";
+import AdminNav from "../../components/AdminNav";
 import { useToast } from "../../lib/useToast";
 import { Shield, ShieldAlert, UserX, UserCheck, ShieldCheck, ArrowLeft, Search } from "lucide-react";
 
@@ -121,6 +122,8 @@ export default function AdminUsersPage() {
   return (
     <Layout title="Admin · User Management">
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px var(--page-pad) 80px" }}>
+        <AdminNav activeTab="users" />
+
         {/* Top Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
           <div>

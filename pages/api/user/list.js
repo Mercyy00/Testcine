@@ -21,12 +21,12 @@ export default async function handler(req, res) {
             select: { id: true, name: true, username: true, image: true },
           },
           items: {
-            orderBy: { order: "asc" },
+            orderBy: { position: "asc" },
             select: {
               id: true,
               titleId: true,
               titleData: true,
-              order: true,
+              position: true,
             },
           },
         },

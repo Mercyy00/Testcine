@@ -157,6 +157,54 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
   const [settings] = useSettings();
 
   const [showFullOverview, setShowFullOverview] = useState(false);
+  const [isTheater, setIsTheater] = useState(false);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [comments, setComments] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem(`comments_${t?.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handlePostComment = () => {
+    if (!newCommentText.trim()) return;
+    const newC = {
+      id: `c_${Date.now()}`,
+      author: settings.name || "Guest",
+      avatar: settings.avatar || "/avatars/movie-spiderman.jpg",
+      time: "Just now",
+      text: newCommentText.trim(),
+      likes: 0,
+    };
+    const updated = [newC, ...comments];
+    setComments(updated);
+    try {
+      localStorage.setItem(`comments_${t?.id}`, JSON.stringify(updated));
+    } catch {}
+    setNewCommentText("");
+    showToast("Comment posted");
+  };
+
+  const handleCommentReaction = (commentId, type) => {
+    setComments((prev) => {
+      const updated = prev.map((c) => {
+        if (c.id === commentId) {
+          return {
+            ...c,
+            likes: type === "like" ? (c.likes || 0) + 1 : Math.max(0, (c.likes || 0) - 1),
+          };
+        }
+        return c;
+      });
+      try {
+        localStorage.setItem(`comments_${t?.id}`, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
 
   const currentSeason = Number(season) || 1;
   const currentEpisode = Number(episode) || 1;
@@ -591,6 +639,26 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     ? `${overview.slice(0, synopsisLimit).trimEnd()}…`
     : overview;
 
+  const isTitleWatched = watchedList.some((item) => {
+    const s = String(item);
+    const epStr = String(currentEpisode);
+    if (currentSeason === 1 && (Number(item) === currentEpisode || s === epStr || s === `s1_e${epStr}`)) return true;
+    return s === `s${currentSeason}_e${epStr}`;
+  });
+
+  const formattedDate = useMemo(() => {
+    if (currentEpisodeObj?.airDate) return currentEpisodeObj.airDate;
+    if (t.releaseDate) {
+      try {
+        const d = new Date(t.releaseDate);
+        return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+      } catch {
+        return t.releaseDate;
+      }
+    }
+    return t.year ? String(t.year) : "2026";
+  }, [currentEpisodeObj?.airDate, t.releaseDate, t.year]);
+
   const {
     activeVideoEl,
     isLive: isLiveAmbient,
@@ -613,21 +681,11 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         getCropRect={getCropRect}
         enabled={settings.ambientLight !== "off"}
       />
-      <div className={styles.watchLayout} style={{ position: "relative", zIndex: 1 }}>
+      <div className={`${styles.watchLayout} ${isTheater ? styles.theaterLayout : ""}`} style={{ position: "relative", zIndex: 1 }}>
         {/* ── LEFT COLUMN: PLAYER & DETAILS ────────────────────────────── */}
       <div className={styles.mainCol}>
-        {/* Video Player Container with outside back button */}
+        {/* Video Player Container */}
         <div ref={playerStageRef} className={styles.playerStageWrap}>
-          <Link
-            href={`/title/${t.id}`}
-            className={styles.outsideBackBtn}
-            aria-label="Back to title"
-            title="Back to title"
-            onClick={handleOutsideBack}
-          >
-            <ArrowLeft size={22} strokeWidth={2.4} />
-          </Link>
-
           <div className={styles.playerWrap}>
             {mode === "trailer" && t.trailerKey ? (
               <div className={styles.stage}>
@@ -674,6 +732,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                 partyName={settings.name || "Guest"}
                 onVideoElement={setVideoEl}
                 recommendations={recommendations}
+                isTheater={isTheater}
+                onToggleTheater={() => setIsTheater((v) => !v)}
               />
             ) : (
               <div className={styles.stage}>
@@ -783,7 +843,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             <span>{isSaved ? "Saved" : "Save"}</span>
           </button>
 
-          {/* Server selector (Greek Gods) */}
+          {/* Server selector (Greek Gods / Aura matching vivarium.su reference) */}
           <div ref={sourcePickerRef} className={styles.sourcePicker}>
             <button
               type="button"
@@ -792,8 +852,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               aria-expanded={showSourceMenu}
               onClick={() => setShowSourceMenu((open) => !open)}
             >
-              <Server size={14} className={styles.serverIcon} />
-              <span>Server: <strong className={styles.serverNameBold}>{activeServer?.name || "Poseidon"}</strong></span>
+              <Star size={14} fill="#f59e0b" color="#f59e0b" className={styles.serverStarIcon} />
+              <span>{activeServer?.name || "Poseidon"}</span>
               <ChevronDown size={13} className={`${styles.chevronIcon} ${showSourceMenu ? styles.chevronRotated : ""}`} />
             </button>
             {showSourceMenu && (
@@ -847,6 +907,34 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             )}
           </div>
 
+          {/* Download */}
+          <button
+            type="button"
+            className={styles.actionPillBtn}
+            aria-label="Download"
+            onClick={() => showToast("Downloads are not available for this stream")}
+          >
+            <Download size={15} />
+            <span>Download</span>
+          </button>
+
+          {/* Mark as Watched */}
+          <button
+            type="button"
+            className={`${styles.actionPillBtn} ${isTitleWatched ? styles.actionPillBtnActive : ""}`}
+            onClick={handleMarkWatched}
+            aria-label="Mark as watched"
+          >
+            <Check size={15} strokeWidth={2.5} />
+            <span>Watched</span>
+          </button>
+
+          {/* Share */}
+          <button type="button" className={styles.actionPillBtn} onClick={handleShare} aria-label="Share">
+            <Share2 size={15} />
+            <span>Share</span>
+          </button>
+
           {/* Ambient Lighting Toggle */}
           <button
             type="button"
@@ -871,27 +959,12 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             <span>{isLiveAmbient ? "Ambient: Live" : "Ambient"}</span>
             {isLiveAmbient && <span className={styles.livePulseDot} />}
           </button>
-
-          {/* Download */}
-          <button
-            type="button"
-            className={`${styles.actionPillBtn} ${styles.actionIconBtn}`}
-            aria-label="Download"
-            onClick={() => showToast("Downloads are not available for this stream")}
-          >
-            <Download size={16} />
-          </button>
-
-          {/* Share */}
-          <button type="button" className={`${styles.actionPillBtn} ${styles.actionIconBtn}`} onClick={handleShare} aria-label="Share">
-            <Share2 size={16} />
-          </button>
         </div>
 
         {/* Metadata Box */}
         <div className={styles.metaBox}>
           <div className={styles.metaHeaderLine}>
-            {(t.releaseDate || t.year) && <span>{t.releaseDate || t.year}</span>}
+            {(t.releaseDate || t.year) && <span>{formattedDate}</span>}
             {(t.releaseDate || t.year) && t.rating > 0 && <span className={styles.metaDot}>·</span>}
             {t.rating > 0 && <span>★ {t.rating}</span>}
             {isSeries && (
@@ -902,6 +975,12 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                 </span>
               </>
             )}
+            {t.views ? (
+              <>
+                <span className={styles.metaDot}>·</span>
+                <span>{t.views} views</span>
+              </>
+            ) : null}
           </div>
 
           <p className={styles.synopsisText}>
@@ -916,6 +995,73 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
               </button>
             )}
           </p>
+        </div>
+
+        {/* Comments Section */}
+        <div className={styles.commentsSection}>
+          <h2 className={styles.commentsHeading}>Comments</h2>
+          <div className={styles.commentInputRow}>
+            <div className={styles.commentAvatar}>
+              <img src={settings.avatar || "/avatars/movie-spiderman.jpg"} alt="User" />
+            </div>
+            <div className={styles.commentInputWrap}>
+              <input
+                type="text"
+                placeholder="Add a comment…"
+                value={newCommentText}
+                onChange={(e) => setNewCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePostComment()}
+                className={styles.commentInput}
+              />
+              {newCommentText.trim() && (
+                <button
+                  type="button"
+                  className={styles.commentSubmitBtn}
+                  onClick={handlePostComment}
+                >
+                  Comment
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.commentsList}>
+            {comments.length > 0 ? (
+              comments.map((c) => (
+                <div key={c.id} className={styles.commentItem}>
+                  <div className={styles.commentItemAvatar}>
+                    <img src={c.avatar} alt={c.author} />
+                  </div>
+                  <div className={styles.commentItemBody}>
+                    <div className={styles.commentItemHeader}>
+                      <span className={styles.commentAuthor}>{c.author}</span>
+                      <span className={styles.commentTime}>{c.time}</span>
+                    </div>
+                    <p className={styles.commentText}>{c.text}</p>
+                    <div className={styles.commentReactions}>
+                      <button
+                        type="button"
+                        className={styles.commentReactionBtn}
+                        onClick={() => handleCommentReaction(c.id, "like")}
+                      >
+                        <ThumbsUp size={13} />
+                        {c.likes > 0 && <span>{c.likes}</span>}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.commentReactionBtn}
+                        onClick={() => handleCommentReaction(c.id, "dislike")}
+                      >
+                        <ThumbsDown size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className={styles.emptyCommentsNotice}>No comments yet. Be the first to comment!</p>
+            )}
+          </div>
         </div>
 
       </div>
@@ -936,12 +1082,10 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                   aria-label={`Select season (Current: Season ${currentSeason})`}
                 >
                   <span>Season {currentSeason}</span>
-                  {totalSeasons > 1 && (
-                    <ChevronDown
-                      size={14}
-                      className={`${styles.chevronIcon} ${showSeasonMenu ? styles.chevronRotated : ""}`}
-                    />
-                  )}
+                  <ChevronDown
+                    size={14}
+                    className={`${styles.chevronIcon} ${showSeasonMenu ? styles.chevronRotated : ""}`}
+                  />
                 </button>
                 {showSeasonMenu && totalSeasons > 1 && (
                   <div className={styles.seasonMenu} role="listbox">

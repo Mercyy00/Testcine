@@ -19,7 +19,17 @@
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--text, #ffffff);
-  transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1), top 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1), top 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), backdrop-filter 0.3s ease;
+}
+
+.barScrolled {
+  background: linear-gradient(180deg, rgba(7, 9, 14, 0.94) 0%, rgba(7, 9, 14, 0.8) 65%, rgba(7, 9, 14, 0) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.barHidden {
+  transform: translateY(-100%);
 }
 
 @media (max-width: 1460px) {
@@ -293,6 +303,21 @@
 
 .round:active {
   transform: scale(0.92);
+}
+
+/* Minimalist Blue Notification Dot */
+.notifDot {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.95), 0 0 2px #0ea5e9;
+  border: 1.5px solid #0e1018;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .avatarBtn {
@@ -702,63 +727,234 @@
   display: none;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 960px) {
   .bar {
     grid-template-columns: auto 1fr auto;
-    padding: 0 12px;
+    padding: 0 14px;
     gap: 10px;
   }
 
   .link {
-    padding: 0 12px;
-    font-size: 15px;
+    padding: 0 10px;
+    font-size: 14px;
   }
 
   .dock {
-    max-width: none;
+    max-width: 380px;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 56px;
+    padding: 0 16px;
+  }
+
+  .bar .links {
     display: none;
+  }
+
+  .bar .dock {
+    display: none;
+  }
+
+  .barStart {
+    gap: 0;
+  }
+
+  .brandLogo {
+    height: 34px;
+  }
+
+  .barEnd {
+    gap: 8px;
+  }
+
+  .round {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+  }
+
+  .avatar,
+  .avatarWrap {
+    width: 38px !important;
+    height: 38px !important;
   }
 
   .tabbar {
     display: flex;
     position: fixed;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     z-index: var(--z-bar, 200);
     height: 52px;
     padding: 4px;
-    border-radius: 999px;
-    background: var(--bar-glass);
-    backdrop-filter: var(--bar-glass-blur);
-    -webkit-backdrop-filter: var(--bar-glass-blur);
-    box-shadow: var(--shadow-md);
-    gap: 4px;
+    border-radius: 9999px;
+    background: rgba(14, 16, 24, 0.82);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px double rgba(255, 255, 255, 0.2);
+    box-shadow:
+      inset 1px 1px 1px rgba(255, 255, 255, 0.35),
+      0 16px 40px rgba(0, 0, 0, 0.75);
+    gap: 3px;
+    max-width: calc(100vw - 24px);
   }
 
   .tab {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     height: 44px;
-    padding: 0 14px;
-    border-radius: 999px;
-    color: var(--text);
-    font-size: 14px;
+    min-width: 44px;
+    padding: 0 13px;
+    border-radius: 9999px;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 13.5px;
     font-weight: 600;
     text-decoration: none;
     position: relative;
     z-index: 1;
-    transition: background var(--t-fast);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .tab:hover {
+    color: #fff;
   }
 
   .tabActive {
     color: #fff;
-    background: var(--fill-3);
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px rgba(0, 0, 0, 0.4);
   }
+}
+
+@media (max-width: 380px) {
+  .tabbar {
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .tab {
+    padding: 0 10px;
+    font-size: 12.5px;
+  }
+}
+
+/* Airing Today In-App Toast Alert */
+.airingToast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(380px, calc(100vw - 32px));
+  padding: 10px 14px 10px 10px;
+  background: rgba(14, 16, 24, 0.94);
+  border: 1px double rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.35),
+    0 20px 48px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  animation: slideInToast 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInToast {
+  from {
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.airingToastPoster {
+  width: 44px;
+  height: 62px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: #111;
+}
+
+.airingToastBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+}
+
+.airingToastHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.airingToastBadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(74, 222, 128, 0.16);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.airingToastTime {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.airingToastTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.airingToastSub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.airingToastClose {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.airingToastClose:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }

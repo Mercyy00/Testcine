@@ -1,6 +1,7 @@
 .hero {
   position: relative;
   height: clamp(560px, 100vh, 940px);
+  height: clamp(560px, 100dvh, 940px);
   min-height: 560px;
   overflow: hidden;
   display: flex;
@@ -210,15 +211,16 @@
 
 @media (max-width: 900px) {
   .hero {
-    height: min(100svh, 820px);
-    min-height: 600px;
+    height: min(100vh, 820px);
+    height: min(100dvh, 820px);
+    min-height: min(540px, calc(100dvh - 56px));
     align-items: flex-end;
   }
   .fadeLeft {
     background: linear-gradient(180deg, rgba(8, 8, 8, 0.35), rgba(8, 8, 8, 0) 32%);
   }
   .content {
-    padding-bottom: calc(150px + var(--safe-b));
+    padding-bottom: calc(140px + var(--safe-b));
   }
   .copy {
     align-items: center;
@@ -260,10 +262,30 @@
   .pager {
     left: 0;
     right: 0;
-    bottom: calc(92px + var(--safe-b));
+    bottom: calc(86px + var(--safe-b));
     justify-content: center;
   }
   .arrow {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: min(100vh, 720px);
+    height: min(100dvh, 720px);
+    min-height: min(480px, calc(100dvh - 48px));
+  }
+  .content {
+    padding-bottom: calc(115px + var(--safe-b));
+  }
+  .logoWrap {
+    width: min(320px, 86vw);
+  }
+  .logoImg {
+    max-height: 100px;
+  }
+  .pager {
+    bottom: calc(74px + var(--safe-b));
   }
 }

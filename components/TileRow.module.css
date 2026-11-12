@@ -80,6 +80,11 @@
   scroll-padding-inline: var(--page-pad);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.scroller:active {
+  cursor: grabbing;
 }
 
 .scroller::-webkit-scrollbar {

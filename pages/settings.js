@@ -491,7 +491,7 @@ export default function SettingsPage() {
           </aside>
 
           {/* 2. Right Content Area */}
-          <div className={styles.contentArea}>
+          <div key={activeTab} className={styles.contentArea}>
             {/* ---------------- TAB 1: ACCOUNT ---------------- */}
             {activeTab === "account" && (
               <>

@@ -53,6 +53,14 @@ test("searchTMDB handles common typos and sets didYouMean", async () => {
   assert.equal(results.didYouMean, "baahubali");
 });
 
+test("TYPE_LABEL maps movie, series, tv, and anime correctly", async () => {
+  const { TYPE_LABEL } = await import("../lib/constants.js");
+  assert.equal(TYPE_LABEL.movie, "Movie");
+  assert.equal(TYPE_LABEL.series, "Series");
+  assert.equal(TYPE_LABEL.tv, "Series");
+  assert.equal(TYPE_LABEL.anime, "Anime");
+});
+
 test("all brand SVGs for SERVICES and STUDIOS exist locally and have valid XML viewBoxes", async () => {
   const fs = await import("fs");
   const path = await import("path");
@@ -95,4 +103,49 @@ test("all brand SVGs for SERVICES and STUDIOS exist locally and have valid XML v
     assert.ok(widthMatches.length <= 1, `${item.id} should not have duplicate width attributes`);
     assert.ok(heightMatches.length <= 1, `${item.id} should not have duplicate height attributes`);
   }
+});
+
+test("normalizeTmdbItem extracts watchProviders, directors and detected service correctly", async () => {
+  const { normalizeTmdbItem } = await import("../lib/tmdb.js");
+  const rawMock = {
+    id: 550,
+    title: "Fight Club",
+    release_date: "1999-10-15",
+    runtime: 139,
+    vote_average: 8.433,
+    credits: {
+      crew: [
+        { job: "Director", name: "David Fincher" },
+        { job: "Producer", name: "Art Linson" },
+      ],
+      cast: [{ id: 819, name: "Edward Norton", character: "The Narrator" }],
+    },
+    "watch/providers": {
+      results: {
+        US: {
+          link: "https://www.themoviedb.org/movie/550-fight-club/watch?locale=US",
+          flatrate: [
+            { provider_id: 8, provider_name: "Netflix", logo_path: "/netflix.png" },
+          ],
+          rent: [
+            { provider_id: 10, provider_name: "Amazon Video", logo_path: "/amazon.png" },
+          ],
+          buy: [
+            { provider_id: 2, provider_name: "Apple TV Store", logo_path: "/apple.png" },
+          ],
+        },
+      },
+    },
+  };
+
+  const item = normalizeTmdbItem(rawMock, "movie");
+  assert.equal(item.director, "David Fincher");
+  assert.deepEqual(item.directors, ["David Fincher"]);
+  assert.equal(item.service, "netflix");
+  assert.ok(item.watchProviders);
+  assert.equal(item.watchProviders.link, "https://www.themoviedb.org/movie/550-fight-club/watch?locale=US");
+  assert.equal(item.watchProviders.flatrate.length, 1);
+  assert.equal(item.watchProviders.flatrate[0].name, "Netflix");
+  assert.equal(item.watchProviders.rent.length, 1);
+  assert.equal(item.watchProviders.buy.length, 1);
 });

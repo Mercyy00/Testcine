@@ -1,5 +1,5 @@
 .container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: calc(var(--nav-h) + 24px) var(--page-pad) 80px;
 }
@@ -10,6 +10,12 @@
   position: relative;
   display: flex;
   align-items: center;
+}
+
+@media (min-width: 768px) {
+  .searchBarWrap {
+    display: none;
+  }
 }
 
 .searchInput {
@@ -60,9 +66,9 @@
 .tabsRow {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
@@ -114,7 +120,7 @@
 }
 
 .thumbWrap {
-  width: 320px;
+  width: 380px;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
@@ -156,6 +162,13 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text-soft, rgba(255, 255, 255, 0.7));
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
 }
 
 .rating {
@@ -216,7 +229,10 @@
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 12px;
-  background: #222;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .personAvatarImg {

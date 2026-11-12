@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { Search as SearchIcon, X } from "lucide-react";
+import { Search as SearchIcon, X, User } from "lucide-react";
 import Layout from "../components/Layout";
 import { Empty } from "../components/Page";
 import { SkeletonGrid } from "../components/Skeleton";
@@ -272,13 +272,32 @@ export default function SearchPage() {
               {peopleResults.map((person) => (
                 <div key={person.id} className={styles.personCard}>
                   <div className={styles.personAvatarWrap}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={person.profile || "/avatars/avatar-1.png"}
-                      alt={person.name}
-                      className={styles.personAvatarImg}
-                      loading="lazy"
-                    />
+                    {person.profile && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={person.profile}
+                        alt=""
+                        className={styles.personAvatarImg}
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.parentElement?.querySelector(`.${styles.personFallbackAvatar}`);
+                          if (fallback) fallback.style.display = "flex";
+                        }}
+                      />
+                    )}
+                    <div
+                      className={styles.personFallbackAvatar}
+                      style={{
+                        display: person.profile ? "none" : "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <User size={44} color="rgba(255, 255, 255, 0.4)" />
+                    </div>
                   </div>
                   <h3 className={styles.personName}>{person.name}</h3>
                   <span className={styles.personDept}>{person.department || "Acting"}</span>
@@ -315,24 +334,14 @@ export default function SearchPage() {
                   <h2 className={styles.cardTitle}>{item.title}</h2>
                   <div className={styles.cardMeta}>
                     {item.year && <span>{item.year}</span>}
-                    <span>·</span>
+                    {item.year && <span>·</span>}
                     <span style={{ textTransform: "capitalize" }}>
                       {item.type === "movie" ? "Movie" : item.type === "anime" ? "Anime" : "Series"}
                     </span>
-                    {item.rating > 0 && (
-                      <>
-                        <span>·</span>
-                        <span className={styles.rating}>★ {item.rating}</span>
-                      </>
-                    )}
                   </div>
-                  {item.genres && item.genres.length > 0 && (
-                    <div className={styles.genresRow}>
-                      {item.genres.slice(0, 4).map((g) => (
-                        <span key={g} className={styles.genreChip}>
-                          {g}
-                        </span>
-                      ))}
+                  {item.rating > 0 && (
+                    <div className={styles.ratingRow}>
+                      <span className={styles.rating}>★ {item.rating}</span>
                     </div>
                   )}
                   <p className={styles.overview}>{item.overview}</p>

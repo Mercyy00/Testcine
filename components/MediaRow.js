@@ -11,6 +11,11 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
   const menuRefs = useRef([]);
   const rowMenus = Array.isArray(menus) ? menus : menu ? [menu] : [];
 
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftStart = useRef(0);
+  const hasMoved = useRef(false);
+
   const measure = () => {
     const el = scroller.current;
     if (!el) return;
@@ -40,9 +45,74 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
     };
   }, [openMenu]);
 
+  // Window mouseup listener to terminate drag anywhere
+  useEffect(() => {
+    const onWindowMouseUp = () => {
+      if (isDragging.current) {
+        stopDragging();
+      }
+    };
+    window.addEventListener("mouseup", onWindowMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", onWindowMouseUp);
+    };
+  }, []);
+
+  // Step exactly 3 cards on arrow click
   const page = (dir) => {
     const el = scroller.current;
-    el?.scrollBy({ left: dir * el.clientWidth * 0.86, behavior: "smooth" });
+    if (!el) return;
+    const firstCard = el.firstElementChild;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : 280;
+    const gap = 16;
+    const step = (cardWidth + gap) * 3;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
+
+  const onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    const el = scroller.current;
+    if (!el) return;
+    isDragging.current = true;
+    hasMoved.current = false;
+    startX.current = e.pageX - el.offsetLeft;
+    scrollLeftStart.current = el.scrollLeft;
+    el.style.scrollBehavior = "auto";
+    el.style.scrollSnapType = "none";
+  };
+
+  const onMouseMove = (e) => {
+    if (!isDragging.current) return;
+    const el = scroller.current;
+    if (!el) return;
+    const x = e.pageX - el.offsetLeft;
+    const walk = x - startX.current;
+    if (Math.abs(walk) > 5) {
+      hasMoved.current = true;
+      el.style.userSelect = "none";
+      el.style.cursor = "grabbing";
+    }
+    el.scrollLeft = scrollLeftStart.current - walk;
+  };
+
+  const stopDragging = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    const el = scroller.current;
+    if (el) {
+      el.style.scrollBehavior = "smooth";
+      el.style.scrollSnapType = "";
+      el.style.userSelect = "";
+      el.style.cursor = "";
+    }
+  };
+
+  const onClickCapture = (e) => {
+    if (hasMoved.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      hasMoved.current = false;
+    }
   };
 
   return (
@@ -126,7 +196,14 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
           </div>
         )}
       </header>
-      <div className={styles.scroller} ref={scroller} onScroll={measure}>
+      <div
+        className={styles.scroller}
+        ref={scroller}
+        onScroll={measure}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onClickCapture={onClickCapture}
+      >
         {children}
       </div>
     </section>

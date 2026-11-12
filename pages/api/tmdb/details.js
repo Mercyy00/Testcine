@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 1. Check local pre-seeded catalogue only if rich details, logo, and (if series/anime) full seasons exist
+  // 1. Check local pre-seeded catalogue only if rich details, logo, watchProviders and (if series/anime) full seasons exist
   const local = getTitle(targetId);
   const isSeries = local ? (local.type === "series" || local.type === "anime") : false;
   if (
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
     local.cast.length > 0 &&
     local.videos &&
     local.logo &&
+    local.watchProviders &&
     (!isSeries || (local.seasonsList && local.seasonsList.length > 1))
   ) {
     return res.status(200).json(local);

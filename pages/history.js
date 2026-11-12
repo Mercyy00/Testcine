@@ -126,10 +126,13 @@ export default function History({ cardMap = {} }) {
     return groupEntriesByDate(displayedEntries);
   }, [displayedEntries]);
 
-  const handleRemoveItem = (e, id) => {
+  const handleRemoveItem = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
     removeFromHistory(setHistory, id);
+    try {
+      await fetch(`/api/user/history?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {}
   };
 
   const handleClearAll = () => {
@@ -264,7 +267,9 @@ export default function History({ cardMap = {} }) {
 
                     const isSeries = item.title.type === "series" || item.title.type === "anime";
                     const seriesLabel = isSeries
-                      ? `S${item.season || 1} · E${item.episode || 1}`
+                      ? item.episodeTitle
+                        ? `S${item.season || 1} · E${item.episode || 1} — “${item.episodeTitle}”`
+                        : `S${item.season || 1} · E${item.episode || 1}`
                       : null;
 
                     // Compute remaining time

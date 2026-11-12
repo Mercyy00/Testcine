@@ -21,6 +21,10 @@ export default function useVideoPlayback({ streamUrl, retry, initialProgress = 0
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [subtitleTracks, setSubtitleTracks] = useState([]);
+  const [selectedSubtitleTrack, setSelectedSubtitleTrack] = useState(-1);
+  const [audioTracks, setAudioTracks] = useState([]);
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState(-1);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -37,6 +41,10 @@ export default function useVideoPlayback({ streamUrl, retry, initialProgress = 0
     setNotice("");
     setQualities([]);
     setCurrentHeight(0);
+    setSubtitleTracks([]);
+    setSelectedSubtitleTrack(-1);
+    setAudioTracks([]);
+    setSelectedAudioTrack(-1);
 
     const save = (force = false) => {
       if (!Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 1) return;
@@ -102,6 +110,22 @@ export default function useVideoPlayback({ streamUrl, retry, initialProgress = 0
         if (selectedHeight.current !== -1 && index === -1) { selectedHeight.current = -1; setQuality(-1); }
         hls.currentLevel = selectedHeight.current === -1 ? -1 : index;
       });
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (_, data) => {
+        const tracks = (data.subtitleTracks || []).map((t, idx) => ({
+          id: idx,
+          label: t.name || t.lang || `Track ${idx + 1}`,
+          lang: t.lang || "",
+        }));
+        setSubtitleTracks(tracks);
+      });
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (_, data) => {
+        const tracks = (data.audioTracks || []).map((t, idx) => ({
+          id: idx,
+          label: t.name || t.lang || `Audio ${idx + 1}`,
+          lang: t.lang || "",
+        }));
+        setAudioTracks(tracks);
+      });
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentHeight(hls.levels[data.level]?.height || 0));
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (!data.fatal) return;
@@ -157,9 +181,59 @@ export default function useVideoPlayback({ streamUrl, retry, initialProgress = 0
       setCurrentTime(videoRef.current.currentTime);
     }
   };
-  return { videoRef, playing, ready, buffering, duration, currentTime, volume, muted, error, notice,
-    qualities, quality, currentHeight, togglePlay, seek, chooseQuality,
-    setSpeed: (rate) => { if (videoRef.current) videoRef.current.playbackRate = rate; },
-    toggleMute: () => { videoRef.current.muted = !videoRef.current.muted; },
-    changeVolume: (value) => { videoRef.current.volume = value; videoRef.current.muted = value === 0; } };
+  const chooseSubtitleTrack = (trackId) => {
+    setSelectedSubtitleTrack(trackId);
+    if (hlsRef.current) {
+      hlsRef.current.subtitleTrack = trackId;
+    }
+    if (videoRef.current?.textTracks) {
+      for (let i = 0; i < videoRef.current.textTracks.length; i++) {
+        videoRef.current.textTracks[i].mode = i === trackId ? "showing" : "disabled";
+      }
+    }
+  };
+
+  const chooseAudioTrack = (trackId) => {
+    setSelectedAudioTrack(trackId);
+    if (hlsRef.current) {
+      hlsRef.current.audioTrack = trackId;
+    }
+  };
+
+  return {
+    videoRef,
+    playing,
+    ready,
+    buffering,
+    duration,
+    currentTime,
+    volume,
+    muted,
+    error,
+    notice,
+    qualities,
+    quality,
+    currentHeight,
+    subtitleTracks,
+    selectedSubtitleTrack,
+    chooseSubtitleTrack,
+    audioTracks,
+    selectedAudioTrack,
+    chooseAudioTrack,
+    togglePlay,
+    seek,
+    chooseQuality,
+    setSpeed: (rate) => {
+      if (videoRef.current) videoRef.current.playbackRate = rate;
+    },
+    toggleMute: () => {
+      if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
+    },
+    changeVolume: (value) => {
+      if (videoRef.current) {
+        videoRef.current.volume = value;
+        videoRef.current.muted = value === 0;
+      }
+    },
+  };
 }

@@ -150,13 +150,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1.5px solid #2ecc71;
-  color: #2ecc71;
-  font-weight: 800;
-  font-size: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #22c55e;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13.5px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .dot {
@@ -167,14 +169,20 @@
 }
 
 .certBadge {
-  background: #f5a623;
-  color: #111;
-  font-weight: 800;
+  background: #e11d48;
+  color: #ffffff;
+  font-weight: 700;
   font-size: 12px;
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 6px;
   line-height: 1;
   letter-spacing: 0.02em;
+}
+
+.qualityBadge {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .overviewBox {
@@ -554,8 +562,8 @@
   background: transparent;
   border: none;
   color: #ffffff;
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   text-align: left;
@@ -568,7 +576,42 @@
 
 .listItemActive {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.listItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.listCheckbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  color: #000;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.listCheckboxActive {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.listName {
+  font-size: 14px;
+  font-weight: 600;
   color: #ffffff;
+}
+
+.listCount {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .listDivider {
@@ -1204,6 +1247,86 @@
 
 .aboutItem a:hover {
   border-color: #fff;
+}
+
+.providersGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.providerCategory {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.providerCategoryTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim, rgba(255, 255, 255, 0.5));
+}
+
+.providersList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.providerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 4px 10px 4px 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  transition: all 0.2s ease;
+}
+
+.providerBadge:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.providerLogo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.justWatchAttribution {
+  margin-top: 4px;
+}
+
+.justWatchLink {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.25) !important;
+  transition: all 0.2s ease;
+}
+
+.justWatchLink:hover {
+  color: #fff;
+  border-bottom-color: #fff !important;
+}
+
+.justWatchNote {
+  display: block;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
 }
 
 /* Modal Trailer */

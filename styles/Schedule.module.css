@@ -1,136 +1,562 @@
-.week {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 12px;
-}
+/* Schedule Page - Minimalist & Aesthetic High-End Architecture */
 
-.day {
+.controlsBar {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  margin: 22px 0 32px;
+}
+
+/* Category Filter Bar */
+.filterBar {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  min-height: 150px;
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--surface-1);
-  box-shadow: rgba(255, 255, 255, 0.08) 0 0 0 1px inset;
+  flex-wrap: wrap;
 }
 
-.today {
-  background: var(--surface-3);
-  box-shadow: rgba(255, 255, 255, 0.28) 0 0 0 1px inset, var(--glow-shadow);
+.filterTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.day h2 {
+.filterTab:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filterActive {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border-color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.12);
+}
+
+.filterCount {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+}
+
+.filterActive .filterCount {
+  background: rgba(0, 0, 0, 0.14);
+  color: #000000;
+}
+
+/* Day Navigation Ribbon */
+.dayRibbon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.dayRibbon::-webkit-scrollbar {
+  display: none;
+}
+
+.dayTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-dim);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.dayTab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dayTabActive {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dayTabToday {
+  border-color: rgba(255, 122, 48, 0.4);
+  color: #ff9d66;
+}
+
+.dayTabCount {
+  font-size: 10.5px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Schedule Container & Day Sections */
+.scheduleContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.daySection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.todaySection .dayName {
+  color: #ffffff;
+}
+
+.dayHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.day h2 span {
+.dayHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dayName {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.todayPill {
+  display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 800;
   letter-spacing: 0.04em;
-  background: var(--primary);
-  color: var(--on-accent);
+  text-transform: uppercase;
+  background: var(--brand-amber, #ff7a30);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(255, 122, 48, 0.35);
 }
 
-.item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  transition: background-color 0.15s ease;
+.dayItemCount {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-dim);
 }
 
-.item:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.item b {
-  font-size: 15px;
-  letter-spacing: -0.1px;
-}
-
-.item small {
+.focusDayBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.focusDayBtn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Responsive Cards Grid */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+/* Minimalist Card with Small Poster Thumbnail */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* Small Poster Thumbnail (2:3 aspect ratio) */
+.posterWrapper {
+  width: 54px;
+  height: 78px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .posterImg {
+  transform: scale(1.05);
+}
+
+.posterRating {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #ffb830;
+  line-height: 1.2;
+}
+
+/* Card Body & Content */
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.card:hover .cardTitle {
+  color: #ffffff;
+}
+
+/* Episode Badges */
+.epBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.epBadgeAnime {
+  background: rgba(255, 122, 48, 0.2);
+  color: #ff9d66;
+  border: 1px solid rgba(255, 122, 48, 0.32);
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.serviceTag {
+  font-size: 11.5px;
+  font-weight: 500;
   color: var(--text-dim);
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.none {
-  margin: 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.34);
-}
-
-.h2 {
-  margin: 44px 0 14px;
-  font-size: 23.472px;
-  letter-spacing: -0.35px;
-}
-
-.soon {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.soon li {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr) 80px auto;
+.cardBottom {
+  display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 17px;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.soon time {
+.remindBtnSmall {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-dim, rgba(255, 255, 255, 0.72));
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.remindBtnSmall:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.remindBtnActive {
+  background: rgba(74, 222, 128, 0.16) !important;
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.38) !important;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.18);
+}
+
+.remindBtnActive:hover {
+  background: rgba(74, 222, 128, 0.24) !important;
+  border-color: rgba(74, 222, 128, 0.55) !important;
+}
+
+.icsDownloadBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.icsDownloadBtn:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.soonActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emptyDay {
+  padding: 32px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* Upcoming Blockbusters Section */
+.h2 {
+  margin: 48px 0 16px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.soonList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.soonRow {
+  display: grid;
+  grid-template-columns: 46px 120px minmax(0, 1fr) 140px 50px auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.soonRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(2px);
+}
+
+.soonPoster {
+  width: 44px;
+  height: 62px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.soonPosterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.soonDate {
+  font-size: 13.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text-soft);
+  white-space: nowrap;
 }
 
-.soon a {
+.soonTitleLink {
+  font-size: 15px;
   font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.soon a:hover {
+.soonTitleLink:hover {
   text-decoration: underline;
 }
 
-.soon span {
-  font-size: 14px;
+.soonGenres {
+  font-size: 13px;
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 1100px) {
-  .week {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.remindBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.remindBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Toast Notice */
+.toastNotice {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: rgba(20, 24, 34, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  animation: fadeInToast 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInToast {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 560px) {
-  .week {
+/* Responsive Adjustments */
+@media (max-width: 900px) {
+  .soonRow {
+    grid-template-columns: 44px 100px minmax(0, 1fr) auto;
+  }
+  .soonGenres {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .cardsGrid {
     grid-template-columns: 1fr;
   }
-  .soon li {
-    grid-template-columns: 1fr auto;
-    gap: 4px 12px;
+  .soonRow {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 10px;
   }
-  .soon time {
-    grid-column: 1 / -1;
-    font-size: 14px;
+  .soonDate {
+    display: none;
   }
 }

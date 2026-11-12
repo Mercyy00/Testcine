@@ -21,6 +21,8 @@ import {
   Heart,
   Download,
   Clapperboard,
+  Bell,
+  List,
   ChevronDown,
   ChevronUp,
   Search,
@@ -138,7 +140,7 @@ export async function getStaticProps({ params }) {
       }
     }
   } else {
-    if (!t || !t.cast || !t.videos || hasIncompleteSeasons) {
+    if (!t || !t.cast || !t.videos || hasIncompleteSeasons || !t.watchProviders) {
       let type = isSeries ? "tv" : "movie";
       let tmdbId = id;
       if (id.startsWith("movie-")) {
@@ -162,6 +164,9 @@ export async function getStaticProps({ params }) {
             seasons: live.seasons || t?.seasons || 1,
             numberOfSeasons: live.numberOfSeasons || t?.numberOfSeasons || 1,
             seasonsList: live.seasonsList || t?.seasonsList || null,
+            watchProviders: live.watchProviders || t?.watchProviders || null,
+            director: live.director || t?.director || null,
+            directors: live.directors || t?.directors || null,
           };
         } else if (!t) {
           const fallbackType = type === "movie" ? "tv" : "movie";
@@ -212,9 +217,12 @@ function TitlePageForRoute({ initialTitle, id }) {
   const router = useRouter();
   const [liveTitle, setLiveTitle] = useState(initialTitle);
   const [error, setError] = useState(false);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!liveTitle && id) {
+    if (fetchedRef.current) return;
+    if ((!liveTitle || !liveTitle.watchProviders) && id) {
+      fetchedRef.current = true;
       const isAnime = /^\d+$/.test(id) || id.startsWith("anilist-") || id.startsWith("anime-");
       const url = isAnime
         ? `/api/anilist/details?id=${encodeURIComponent(id)}`
@@ -223,11 +231,14 @@ function TitlePageForRoute({ initialTitle, id }) {
       fetch(url)
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
-          if (data && data.title) setLiveTitle(data);
-          else setError(true);
+          if (data && data.title) {
+            setLiveTitle((prev) => ({ ...(prev || {}), ...data }));
+          } else if (!liveTitle) {
+            setError(true);
+          }
         })
         .catch(() => {
-          setError(true);
+          if (!liveTitle) setError(true);
         });
     }
   }, [id, liveTitle]);
@@ -293,6 +304,7 @@ function TitleContent({ t, id }) {
   const [showSeasonModal, setShowSeasonModal] = useState(false);
 
   const relatedScrollRef = useRef(null);
+  const moreLikeScrollRef = useRef(null);
   const moreMenuRef = useRef(null);
   const listMenuRef = useRef(null);
 
@@ -559,11 +571,50 @@ function TitleContent({ t, id }) {
       progress: prog,
       season: sNum,
       episode: epNum,
-      label: isSeries ? `Continue S${sNum} E${epNum}` : "Resume",
+      label: "Resume",
+      continueText: isSeries
+        ? `Continue S${sNum} E${epNum}${remStr ? ` ${remStr}` : ""}`
+        : `Continue watching${remStr ? ` ${remStr}` : ""}`,
       remainingLabel: remStr,
       watchUrl: isSeries ? `/watch/${t.id}?season=${sNum}&episode=${epNum}` : `/watch/${t.id}`,
     };
   }, [historyEntry, t, selectedSeason]);
+
+  const getSeasonWatchedCount = (seasonNumber) => {
+    const loadedEps = seasonEpisodesMap[seasonNumber];
+    const eps =
+      loadedEps && loadedEps.length > 0
+        ? loadedEps
+        : seasonNumber === 1 && t?.episodes && t.episodes.length > 0
+        ? t.episodes
+        : [];
+    if (eps.length > 0) {
+      return eps.filter((ep) => isEpWatched(seasonNumber, ep.episodeNumber)).length;
+    }
+    return (watchedList || []).filter((item) => {
+      const s = String(item);
+      if (seasonNumber === 1 && !s.includes("_")) return true;
+      return s.startsWith(`s${seasonNumber}_`);
+    }).length;
+  };
+
+  const getEpProgress = (seasonNum, epNum) => {
+    if (!history || !Array.isArray(history)) return null;
+    const normalizeId = (id) => String(id || "").toLowerCase().replace(/^(movie|series|tv|anime)-/, "");
+    const ids = new Set([t?.id, normalizeId(t?.id), t?.tmdbId && String(t?.tmdbId)].filter(Boolean).map(String));
+    const entry = history.find((h) => {
+      const card = h?.title && typeof h.title === "object" ? h.title : null;
+      const matchId = [h?.id, card?.id, card?.tmdbId].filter(Boolean).some((id) => ids.has(String(id)) || ids.has(normalizeId(id)));
+      if (!matchId) return false;
+      const s = Number(h.season || 1);
+      const e = Number(h.episode || 1);
+      return s === Number(seasonNum) && e === Number(epNum);
+    });
+    if (entry && typeof entry.progress === "number" && entry.progress > 0 && entry.progress < 0.98) {
+      return entry.progress;
+    }
+    return null;
+  };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -593,13 +644,17 @@ function TitleContent({ t, id }) {
 
   const comingLabel = useMemo(() => {
     if (!t) return null;
+    if (t.nextEpisodeToAir?.airDate) {
+      const sNum = t.nextEpisodeToAir.seasonNumber || 1;
+      const eNum = t.nextEpisodeToAir.episodeNumber || 1;
+      return `New episode ${formatEpDate(t.nextEpisodeToAir.airDate)} S${sNum}E${eNum}`;
+    }
     if (t.upcomingPill) return t.upcomingPill;
     if (t.releaseDate && (t.status === "upcoming" || new Date(t.releaseDate) > new Date())) {
       return `${t.title} · coming ${formatDate(t.releaseDate)}`;
     }
     return null;
   }, [t]);
-
 
   const toggleReaction = (type) => {
     setReactions((prev) => ({
@@ -614,6 +669,20 @@ function TitleContent({ t, id }) {
         ? "Marked as I like this"
         : "Added to favorites";
     showToast(label);
+  };
+
+  const handleNotifyMe = () => {
+    setShowMoreMenu(false);
+    showToast("Notifications enabled for new episodes");
+  };
+
+  const handleScrollToEpisodes = () => {
+    setShowMoreMenu(false);
+    setActiveTab("episodes");
+    setTimeout(() => {
+      const el = document.getElementById("episodes-section") || document.querySelector(`.${styles.tabsBar}`);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   const handleDownload = () => {
@@ -646,6 +715,13 @@ function TitleContent({ t, id }) {
     }
   };
 
+  const scrollMoreLikeThis = (direction) => {
+    if (moreLikeScrollRef.current) {
+      const offset = direction === "left" ? -450 : 450;
+      moreLikeScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    }
+  };
+
   // Actual similar movies/series: first priority TMDB recommendations
   const similar = useMemo(() => {
     return t?.recommendations || [];
@@ -666,6 +742,14 @@ function TitleContent({ t, id }) {
     description: overviewText,
     image: t.poster || t.backdrop || "",
     datePublished: t.releaseDate || (t.year ? `${t.year}-01-01` : undefined),
+    ...(t.director
+      ? {
+          director: {
+            "@type": "Person",
+            name: t.director,
+          },
+        }
+      : {}),
     ...(t.rating
       ? {
           aggregateRating: {
@@ -748,10 +832,21 @@ function TitleContent({ t, id }) {
               )}
             </div>
 
-            {/* Meta Row (Rating ring/pill, Year, Runtime, Cert) */}
+            {/* Meta Row (Rating ring/pill, Year, Runtime, Cert, Quality) */}
             <div className={styles.metaRow}>
               {t.rating > 0 && (
-                <span className={styles.ratingPill}>
+                <span
+                  className={styles.ratingPill}
+                  style={{
+                    borderColor:
+                      t.rating >= 7.0
+                        ? "#22c55e"
+                        : t.rating >= 5.0
+                        ? "#eab308"
+                        : "#ef4444",
+                  }}
+                  title={`Rating: ${t.rating.toFixed(1)}/10`}
+                >
                   {t.rating.toFixed(1)}
                 </span>
               )}
@@ -762,9 +857,21 @@ function TitleContent({ t, id }) {
               {t.cert && (
                 <>
                   <span className={styles.dot} />
-                  <span className={styles.certBadge}>{t.cert}</span>
+                  <span
+                    className={styles.certBadge}
+                    style={{
+                      background:
+                        t.cert.includes("14") || t.cert.includes("PG-13")
+                          ? "#ea580c"
+                          : "#e11d48",
+                    }}
+                  >
+                    {t.cert}
+                  </span>
                 </>
               )}
+              <span className={styles.dot} />
+              <span className={styles.qualityBadge}>{t.quality || "HD"}</span>
               {t.anilistId && (
                 <>
                   <span className={styles.dot} />
@@ -802,7 +909,18 @@ function TitleContent({ t, id }) {
                 <div className={styles.resumeTrack} aria-label={`${Math.round(resumeInfo.progress * 100)}% watched`}>
                   <span style={{ width: `${Math.round(resumeInfo.progress * 100)}%` }} />
                 </div>
-                <span>Continue watching{resumeInfo.remainingLabel ? ` ${resumeInfo.remainingLabel}` : ""}</span>
+                <span>{resumeInfo.continueText}</span>
+              </div>
+            )}
+
+            {/* Genre / Tag Pills matching reference screenshot */}
+            {t.genres && t.genres.length > 0 && (
+              <div className={styles.pillsRow}>
+                {t.genres.slice(0, 3).map((g) => (
+                  <span key={g} className={styles.genrePill}>
+                    {g}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -892,8 +1010,13 @@ function TitleContent({ t, id }) {
                                 );
                               }}
                             >
-                              <span>{list.name}</span>
-                              {inList && <Check size={16} strokeWidth={2.5} />}
+                              <div className={styles.listItemLeft}>
+                                <div className={`${styles.listCheckbox} ${inList ? styles.listCheckboxActive : ""}`}>
+                                  {inList && <Check size={13} strokeWidth={3.5} color="#000000" />}
+                                </div>
+                                <span className={styles.listName}>{list.name}</span>
+                              </div>
+                              <span className={styles.listCount}>{list.items?.length || 0}</span>
                             </button>
                           );
                         })}
@@ -901,8 +1024,6 @@ function TitleContent({ t, id }) {
                     ) : (
                       <p className={styles.emptyListsText}>No lists yet</p>
                     )}
-
-                    <div className={styles.listDivider} />
 
                     <form className={styles.newListRow} onSubmit={handleCreateList}>
                       <input
@@ -973,11 +1094,31 @@ function TitleContent({ t, id }) {
                     <button
                       type="button"
                       className={styles.moreItem}
+                      onClick={handleNotifyMe}
+                    >
+                      <Bell size={18} />
+                      <span>Notify me</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.moreItem}
                       onClick={handleDownload}
                     >
                       <Download size={18} />
                       <span>Download</span>
                     </button>
+
+                    {hasEpisodes && (
+                      <button
+                        type="button"
+                        className={styles.moreItem}
+                        onClick={handleScrollToEpisodes}
+                      >
+                        <List size={18} />
+                        <span>Episodes</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -1080,10 +1221,7 @@ function TitleContent({ t, id }) {
                     aria-expanded={showSeasonModal}
                   >
                     <span>
-                      {currentSeasonObj?.name &&
-                      !currentSeasonObj.name.toLowerCase().startsWith("season")
-                        ? `Season ${selectedSeason} · ${currentSeasonObj.name}`
-                        : currentSeasonObj?.name || `Season ${selectedSeason}`}
+                      {currentSeasonObj?.name || `Season ${selectedSeason}`}
                     </span>
                     {showSeasonModal ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
@@ -1109,7 +1247,11 @@ function TitleContent({ t, id }) {
                           className={styles.seasonCardsRow}
                           ref={seasonCardsRowRef}
                           style={{
-                            transform: `translateX(-${activeSeasonIndex * 140 + 62}px)`,
+                            transform:
+                              seasonOptions.length > 1
+                                ? `translateX(-${activeSeasonIndex * 140 + 62}px)`
+                                : "translateX(-50%)",
+                            left: seasonOptions.length > 1 ? "50%" : "50%",
                           }}
                         >
                           {seasonOptions.map((s) => {
@@ -1122,6 +1264,7 @@ function TitleContent({ t, id }) {
                                 className={`${styles.seasonCardBtn} ${isActive ? styles.seasonCardActive : ""}`}
                                 onClick={() => {
                                   setSelectedSeason(s.seasonNumber);
+                                  setShowSeasonModal(false);
                                 }}
                                 aria-label={`Select ${s.name}`}
                               >
@@ -1163,22 +1306,29 @@ function TitleContent({ t, id }) {
                         <h4 className={styles.seasonMetaTitle}>
                           {currentSeasonObj?.name &&
                           !currentSeasonObj.name.toLowerCase().startsWith("season")
-                            ? `Season ${selectedSeason} · ${currentSeasonObj.name}`
+                            ? currentSeasonObj.name
                             : currentSeasonObj?.name || `Season ${selectedSeason}`}
                         </h4>
                         <p className={styles.seasonMetaSub}>
-                          {currentSeasonObj?.episodeCount
-                            ? `${currentSeasonObj.episodeCount} episodes`
-                            : "12 episodes"}
-                          {currentSeasonObj?.year ? ` · ${currentSeasonObj.year}` : ""}
+                          {[
+                            currentSeasonObj?.episodeCount
+                              ? `${currentSeasonObj.episodeCount} episodes`
+                              : null,
+                            currentSeasonObj?.year || null,
+                            `${getSeasonWatchedCount(selectedSeason)} watched`,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
-                        <button
-                          type="button"
-                          className={styles.openSeasonBtn}
-                          onClick={() => setShowSeasonModal(false)}
-                        >
-                          Open
-                        </button>
+                        {seasonOptions.length > 1 && (
+                          <button
+                            type="button"
+                            className={styles.openSeasonBtn}
+                            onClick={() => setShowSeasonModal(false)}
+                          >
+                            Open
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1216,7 +1366,7 @@ function TitleContent({ t, id }) {
                 const isWatched = isEpWatched(selectedSeason, ep.episodeNumber);
                 const epKey = selectedSeason > 1 ? `s${selectedSeason}_e${ep.episodeNumber}` : ep.episodeNumber;
                 const altKey = selectedSeason === 1 ? `s1_e${ep.episodeNumber}` : null;
-                const progress = null;
+                const progress = getEpProgress(selectedSeason, ep.episodeNumber);
                 const isSelected = selectedEp === ep.episodeNumber || Boolean(progress);
                 const dateStr = formatEpDate(ep.airDate);
                 const epSubtext = [dateStr, ep.runtime ? `${ep.runtime} min` : null]
@@ -1255,22 +1405,29 @@ function TitleContent({ t, id }) {
                       {/* Episode number in top left */}
                       <span className={styles.epNumberBadge}>{ep.episodeNumber}</span>
 
-                      {/* Top right: Watched checkmark button */}
-                      <button
-                        type="button"
-                        className={`${styles.watchedRoundBtn} ${
-                          isWatched ? styles.watchedRoundBtnActive : ""
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleWatchedEpisode(setWatchedEpisodes, t.id, epKey, altKey);
-                        }}
-                        aria-label={isWatched ? "Mark as unwatched" : "Mark as watched"}
-                        title={isWatched ? "Mark as unwatched" : "Mark as watched"}
-                      >
-                        {isWatched && <Check size={14} strokeWidth={3.5} color="#000000" />}
-                      </button>
+                      {/* Progress badge e.g. 44% in top right when in progress and not fully watched */}
+                      {progress > 0 && !isWatched ? (
+                        <span className={styles.epProgressBadge}>
+                          {Math.round(progress * 100)}%
+                        </span>
+                      ) : (
+                        /* Top right: Watched checkmark button */
+                        <button
+                          type="button"
+                          className={`${styles.watchedRoundBtn} ${
+                            isWatched ? styles.watchedRoundBtnActive : ""
+                          }`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleWatchedEpisode(setWatchedEpisodes, t.id, epKey, altKey);
+                          }}
+                          aria-label={isWatched ? "Mark as unwatched" : "Mark as watched"}
+                          title={isWatched ? "Mark as unwatched" : "Mark as watched"}
+                        >
+                          {isWatched && <Check size={14} strokeWidth={3.5} color="#000000" />}
+                        </button>
+                      )}
 
                       {/* Progress bar line along bottom of thumbnail */}
                       {progress > 0 && (
@@ -1475,12 +1632,32 @@ function TitleContent({ t, id }) {
               </div>
             )}
 
-            {/* Similar titles row */}
+            {/* Similar titles row matching reference screenshot */}
             <div id="more-like-this">
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>More like this</h2>
+                <div className={styles.navControls}>
+                  <div className={styles.arrowGroup}>
+                    <button
+                      type="button"
+                      className={styles.navArrow}
+                      onClick={() => scrollMoreLikeThis("left")}
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.navArrow}
+                      onClick={() => scrollMoreLikeThis("right")}
+                      aria-label="Next"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className={styles.cardsRow}>
+              <div className={styles.cardsRow} ref={moreLikeScrollRef}>
                 {similar.map((sim) => (
                   <Link
                     key={sim.id}
@@ -1506,14 +1683,8 @@ function TitleContent({ t, id }) {
                           <span className={styles.badgeHd}>{sim.quality}</span>
                         </span>
                       )}
-                    </div>
-                    <div className={styles.wideMeta}>
-                      <span className={styles.cardName}>{sim.title}</span>
-                      <div className={styles.cardMetaSub}>
-                        {sim.rating > 0 && (
-                          <span className={styles.cardRating}>★ {sim.rating.toFixed(1)}</span>
-                        )}
-                        <span>{sim.year}</span>
+                      <div className={styles.cardTitleBottom}>
+                        {sim.title}
                       </div>
                     </div>
                   </Link>
@@ -1654,19 +1825,138 @@ function TitleContent({ t, id }) {
                 <dd>{studio.name}</dd>
               </div>
             )}
-            {t.director && (
+            {(t.directors?.length > 0 || t.director) && (
               <div className={styles.aboutItem}>
-                <dt>{t.type === "movie" ? "Director" : "Creator"}</dt>
-                <dd>{t.director}</dd>
+                <dt>
+                  {t.type === "movie"
+                    ? (t.directors?.length > 1 ? "Directors" : "Director")
+                    : (t.directors?.length > 1 ? "Creators" : "Creator")}
+                </dt>
+                <dd>
+                  {t.directors?.length > 0
+                    ? t.directors.join(", ")
+                    : t.director}
+                </dd>
               </div>
             )}
-            <div className={styles.aboutItem}>
+            <div className={styles.aboutItem} style={{ gridColumn: "1 / -1" }}>
               <dt>Where to watch</dt>
               <dd>
-                {service ? `Stream on ${service.name}` : "Digital & Theatrical"}
-                <span style={{ display: "block", fontSize: 11, opacity: 0.6, marginTop: 4 }}>
-                  Streaming availability provided by JustWatch
-                </span>
+                {t.watchProviders && (t.watchProviders.flatrate?.length > 0 || t.watchProviders.rent?.length > 0 || t.watchProviders.buy?.length > 0) ? (
+                  <div className={styles.providersGroup}>
+                    {t.watchProviders.flatrate?.length > 0 && (
+                      <div className={styles.providerCategory}>
+                        <span className={styles.providerCategoryTitle}>Stream</span>
+                        <div className={styles.providersList}>
+                          {t.watchProviders.flatrate.map((p) => (
+                            <a
+                              key={p.id || p.name}
+                              href={t.watchProviders.link || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.providerBadge}
+                              title={`Stream on ${p.name}`}
+                            >
+                              {p.logo && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={p.logo}
+                                  alt={p.name}
+                                  className={styles.providerLogo}
+                                  loading="lazy"
+                                />
+                              )}
+                              <span>{p.name}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {t.watchProviders.rent?.length > 0 && (
+                      <div className={styles.providerCategory}>
+                        <span className={styles.providerCategoryTitle}>Rent</span>
+                        <div className={styles.providersList}>
+                          {t.watchProviders.rent.map((p) => (
+                            <a
+                              key={p.id || p.name}
+                              href={t.watchProviders.link || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.providerBadge}
+                              title={`Rent on ${p.name}`}
+                            >
+                              {p.logo && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={p.logo}
+                                  alt={p.name}
+                                  className={styles.providerLogo}
+                                  loading="lazy"
+                                />
+                              )}
+                              <span>{p.name}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {t.watchProviders.buy?.length > 0 && (
+                      <div className={styles.providerCategory}>
+                        <span className={styles.providerCategoryTitle}>Buy</span>
+                        <div className={styles.providersList}>
+                          {t.watchProviders.buy.map((p) => (
+                            <a
+                              key={p.id || p.name}
+                              href={t.watchProviders.link || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.providerBadge}
+                              title={`Buy on ${p.name}`}
+                            >
+                              {p.logo && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={p.logo}
+                                  alt={p.name}
+                                  className={styles.providerLogo}
+                                  loading="lazy"
+                                />
+                              )}
+                              <span>{p.name}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className={styles.justWatchAttribution}>
+                      <a
+                        href={t.watchProviders.link || "https://www.justwatch.com"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.justWatchLink}
+                      >
+                        Streaming availability powered by JustWatch ↗
+                      </a>
+                    </div>
+                  </div>
+                ) : service ? (
+                  <div>
+                    <span>Stream on {service.name}</span>
+                    <span className={styles.justWatchNote}>
+                      Streaming availability provided by JustWatch
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <span>Digital & Theatrical</span>
+                    <span className={styles.justWatchNote}>
+                      Streaming availability provided by JustWatch
+                    </span>
+                  </div>
+                )}
               </dd>
             </div>
           </div>

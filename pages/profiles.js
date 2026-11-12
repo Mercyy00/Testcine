@@ -30,7 +30,9 @@ export default function Profiles() {
   // Form states for Add/Edit
   const [formName, setFormName] = useState("");
   const [formAvatar, setFormAvatar] = useState(PROFILE_AVATARS[0].url);
+  const [formIsKids, setFormIsKids] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState("All");
+  const [selectingId, setSelectingId] = useState(null);
 
   const visibleAvatars =
     avatarCategory === "All"
@@ -51,16 +53,25 @@ export default function Profiles() {
       setEditingProfile(p);
       setFormName(p.name);
       setFormAvatar(p.avatar || PROFILE_AVATARS[0].url);
+      setFormIsKids(Boolean(p.isKids));
       setModalMode("edit");
       return;
     }
+    setSelectingId(p.id);
     switchProfile(setActiveProfileId, setSettings, p);
-    router.push("/");
+    const targetUrl =
+      typeof router.query.callbackUrl === "string" && router.query.callbackUrl.startsWith("/")
+        ? router.query.callbackUrl
+        : "/";
+    setTimeout(() => {
+      router.push(targetUrl);
+    }, 280);
   };
 
   const openAddModal = () => {
     setFormName("");
     setFormAvatar(PROFILE_AVATARS[0].url);
+    setFormIsKids(false);
     setModalMode("add");
   };
 
@@ -68,7 +79,7 @@ export default function Profiles() {
     e.preventDefault();
     const trimmed = formName.trim();
     if (!trimmed) return;
-    const created = addProfile(setProfiles, trimmed, formAvatar);
+    const created = addProfile(setProfiles, trimmed, formAvatar, formIsKids);
     if (created) {
       switchProfile(setActiveProfileId, setSettings, created);
     }
@@ -83,6 +94,7 @@ export default function Profiles() {
     updateProfile(setProfiles, editingProfile.id, {
       name: trimmed,
       avatar: formAvatar,
+      isKids: formIsKids,
     });
     // If active profile was updated, sync settings
     if (activeProfileId === editingProfile.id) {
@@ -140,15 +152,21 @@ export default function Profiles() {
         {/* Profiles Row */}
         <div className={styles.profilesRow}>
           {profileList.map((p) => {
+            const isThisSelected = selectingId === p.id;
+            const isDimmed = selectingId && !isThisSelected;
             return (
               <button
                 key={p.id}
                 type="button"
-                className={styles.profileItem}
+                className={`${styles.profileItem} ${isDimmed ? styles.itemDimmed : ""}`}
                 onClick={() => handleSelectProfile(p)}
                 aria-label={managing ? `Edit ${p.name}` : `Select ${p.name}`}
               >
-                <div className={styles.avatarCircle}>
+                <div
+                  className={`${styles.avatarCircle} ${
+                    isThisSelected ? styles.avatarSelecting : ""
+                  }`}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.avatar || PROFILE_AVATARS[0].url}
@@ -168,6 +186,9 @@ export default function Profiles() {
                     {p.name.charAt(0).toUpperCase()}
                   </div>
 
+                  {/* Kids badge */}
+                  {p.isKids && <span className={styles.kidsBadge}>KIDS</span>}
+
                   {/* Pencil overlay in manage mode */}
                   {managing && (
                     <div className={styles.editOverlay}>
@@ -183,7 +204,7 @@ export default function Profiles() {
           {/* Add Profile button */}
           <button
             type="button"
-            className={styles.profileItem}
+            className={`${styles.profileItem} ${selectingId ? styles.itemDimmed : ""}`}
             onClick={openAddModal}
             aria-label="Add profile"
           >
@@ -214,7 +235,15 @@ export default function Profiles() {
             )}
           </button>
 
-          <Link href="/" className={styles.notNowBtn}>
+          <Link
+            href={
+              typeof router.query.callbackUrl === "string" &&
+              router.query.callbackUrl.startsWith("/")
+                ? router.query.callbackUrl
+                : "/"
+            }
+            className={styles.notNowBtn}
+          >
             Not now
           </Link>
         </div>
@@ -273,6 +302,18 @@ export default function Profiles() {
                     maxLength={24}
                     required
                   />
+                </div>
+
+                <div className={styles.checkboxGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={formIsKids}
+                      onChange={(e) => setFormIsKids(e.target.checked)}
+                      className={styles.checkboxInput}
+                    />
+                    <span>Kids profile (shows titles suitable for all ages)</span>
+                  </label>
                 </div>
 
                 <div className={styles.modalActions}>
@@ -350,6 +391,18 @@ export default function Profiles() {
                     maxLength={24}
                     required
                   />
+                </div>
+
+                <div className={styles.checkboxGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={formIsKids}
+                      onChange={(e) => setFormIsKids(e.target.checked)}
+                      className={styles.checkboxInput}
+                    />
+                    <span>Kids profile (shows titles suitable for all ages)</span>
+                  </label>
                 </div>
 
                 <div className={styles.modalActions}>

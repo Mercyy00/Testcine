@@ -10,6 +10,10 @@ function generateSiteMap(titles) {
     "/anime",
     "/discover",
     "/schedule",
+    "/watch-party",
+    "/privacy",
+    "/terms",
+    "/dmca",
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>

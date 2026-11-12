@@ -29,13 +29,13 @@
   outline-offset: 2px;
 }
 
-/* Centered logo box: exactly 56px height, max-width 70% */
+/* Centered logo box: 52px height, max-width 82% for wide logos */
 .logoArea {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 16px 0;
+  padding: 16px 14px 0;
   min-height: 0;
 }
 
@@ -44,15 +44,15 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 70%;
-  height: 56px;
-  overflow: hidden;
+  max-width: 82%;
+  height: 52px;
+  overflow: visible;
 }
 
 .logoImg {
   display: block;
   max-width: 100%;
-  max-height: 56px;
+  max-height: 52px;
   width: auto;
   height: auto;
   object-fit: contain;

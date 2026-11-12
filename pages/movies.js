@@ -7,7 +7,7 @@ import MediaCard from "../components/MediaCard";
 import TileRow from "../components/TileRow";
 import { CatalogFilterBar, TitleGrid, Empty } from "../components/Page";
 import { SkeletonHero, SkeletonGrid, SkeletonRow } from "../components/Skeleton";
-import { STUDIOS, BRAND, GENRE_MAP } from "../lib/constants";
+import { STUDIOS, SERVICES, LANGUAGES, BRAND } from "../lib/constants";
 
 export async function getStaticProps() {
   return {
@@ -73,32 +73,26 @@ const YEARS = [
 export default function Movies() {
   const router = useRouter();
   const gridRef = useRef(null);
+  const infiniteTriggerRef = useRef(null);
+  const isInitialMount = useRef(true);
 
   const [category, setCategory] = useState("trending");
   const [filters, setFilters] = useState({
     genre: "all",
     country: "all",
     year: "all",
+    service: "all",
+    language: "all",
     rating: "all",
   });
   const [shuffleSeed, setShuffleSeed] = useState(0);
 
-  // Sync state from URL query on initial load or back/forward navigation
-  useEffect(() => {
-    if (!router.isReady) return;
-    const q = router.query;
-    if (q.category && typeof q.category === "string") {
-      setCategory(q.category);
-    }
-    setFilters((prev) => ({
-      genre: typeof q.genre === "string" ? q.genre : prev.genre,
-      country: typeof q.country === "string" ? q.country : prev.country,
-      year: typeof q.year === "string" ? q.year : prev.year,
-      rating: typeof q.rating === "string" ? q.rating : prev.rating,
-    }));
-  }, [router.isReady, router.query]);
+  // Pagination & Infinite Scroll states
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Dynamic state loaded strictly from TMDB API
+  // Dynamic state loaded from TMDB API
   const [heroItems, setHeroItems] = useState([]);
   const [heroLoading, setHeroLoading] = useState(true);
 
@@ -107,6 +101,24 @@ export default function Movies() {
 
   const [topMovies, setTopMovies] = useState([]);
   const [topLoading, setTopLoading] = useState(true);
+
+  // Sync state from URL query on initial load or back/forward navigation
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query;
+    if (q.category && typeof q.category === "string" && q.category !== category) {
+      setCategory(q.category);
+    }
+    setFilters({
+      genre: typeof q.genre === "string" ? q.genre : "all",
+      country: typeof q.country === "string" ? q.country : "all",
+      year: typeof q.year === "string" ? q.year : "all",
+      service: typeof q.service === "string" ? q.service : "all",
+      language: typeof q.language === "string" ? q.language : "all",
+      rating: typeof q.rating === "string" ? q.rating : "all",
+    });
+    isInitialMount.current = false;
+  }, [router.isReady, router.query]);
 
   // 1. Fetch featured hero banner movies from TMDB API (trending movies)
   useEffect(() => {
@@ -148,10 +160,34 @@ export default function Movies() {
     };
   }, []);
 
-  // 3. Fetch catalog movies based on selected category & filters from TMDB API
+  // 3. Reset pagination when category or filters change
+  const prevFiltersRef = useRef({ category, ...filters });
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    if (
+      prev.category !== category ||
+      prev.genre !== filters.genre ||
+      prev.country !== filters.country ||
+      prev.year !== filters.year ||
+      prev.service !== filters.service ||
+      prev.language !== filters.language ||
+      prev.rating !== filters.rating
+    ) {
+      prevFiltersRef.current = { category, ...filters };
+      setPage(1);
+      setHasMore(true);
+      setMoviesList([]);
+    }
+  }, [category, filters]);
+
+  // 4. Fetch catalog movies based on selected category, filters, and page
   useEffect(() => {
     let active = true;
-    setMoviesLoading(true);
+    if (page === 1) {
+      setMoviesLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
     const params = new URLSearchParams({
       type: "movie",
@@ -159,34 +195,75 @@ export default function Movies() {
       genre: filters.genre,
       country: filters.country,
       year: filters.year,
+      service: filters.service,
+      language: filters.language,
       rating: filters.rating,
+      page: String(page),
     });
 
     fetch(`/api/tmdb/discover?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        if (active) {
-          setMoviesList(Array.isArray(data) ? data : []);
+        if (!active) return;
+        const newItems = Array.isArray(data) ? data : [];
+        if (newItems.length < 10) {
+          setHasMore(false);
+        }
+        if (page === 1) {
+          setMoviesList(newItems);
           setMoviesLoading(false);
+        } else {
+          setMoviesList((prev) => {
+            const seen = new Set(prev.map((t) => String(t.id || t.tmdbId)));
+            const distinct = newItems.filter((t) => !seen.has(String(t.id || t.tmdbId)));
+            return [...prev, ...distinct];
+          });
+          setLoadingMore(false);
         }
       })
       .catch(() => {
-        if (active) {
+        if (!active) return;
+        if (page === 1) {
           setMoviesList([]);
           setMoviesLoading(false);
+        } else {
+          setLoadingMore(false);
+          setHasMore(false);
         }
       });
 
     return () => {
       active = false;
     };
-  }, [category, filters]);
+  }, [category, filters, page]);
 
+  // 5. Infinite scroll observer
+  useEffect(() => {
+    if (!hasMore || moviesLoading || loadingMore) return;
+    const trigger = infiniteTriggerRef.current;
+    if (!trigger) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !moviesLoading) {
+          setPage((p) => p + 1);
+        }
+      },
+      { rootMargin: "400px" }
+    );
+
+    observer.observe(trigger);
+    return () => observer.disconnect();
+  }, [hasMore, moviesLoading, loadingMore]);
+
+  // Dropdown filter options strictly ordered as in reference screenshot
   const filterOptions = useMemo(() => {
     return {
       genre: STANDARD_GENRES.map((g) => ({ value: g, label: g })),
       country: COUNTRIES,
       year: YEARS.map((y) => ({ value: y, label: y })),
+      service: SERVICES.map((s) => ({ value: s.id, label: s.name })),
+      language: LANGUAGES,
       rating: [
         { value: "8", label: "★ 8.0+" },
         { value: "7", label: "★ 7.0+" },
@@ -202,7 +279,10 @@ export default function Movies() {
       if (v && v !== "all") next[k] = v;
     }
     router.replace({ pathname: "/movies", query: next }, undefined, { shallow: true });
-    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!isInitialMount.current && gridRef.current) {
+      const top = gridRef.current.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
   };
 
   const handleCategoryChange = (val) => {
@@ -260,9 +340,49 @@ export default function Movies() {
         />
 
         {moviesLoading ? (
-          <SkeletonGrid count={12} wide={true} />
+          <SkeletonGrid count={15} wide={true} />
         ) : displayedMovies.length > 0 ? (
-          <TitleGrid items={displayedMovies} wide={true} />
+          <>
+            <TitleGrid items={displayedMovies} wide={true} />
+
+            {/* Infinite Scroll Trigger & Indicator */}
+            <div
+              ref={infiniteTriggerRef}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "36px 0 16px",
+                minHeight: "60px",
+              }}
+            >
+              {loadingMore && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    color: "rgba(255, 255, 255, 0.6)",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      border: "2px solid rgba(255, 255, 255, 0.2)",
+                      borderTopColor: "#ffffff",
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                      display: "inline-block",
+                    }}
+                  />
+                  <span>Loading more movies...</span>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <Empty
             title="No movies found"
