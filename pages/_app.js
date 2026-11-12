@@ -61,6 +61,61 @@ export default function App({ Component, pageProps }) {
     }
   }, [settings.theme, settings.themeMode, settings.bgIntensity, settings.showBackground]);
 
+  // Buttery-smooth inertial momentum scrolling (Lenis)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Honor accessibility preferences or user toggle
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion || settings.smoothScroll === false) {
+      if (window.__lenis) {
+        window.__lenis.destroy();
+        delete window.__lenis;
+      }
+      return;
+    }
+
+    let lenis = null;
+    let rafId = null;
+
+    import("lenis").then(({ default: Lenis }) => {
+      lenis = new Lenis({
+        duration: 1.35, // Luxurious, buttery smooth inertia duration
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration curve
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+        wheelMultiplier: 1.15, // Glides a little bit further per wheel tick
+        touchMultiplier: 1.5,
+        infinite: false,
+      });
+
+      window.__lenis = lenis;
+
+      function raf(time) {
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+      rafId = requestAnimationFrame(raf);
+    });
+
+    const handleRouteChange = () => {
+      if (window.__lenis) {
+        window.__lenis.scrollTo(0, { immediate: true });
+      }
+    };
+    router.events.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (lenis) {
+        lenis.destroy();
+        delete window.__lenis;
+      }
+    };
+  }, [settings.smoothScroll, router]);
+
   return (
     <div className={`${bebasNeue.variable} appRoot`}>
       <Head>

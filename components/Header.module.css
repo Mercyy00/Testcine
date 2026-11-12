@@ -60,9 +60,8 @@
   user-select: none;
 }
 
-.brandLink:hover {
-  transform: scale(1.06);
-  filter: drop-shadow(0 0 12px rgba(255, 110, 40, 0.5));
+.brandLink {
+  display: none !important;
 }
 
 .brandLogo {
@@ -986,7 +985,7 @@
   display: flex;
   align-items: center;
   gap: 28px;
-  margin-left: 12px;
+  margin-left: 0;
 }
 
 .perfLink {

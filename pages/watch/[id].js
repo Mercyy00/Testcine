@@ -30,6 +30,7 @@ import {
   Sparkles,
   Plus,
   ArrowUpDown,
+  Eye,
 } from "lucide-react";
 import Layout from "../../components/Layout";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -919,38 +920,43 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             )}
           </div>
 
-          {/* Download */}
+          {/* Download (Icon Only per Vivarium reference) */}
           <button
             type="button"
-            className={styles.actionPillBtn}
+            className={`${styles.actionPillBtn} ${styles.actionIconBtn}`}
             aria-label="Download"
+            title="Download"
             onClick={() => showToast("Downloads are not available for this stream")}
           >
-            <Download size={15} />
-            <span>Download</span>
+            <Download size={16} />
+          </button>
+
+          {/* Share (Icon Only per Vivarium reference) */}
+          <button
+            type="button"
+            className={`${styles.actionPillBtn} ${styles.actionIconBtn}`}
+            onClick={handleShare}
+            aria-label="Share"
+            title="Share"
+          >
+            <Share2 size={16} />
           </button>
 
           {/* Mark as Watched */}
           <button
             type="button"
-            className={`${styles.actionPillBtn} ${isTitleWatched ? styles.actionPillBtnActive : ""}`}
+            className={`${styles.actionPillBtn} ${styles.actionIconBtn} ${isTitleWatched ? styles.actionPillBtnActive : ""}`}
             onClick={handleMarkWatched}
-            aria-label="Mark as watched"
+            aria-label={isTitleWatched ? "Marked as watched" : "Mark as watched"}
+            title={isTitleWatched ? "Watched" : "Mark as watched"}
           >
-            <Check size={15} strokeWidth={2.5} />
-            <span>Watched</span>
-          </button>
-
-          {/* Share */}
-          <button type="button" className={styles.actionPillBtn} onClick={handleShare} aria-label="Share">
-            <Share2 size={15} />
-            <span>Share</span>
+            <Check size={16} strokeWidth={2.5} />
           </button>
 
           {/* Ambient Lighting Toggle */}
           <button
             type="button"
-            className={`${styles.actionPillBtn} ${
+            className={`${styles.actionPillBtn} ${styles.actionIconBtn} ${
               isLiveAmbient
                 ? styles.ambientPillLive
                 : settings.ambientLight !== "off"
@@ -967,32 +973,39 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
                 : "Sync ambient lighting to live scene playback"
             }
           >
-            <Sparkles size={15} className={isLiveAmbient ? styles.sparkleLive : ""} />
-            <span>{isLiveAmbient ? "Ambient: Live" : "Ambient"}</span>
-            {isLiveAmbient && <span className={styles.livePulseDot} />}
+            <Sparkles size={16} className={isLiveAmbient ? styles.sparkleLive : ""} />
           </button>
         </div>
 
-        {/* Metadata Box */}
+        {/* Metadata Box matching Vivarium reference */}
         <div className={styles.metaBox}>
           <div className={styles.metaHeaderLine}>
-            {(t.releaseDate || t.year) && <span>{formattedDate}</span>}
-            {(t.releaseDate || t.year) && t.rating > 0 && <span className={styles.metaDot}>·</span>}
-            {t.rating > 0 && <span>★ {t.rating}</span>}
+            <span>{t.views || "25K views"}</span>
+            {(t.releaseDate || t.year) && (
+              <>
+                <span className={styles.metaGap} />
+                <span>{formattedDate || t.releaseDate || t.year}</span>
+              </>
+            )}
+            {t.rating > 0 && (
+              <>
+                <span className={styles.metaGap} />
+                <span style={{ color: "#fff", fontWeight: 700 }}>★ {t.rating.toFixed(1)}</span>
+              </>
+            )}
             {isSeries && (
               <>
-                {(t.releaseDate || t.year || t.rating > 0) && <span className={styles.metaDot}>·</span>}
+                <span className={styles.metaGap} />
                 <span className={styles.metaEpisodePill}>
                   S{currentSeason} E{currentEpisode}
                 </span>
               </>
             )}
-            {t.views ? (
-              <>
-                <span className={styles.metaDot}>·</span>
-                <span>{t.views} views</span>
-              </>
-            ) : null}
+            <span className={styles.metaGap} />
+            <span className={styles.watchingBadge} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <Eye size={13} strokeWidth={2} />
+              <span>12 watching</span>
+            </span>
           </div>
 
           <p className={styles.synopsisText}>

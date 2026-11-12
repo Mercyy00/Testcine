@@ -728,9 +728,9 @@
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: linear-gradient(90deg, #ff944d, #ff6a00);
+  background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(255, 122, 48, 0.6);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 .tabMuteBtn {

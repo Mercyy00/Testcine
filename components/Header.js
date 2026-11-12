@@ -622,25 +622,20 @@ export default function Header({ watchTitle = null }) {
               <span className={styles.breadcrumbCurrent} title={watchTitle}>{watchTitle}</span>
             </div>
           ) : (
-            <>
-              <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
-              </Link>
-              <nav className={styles.perfNav} aria-label="Main">
-                {NAV.map((item) => {
-                  const active = isActive(router.pathname, item);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`${styles.perfLink} ${active ? styles.perfLinkActive : ""}`}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+            <nav className={styles.perfNav} aria-label="Main">
+              {NAV.map((item) => {
+                const active = isActive(router.pathname, item);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.perfLink} ${active ? styles.perfLinkActive : ""}`}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
                 {/* Browse dropdown with chevron */}
                 <div className={styles.perfBrowseWrap} ref={browseMenuRef}>
                   <button
@@ -679,8 +674,7 @@ export default function Header({ watchTitle = null }) {
                   )}
                 </div>
               </nav>
-            </>
-          )}
+            )}
         </div>
 
         {/* 2. Bar End: Bare icon buttons (Search trigger, Watch party, Notifications bell, Profile avatar) */}
@@ -823,13 +817,27 @@ export default function Header({ watchTitle = null }) {
         )}
       </div>
 
-      {/* 2. Center: Docked Search Palette */}
-      <div className={styles.dock} role="search">
-        <SearchPalette />
-      </div>
+      {/* 2. Center: Docked Search Palette (Hidden on watch page to allow full breadcrumbs) */}
+      {!watchTitle && (
+        <div className={styles.dock} role="search">
+          <SearchPalette />
+        </div>
+      )}
 
-      {/* 3. Bar End: Round glass buttons (Watch party, Notifications bell, Profile avatar) */}
+      {/* 3. Bar End: Round glass buttons (Search if watch, Watch party, Notifications bell, Profile avatar) */}
       <div className={styles.barEnd}>
+        {watchTitle && (
+          <button
+            type="button"
+            className={styles.round}
+            onClick={() => setSearchModalOpen(true)}
+            aria-label="Search"
+            title="Search (Ctrl+K)"
+          >
+            <Search size={20} strokeWidth={1.8} />
+          </button>
+        )}
+
         {/* Watch party / community chat */}
         <span className={styles.tooltipWrap}>
           <Link href="/watch-party" className={styles.round} aria-label="Chat">
@@ -875,6 +883,31 @@ export default function Header({ watchTitle = null }) {
           </Popover>
         </div>
       </div>
+
+      {/* Spotlight Search Modal */}
+      {searchModalOpen && (
+        <div
+          className={styles.searchModalOverlay}
+          onClick={() => setSearchModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Spotlight Search"
+        >
+          <div className={styles.searchModalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.searchModalBar}>
+              <SearchPalette autoFocus wide />
+              <button
+                type="button"
+                className={styles.searchModalCloseBtn}
+                onClick={() => setSearchModalOpen(false)}
+                aria-label="Close search"
+              >
+                <X size={18} strokeWidth={2.4} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4. Active In-App Airing Today Toast / Alert */}
       {airingToastContent}

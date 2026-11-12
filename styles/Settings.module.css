@@ -1062,6 +1062,66 @@
   to { opacity: 1; }
 }
 
+/* ---------------- Theme Mode Grid (Exact Vivarium parity) ---------------- */
+.themeModeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.themeModeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  width: 100%;
+}
+
+.themeModePreview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  background: #090a0f;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  user-select: none;
+}
+
+.themeModeCard:hover .themeModePreview {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+}
+
+.themeModePreviewActive {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #ffffff, 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.15) !important;
+}
+
+.themeModeLabel {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+  transition: color 0.2s ease;
+}
+
+.themeModeCard:hover .themeModeLabel {
+  color: #ffffff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .modalBox {

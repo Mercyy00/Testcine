@@ -1016,57 +1016,161 @@ export default function SettingsPage() {
             {activeTab === "appearance" && (
               <>
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Theme Mode</h2>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 28 }}>
+                  <h2 className={styles.sectionTitle} style={{ fontSize: 24, fontWeight: 800, marginBottom: 20 }}>
+                    Theme
+                  </h2>
+                  <div className={styles.themeModeGrid}>
+                    {/* 1. Default (Liquid Glass) matching Vivarium reference */}
                     <button
                       type="button"
-                      style={{
-                        padding: "16px 20px",
-                        borderRadius: 16,
-                        border: (settings.themeMode || "default") === "default" ? "2px solid #fff" : "1px solid rgba(255, 255, 255, 0.12)",
-                        background: (settings.themeMode || "default") === "default" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
-                        color: "#fff",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        transition: "all 0.2s ease",
-                      }}
+                      className={styles.themeModeCard}
                       onClick={() => {
                         setSettings((s) => ({ ...s, themeMode: "default" }));
-                        showToast("Activated Default (Liquid Glass) mode");
+                        showToast("Applied Default Theme");
                       }}
+                      aria-label="Select Default Theme"
                     >
-                      <span style={{ fontSize: 16, fontWeight: 700 }}>✨ Default (Liquid Glass)</span>
-                      <span style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4 }}>
-                        Floating frosted glass capsule dock, specular highlights, and ambient glow
-                      </span>
+                      <div
+                        className={`${styles.themeModePreview} ${
+                          (settings.themeMode || "default") === "default" ? styles.themeModePreviewActive : ""
+                        }`}
+                        style={{
+                          background: "radial-gradient(circle at 75% 40%, rgba(220, 80, 20, 0.45) 0%, rgba(10, 11, 16, 0.95) 70%)",
+                        }}
+                      >
+                        {/* Mini floating capsule navbar */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "auto" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 4,
+                              background: "rgba(255, 255, 255, 0.14)",
+                              backdropFilter: "blur(8px)",
+                              borderRadius: 999,
+                              padding: "2px 6px",
+                              border: "1px solid rgba(255, 255, 255, 0.15)",
+                            }}
+                          >
+                            <span style={{ fontSize: 7, fontWeight: 700, color: "#fff", background: "rgba(255, 255, 255, 0.2)", borderRadius: 999, padding: "1px 5px" }}>Home</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Movies</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Series</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Anime</span>
+                          </div>
+                          <div
+                            style={{
+                              background: "rgba(255, 255, 255, 0.12)",
+                              backdropFilter: "blur(8px)",
+                              borderRadius: 999,
+                              padding: "2px 14px",
+                              border: "1px solid rgba(255, 255, 255, 0.12)",
+                              fontSize: 7,
+                              color: "rgba(255, 255, 255, 0.5)",
+                            }}
+                          >
+                            Search...
+                          </div>
+                          <div style={{ display: "flex", gap: 3 }}>
+                            <div style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255, 255, 255, 0.15)" }} />
+                            <div style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255, 255, 255, 0.15)" }} />
+                            <div style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(255, 255, 255, 0.15)" }} />
+                          </div>
+                        </div>
+
+                        {/* Hero preview content */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 14, paddingLeft: 6 }}>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 1.5, fontFamily: "serif" }}>
+                            THE ODYSSEY
+                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 7, color: "rgba(255, 255, 255, 0.8)" }}>
+                            <span style={{ border: "1px solid #22c55e", borderRadius: "50%", width: 12, height: 12, display: "grid", placeItems: "center", fontSize: 6, fontWeight: 800 }}>8.0</span>
+                            <span>• 2021 • 2h 53m •</span>
+                            <span style={{ background: "#ea580c", padding: "0 3px", borderRadius: 2, fontSize: 6, color: "#fff" }}>18</span>
+                            <span>• HD</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 5, marginTop: 6 }}>
+                            <span style={{ background: "#fff", color: "#000", fontWeight: 800, fontSize: 7, padding: "3px 8px", borderRadius: 3 }}>▶ Play</span>
+                            <span style={{ background: "rgba(255, 255, 255, 0.15)", color: "#fff", fontWeight: 600, fontSize: 7, padding: "3px 8px", borderRadius: 3 }}>Details</span>
+                          </div>
+                        </div>
+
+                        {/* Pager dots */}
+                        <div style={{ display: "flex", gap: 3, justifyContent: "flex-end", marginTop: "auto", paddingRight: 4 }}>
+                          <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.4)" }} />
+                          <div style={{ width: 3, height: 3, borderRadius: "50%", background: "#fff" }} />
+                          <div style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.4)" }} />
+                        </div>
+                      </div>
+                      <span className={styles.themeModeLabel}>Default</span>
                     </button>
+
+                    {/* 2. Performance (Solid & Fast) matching Vivarium reference */}
                     <button
                       type="button"
-                      style={{
-                        padding: "16px 20px",
-                        borderRadius: 16,
-                        border: settings.themeMode === "performance" ? "2px solid #fff" : "1px solid rgba(255, 255, 255, 0.12)",
-                        background: settings.themeMode === "performance" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
-                        color: "#fff",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        transition: "all 0.2s ease",
-                      }}
+                      className={styles.themeModeCard}
                       onClick={() => {
                         setSettings((s) => ({ ...s, themeMode: "performance" }));
-                        showToast("Activated Performance Mode (Solid & Fast)");
+                        showToast("Applied Performance Theme");
                       }}
+                      aria-label="Select Performance Theme"
                     >
-                      <span style={{ fontSize: 16, fontWeight: 700 }}>⚡ Performance Mode</span>
-                      <span style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4 }}>
-                        Full-width solid top bar, zero GPU blur filters, streamlined for 120fps
-                      </span>
+                      <div
+                        className={`${styles.themeModePreview} ${
+                          settings.themeMode === "performance" ? styles.themeModePreviewActive : ""
+                        }`}
+                        style={{
+                          background: "#08090d",
+                        }}
+                      >
+                        {/* Flush top navbar */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 4 }}>
+                          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+                            <span style={{ fontSize: 7, fontWeight: 800, color: "#fff", borderBottom: "1.5px solid #fff", paddingBottom: 1 }}>Home</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Movies</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Series</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Anime</span>
+                            <span style={{ fontSize: 7, color: "rgba(255, 255, 255, 0.7)" }}>Browse ⌵</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.6)" }} />
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.6)" }} />
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.6)" }} />
+                          </div>
+                        </div>
+
+                        {/* Hero preview content */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 10, paddingLeft: 4 }}>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 1.5, fontFamily: "serif" }}>
+                            THE ODYSSEY
+                          </span>
+                          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                            <span style={{ background: "#fff", color: "#000", fontWeight: 800, fontSize: 7, padding: "2px 7px", borderRadius: 3 }}>▶ Play</span>
+                            <span style={{ background: "rgba(255, 255, 255, 0.15)", color: "#fff", fontWeight: 600, fontSize: 7, padding: "2px 7px", borderRadius: 3 }}>Details</span>
+                          </div>
+                        </div>
+
+                        {/* Top 10 Today Row Preview */}
+                        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+                          <span style={{ fontSize: 6.5, fontWeight: 700, color: "#fff" }}>Top 10 Today</span>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            {[1, 2, 3, 4].map((num) => (
+                              <div
+                                key={num}
+                                style={{
+                                  flex: 1,
+                                  height: 20,
+                                  background: "rgba(255, 255, 255, 0.08)",
+                                  borderRadius: 3,
+                                  position: "relative",
+                                  padding: 2,
+                                }}
+                              >
+                                <span style={{ fontSize: 6, fontWeight: 800, color: "#fff" }}>{num}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={styles.themeModeLabel}>Performance</span>
                     </button>
                   </div>
 
@@ -1124,6 +1228,30 @@ export default function SettingsPage() {
                           settings.showBackground !== false ? styles.toggleSwitchOn : ""
                         }`}
                         onClick={() => toggleSetting("showBackground")}
+                      >
+                        <span className={styles.toggleKnob} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Smooth Inertial Scrolling */}
+                  {matchesSearch("Smooth inertial scrolling") && (
+                    <div className={styles.settingRow}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        <span className={styles.settingLabel}>Smooth inertial scrolling</span>
+                        <span style={{ fontSize: 12, color: "rgba(255, 255, 255, 0.45)" }}>
+                          Glides with buttery natural momentum and physics-based inertia
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={settings.smoothScroll !== false}
+                        aria-label="Smooth inertial scrolling"
+                        className={`${styles.toggleSwitch} ${
+                          settings.smoothScroll !== false ? styles.toggleSwitchOn : ""
+                        }`}
+                        onClick={() => toggleSetting("smoothScroll")}
                       >
                         <span className={styles.toggleKnob} />
                       </button>
