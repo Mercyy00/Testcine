@@ -348,13 +348,23 @@
   color: #07090e;
   font-size: 15px;
   font-weight: 700;
-  padding: 10px 24px;
+  padding: 10px 26px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 9999px);
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+:global(html[data-theme-mode="default"]) .playBtn {
+  border-radius: 9999px !important;
+  padding: 10px 30px !important;
+}
+
+:global(html[data-theme-mode="performance"]) .playBtn {
+  border-radius: 8px !important;
+  padding: 10px 24px !important;
 }
 
 .playBtn:hover {
@@ -379,12 +389,22 @@
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
-  padding: 10px 22px;
+  padding: 10px 24px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 9999px);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+}
+
+:global(html[data-theme-mode="default"]) .glassBtn {
+  border-radius: 9999px !important;
+  padding: 10px 26px !important;
+}
+
+:global(html[data-theme-mode="performance"]) .glassBtn {
+  border-radius: 8px !important;
+  padding: 10px 22px !important;
 }
 
 .glassBtn:hover {
@@ -401,7 +421,7 @@
 .iconBtn {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--btn-icon-radius, 50%);
   display: grid;
   place-items: center;
   padding: 0;
@@ -414,6 +434,14 @@
   position: relative;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+}
+
+:global(html[data-theme-mode="default"]) .iconBtn {
+  border-radius: 50% !important;
+}
+
+:global(html[data-theme-mode="performance"]) .iconBtn {
+  border-radius: 8px !important;
 }
 
 .iconBtn:hover {

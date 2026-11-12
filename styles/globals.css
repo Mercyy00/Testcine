@@ -156,6 +156,34 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --nav-h: 56px;
   --safe-b: env(safe-area-inset-bottom, 0px);
+
+  /* Dynamic Theme Mode Tokens (Default vs Performance) */
+  --btn-radius: 9999px;
+  --btn-icon-radius: 50%;
+  --card-radius: 16px;
+  --card-art-radius: 14px;
+  --chip-radius: 9999px;
+  --pager-arrow-radius: 50%;
+}
+
+/* Explicit Theme Mode Dynamic Overrides */
+html[data-theme-mode="default"],
+:root:not([data-theme-mode="performance"]) {
+  --btn-radius: 9999px;
+  --btn-icon-radius: 50%;
+  --card-radius: 16px;
+  --card-art-radius: 14px;
+  --chip-radius: 9999px;
+  --pager-arrow-radius: 50%;
+}
+
+html[data-theme-mode="performance"] {
+  --btn-radius: 8px;
+  --btn-icon-radius: 8px;
+  --card-radius: 10px;
+  --card-art-radius: 8px;
+  --chip-radius: 8px;
+  --pager-arrow-radius: 8px;
 }
 
 *,

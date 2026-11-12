@@ -168,12 +168,20 @@
   height: 32px;
   display: grid;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--pager-arrow-radius, 6px);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #ffffff;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(html[data-theme-mode="default"]) .arrows button {
+  border-radius: 50% !important;
+}
+
+:global(html[data-theme-mode="performance"]) .arrows button {
+  border-radius: 6px !important;
 }
 
 .arrows button:hover:not(:disabled) {

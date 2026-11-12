@@ -1025,7 +1025,12 @@ export default function SettingsPage() {
                       type="button"
                       className={styles.themeModeCard}
                       onClick={() => {
-                        setSettings((s) => ({ ...s, themeMode: "default" }));
+                        const newTheme = settings.theme === "performance" ? "dark" : settings.theme || "dark";
+                        setSettings((s) => ({ ...s, themeMode: "default", theme: newTheme }));
+                        if (typeof document !== "undefined") {
+                          document.documentElement.dataset.themeMode = "default";
+                          document.documentElement.dataset.theme = newTheme;
+                        }
                         showToast("Applied Default Theme");
                       }}
                       aria-label="Select Default Theme"
@@ -1109,6 +1114,9 @@ export default function SettingsPage() {
                       className={styles.themeModeCard}
                       onClick={() => {
                         setSettings((s) => ({ ...s, themeMode: "performance" }));
+                        if (typeof document !== "undefined") {
+                          document.documentElement.dataset.themeMode = "performance";
+                        }
                         showToast("Applied Performance Theme");
                       }}
                       aria-label="Select Performance Theme"
