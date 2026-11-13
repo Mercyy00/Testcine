@@ -749,7 +749,10 @@
   height: 38px;
   padding: 0 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--g-fill);
+  -webkit-backdrop-filter: var(--g-blur);
+  backdrop-filter: var(--g-blur);
+  box-shadow: var(--g-edge);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.75);
   font-size: 13.5px;
@@ -759,7 +762,8 @@
 }
 
 .filterPill:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--g-fill-hover);
+  box-shadow: var(--g-edge-hover);
   color: #ffffff;
 }
 

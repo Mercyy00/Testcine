@@ -1,0 +1,69 @@
+/* ===== DIVINE unified glass buttons =====
+   One recipe for every secondary button / pill / icon control so the whole
+   site matches the navbar: dark frosted fill, strong blur, bright top edge.
+   Primary actions (white Play, active pills) stay solid white. */
+:root {
+  --g-fill: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.02) 100%), rgba(14,16,24,.55);
+  --g-fill-hover: linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.05) 100%), rgba(22,26,38,.65);
+  --g-blur: blur(28px) saturate(190%) brightness(1.1);
+  --g-edge: inset 1px 1px 1px rgba(255,255,255,.40), inset -1px -1px 1px rgba(255,255,255,.08), 0 6px 20px -4px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
+  --g-edge-hover: inset 1px 1px 1.5px rgba(255,255,255,.7), inset -1px -1px 1px rgba(255,255,255,.18), 0 8px 24px -4px rgba(0,0,0,.6), 0 0 16px rgba(255,255,255,.07);
+}
+
+[class*="_detailsBtn"],
+[class*="_actionPillBtn"],
+[class*="_likeDislikeGroup"],
+[class*="_filterTab"],
+[class*="_pillActionBtn"],
+[class*="_markAllBtn"],
+[class*="_notesTabBtn"] {
+  background: var(--g-fill);
+  -webkit-backdrop-filter: var(--g-blur);
+  backdrop-filter: var(--g-blur);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: var(--g-edge);
+  color: rgba(255,255,255,.92);
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(.22,1,.36,1);
+}
+
+[class*="_detailsBtn"]:hover,
+[class*="_actionPillBtn"]:hover,
+[class*="_filterTab"]:hover,
+[class*="_pillActionBtn"]:hover,
+[class*="_markAllBtn"]:hover,
+[class*="_notesTabBtn"]:hover {
+  background: var(--g-fill-hover);
+  border-color: rgba(255,255,255,.32);
+  box-shadow: var(--g-edge-hover);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+[class*="_detailsBtn"]:active,
+[class*="_actionPillBtn"]:active { transform: scale(.96); }
+
+/* active / selected state = solid white pill, like the reference */
+[class*="_filterPillActive"],
+[class*="_pillActive"],
+[class*="_filterActive"],
+[class*="_notesTabBtnActive"] {
+  background: #fff !important;
+  color: #080808 !important;
+  border-color: #fff !important;
+  box-shadow: inset 0 1px 1px #fff, 0 6px 24px rgba(255,255,255,.28) !important;
+}
+
+/* keep the on-state of watch action buttons glassy-bright instead of white */
+[class*="_actionPillBtnActive"] {
+  background: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.12)) !important;
+  border-color: rgba(255,255,255,.4) !important;
+}
+
+/* browsers without backdrop-filter: slightly more opaque so text stays readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --g-fill: rgba(22,26,38,.92); --g-fill-hover: rgba(34,40,56,.96); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --g-fill: rgba(22,26,38,.96); --g-fill-hover: rgba(34,40,56,.98); }
+  [class*="_actionPillBtn"], [class*="_detailsBtn"] { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

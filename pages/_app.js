@@ -8,6 +8,7 @@ import { Bebas_Neue } from "next/font/google";
 import { useSettings } from "../lib/store";
 import "../lib/env";
 import "../styles/globals.css";
+import "../styles/glass.css";
 
 const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
