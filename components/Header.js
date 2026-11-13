@@ -104,8 +104,77 @@ export default function Header({ watchTitle = null }) {
   const [readIds, setReadIds] = useReadNotifications();
   const [dismissedIds, setDismissedIds] = useDismissedNotifications();
   const [activeToastNotif, setActiveToastNotif] = useState(null);
+  const [liveReleases, setLiveReleases] = useState([]);
+  const [liveRecs, setLiveRecs] = useState([]);
 
-  // Notification Filter Tab: "all" | "unread" | "mentions"
+  // Fetch live now playing & new blockbuster releases
+  useEffect(() => {
+    let cancelled = false;
+    async function loadReleases() {
+      try {
+        const res = await fetch("/api/tmdb/discover?category=now_playing&type=movie");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && Array.isArray(data) && data.length > 0) {
+            const formatted = data.slice(0, 6).map((item) => ({
+              id: item.id || item.tmdbId,
+              title: item.title || item.name,
+              poster: item.poster || item.poster_path,
+              subtitle: "Now Streaming · New Release",
+              badge: "New Release",
+              type: "release",
+              href: `/title/${item.id || item.tmdbId}`,
+            }));
+            setLiveReleases(formatted);
+          }
+        }
+      } catch {
+        // Silently fallback to curated new releases in lib/notifications
+      }
+    }
+    loadReleases();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch live personalized recommendations for user's watched items
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRecs() {
+      if (!history || history.length === 0) {
+        setLiveRecs([]);
+        return;
+      }
+      const mostRecent = history[0];
+      if (!mostRecent || !mostRecent.id) return;
+      try {
+        const type =
+          mostRecent.type === "tv" || mostRecent.type === "series"
+            ? "tv"
+            : mostRecent.type === "anime"
+            ? "anime"
+            : "movie";
+        const res = await fetch(
+          `/api/tmdb/recommendations?id=${encodeURIComponent(mostRecent.id)}&type=${type}&limit=4`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && Array.isArray(data) && data.length > 0) {
+            setLiveRecs(data);
+          }
+        }
+      } catch {
+        // Silently fallback to recommendation map in lib/notifications
+      }
+    }
+    loadRecs();
+    return () => {
+      cancelled = true;
+    };
+  }, [history]);
+
+  // Notification Filter Tab: "all" | "foryou" | "unread"
   const [notifTab, setNotifTab] = useState("all");
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -205,15 +274,20 @@ export default function Header({ watchTitle = null }) {
       schedule,
       readIds,
       dismissedIds,
+      newReleases: liveReleases,
+      recommendations: liveRecs,
+      includeCurated: true,
+      includeRecommendations: true,
+      includeNewReleases: true,
     });
-  }, [history, watchlist, schedule, readIds, dismissedIds]);
+  }, [history, watchlist, schedule, readIds, dismissedIds, liveReleases, liveRecs]);
 
   const unread = notificationsData.unreadCount;
 
   // In-app alert when opening website on airing day
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const todayUnread = (notificationsData.today || []).find((n) => n.unread);
+    const todayUnread = (notificationsData.today || []).find((n) => n.unread && n.type === "episode");
     if (!todayUnread) {
       setActiveToastNotif(null);
       return;
@@ -252,13 +326,17 @@ export default function Header({ watchTitle = null }) {
   // Filtered notifications based on active tab
   const displayToday = useMemo(() => {
     if (notifTab === "unread") return notificationsData.today.filter((n) => n.unread);
-    if (notifTab === "mentions") return [];
+    if (notifTab === "foryou" || notifTab === "mentions") {
+      return notificationsData.today.filter((n) => n.type === "recommendation" || n.type === "release");
+    }
     return notificationsData.today;
   }, [notifTab, notificationsData]);
 
   const displayThisWeek = useMemo(() => {
     if (notifTab === "unread") return notificationsData.thisWeek.filter((n) => n.unread);
-    if (notifTab === "mentions") return [];
+    if (notifTab === "foryou" || notifTab === "mentions") {
+      return notificationsData.thisWeek.filter((n) => n.type === "recommendation" || n.type === "release");
+    }
     return notificationsData.thisWeek;
   }, [notifTab, notificationsData]);
 
@@ -328,7 +406,7 @@ export default function Header({ watchTitle = null }) {
         </button>
       </div>
 
-      {/* Filter Tabs: All | Unread | Mentions */}
+      {/* Filter Tabs: All | For You | Unread */}
       <div className={styles.notesTabs} role="tablist">
         <button
           type="button"
@@ -345,6 +423,18 @@ export default function Header({ watchTitle = null }) {
         <button
           type="button"
           role="tab"
+          aria-selected={notifTab === "foryou"}
+          className={`${styles.notesTabBtn} ${notifTab === "foryou" ? styles.notesTabBtnActive : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setNotifTab("foryou");
+          }}
+        >
+          For You
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={notifTab === "unread"}
           className={`${styles.notesTabBtn} ${notifTab === "unread" ? styles.notesTabBtnActive : ""}`}
           onClick={(e) => {
@@ -354,26 +444,14 @@ export default function Header({ watchTitle = null }) {
         >
           Unread
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={notifTab === "mentions"}
-          className={`${styles.notesTabBtn} ${notifTab === "mentions" ? styles.notesTabBtnActive : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setNotifTab("mentions");
-          }}
-        >
-          Mentions
-        </button>
       </div>
 
       {/* Notifications List */}
       <div className={styles.notesList}>
         {totalDisplayed === 0 ? (
           <div className={styles.emptyNotifs}>
-            {notifTab === "mentions"
-              ? "No mentions yet"
+            {notifTab === "foryou" || notifTab === "mentions"
+              ? "No recommendations yet"
               : notifTab === "unread"
               ? "No unread notifications"
               : "No notifications"}
@@ -387,7 +465,7 @@ export default function Header({ watchTitle = null }) {
                 {displayToday.map((item) => (
                   <div
                     key={item.id}
-                    className={styles.notifItem}
+                    className={`${styles.notifItem} ${item.unread ? styles.notifItemUnread : ""}`}
                     onClick={() => handleNotifClick(item)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -401,6 +479,22 @@ export default function Header({ watchTitle = null }) {
                       }}
                     />
                     <div className={styles.notifBody}>
+                      <div className={styles.notifHeadRow}>
+                        {item.badge && (
+                          <span
+                            className={`${styles.notifBadge} ${
+                              item.type === "release"
+                                ? styles.notifBadgeRelease
+                                : item.type === "recommendation"
+                                ? styles.notifBadgeRec
+                                : styles.notifBadgeAiring
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.unread && <span className={styles.notifDotBlue} aria-label="Unread" />}
+                      </div>
                       <span className={styles.notifTitle}>{item.title}</span>
                       <span className={styles.notifSub}>{item.subtitle}</span>
                     </div>
@@ -425,7 +519,7 @@ export default function Header({ watchTitle = null }) {
                 {displayThisWeek.map((item) => (
                   <div
                     key={item.id}
-                    className={styles.notifItem}
+                    className={`${styles.notifItem} ${item.unread ? styles.notifItemUnread : ""}`}
                     onClick={() => handleNotifClick(item)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -439,6 +533,22 @@ export default function Header({ watchTitle = null }) {
                       }}
                     />
                     <div className={styles.notifBody}>
+                      <div className={styles.notifHeadRow}>
+                        {item.badge && (
+                          <span
+                            className={`${styles.notifBadge} ${
+                              item.type === "release"
+                                ? styles.notifBadgeRelease
+                                : item.type === "recommendation"
+                                ? styles.notifBadgeRec
+                                : styles.notifBadgeAiring
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.unread && <span className={styles.notifDotBlue} aria-label="Unread" />}
+                      </div>
                       <span className={styles.notifTitle}>{item.title}</span>
                       <span className={styles.notifSub}>{item.subtitle}</span>
                     </div>
@@ -574,7 +684,9 @@ export default function Header({ watchTitle = null }) {
         onClick={() => handleNotifClick(activeToastNotif)}
       >
         <div className={styles.airingToastHead}>
-          <span className={styles.airingToastBadge}>Airing Today</span>
+          <span className={styles.airingToastBadge}>
+            {activeToastNotif.badge || "Airing Today"}
+          </span>
           {activeToastNotif.network && (
             <span className={styles.airingToastTime}>{activeToastNotif.network}</span>
           )}

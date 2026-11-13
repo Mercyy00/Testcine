@@ -139,3 +139,59 @@ test("buildDynamicNotifications excludes episodes that aired >48h ago if already
   assert.equal(result.all.length, 0);
   assert.equal(result.unreadCount, 0);
 });
+
+test("buildDynamicNotifications generates new release notifications when includeCurated is true", () => {
+  const result = buildDynamicNotifications({ includeCurated: true });
+  assert.ok(result.all.length > 0);
+  const releaseNotifs = result.all.filter((n) => n.type === "release");
+  assert.ok(releaseNotifs.length > 0);
+  assert.equal(releaseNotifs[0].badge, "New Release");
+  assert.ok(releaseNotifs.some((n) => n.title.includes("Ramayana") || n.title.includes("Resident Evil")));
+});
+
+test("buildDynamicNotifications generates personalized 'Because you watched' recommendations from history", () => {
+  const history = [
+    {
+      id: "ramayana-rise-of-a-legend",
+      title: "Ramayana: Rise of a Legend",
+      type: "movie",
+    },
+  ];
+
+  const result = buildDynamicNotifications({
+    history,
+    includeRecommendations: true,
+  });
+
+  const recNotifs = result.all.filter((n) => n.type === "recommendation");
+  assert.ok(recNotifs.length > 0);
+  assert.equal(recNotifs[0].badge, "For You");
+  assert.match(recNotifs[0].subtitle, /Because you watched Ramayana: Rise of a Legend/);
+  // Ensure the recommended item itself is not the already-watched title
+  assert.notEqual(recNotifs[0].id, "notif_rec_ramayana-rise-of-a-legend_ramayana-rise-of-a-legend");
+});
+
+test("buildDynamicNotifications supports custom live new releases and recommendations", () => {
+  const customReleases = [
+    {
+      id: "superman-legacy",
+      title: "Superman: Legacy",
+      poster: "/superman.jpg",
+      subtitle: "Now Streaming in 4K UHD",
+      badge: "Blockbuster",
+      type: "release",
+      href: "/title/superman-legacy",
+    },
+  ];
+
+  const result = buildDynamicNotifications({
+    newReleases: customReleases,
+    includeNewReleases: true,
+  });
+
+  const superman = result.all.find((n) => n.id === "notif_rel_superman-legacy");
+  assert.ok(superman);
+  assert.equal(superman.title, "Superman: Legacy");
+  assert.equal(superman.badge, "Blockbuster");
+  assert.equal(superman.href, "/title/superman-legacy");
+});
