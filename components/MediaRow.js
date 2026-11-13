@@ -199,7 +199,6 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
       <div
         className={styles.scroller}
         ref={scroller}
-        data-lenis-prevent="true"
         onScroll={measure}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}

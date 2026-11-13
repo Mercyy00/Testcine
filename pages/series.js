@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import HeroBanner from "../components/HeroBanner";
@@ -117,13 +117,31 @@ export default function Series() {
     if (q.network && typeof q.network === "string" && q.network !== network) {
       setNetwork(q.network);
     }
-    setFilters({
-      genre: typeof q.genre === "string" ? q.genre : "all",
-      country: typeof q.country === "string" ? q.country : "all",
-      year: typeof q.year === "string" ? q.year : "all",
-      service: typeof q.service === "string" ? q.service : "all",
-      language: typeof q.language === "string" ? q.language : "all",
-      rating: typeof q.rating === "string" ? q.rating : "all",
+    setFilters((prev) => {
+      const nextGenre = typeof q.genre === "string" ? q.genre : "all";
+      const nextCountry = typeof q.country === "string" ? q.country : "all";
+      const nextYear = typeof q.year === "string" ? q.year : "all";
+      const nextService = typeof q.service === "string" ? q.service : "all";
+      const nextLanguage = typeof q.language === "string" ? q.language : "all";
+      const nextRating = typeof q.rating === "string" ? q.rating : "all";
+      if (
+        prev.genre === nextGenre &&
+        prev.country === nextCountry &&
+        prev.year === nextYear &&
+        prev.service === nextService &&
+        prev.language === nextLanguage &&
+        prev.rating === nextRating
+      ) {
+        return prev;
+      }
+      return {
+        genre: nextGenre,
+        country: nextCountry,
+        year: nextYear,
+        service: nextService,
+        language: nextLanguage,
+        rating: nextRating,
+      };
     });
     isInitialMount.current = false;
   }, [router.isReady, router.query]);
@@ -168,35 +186,13 @@ export default function Series() {
     };
   }, []);
 
-  // 3. Reset pagination when category, network, or filters change
-  const prevFiltersRef = useRef({ category, network, ...filters });
-  useEffect(() => {
-    const prev = prevFiltersRef.current;
-    if (
-      prev.category !== category ||
-      prev.network !== network ||
-      prev.genre !== filters.genre ||
-      prev.country !== filters.country ||
-      prev.year !== filters.year ||
-      prev.service !== filters.service ||
-      prev.language !== filters.language ||
-      prev.rating !== filters.rating
-    ) {
-      prevFiltersRef.current = { category, network, ...filters };
-      setPage(1);
-      setHasMore(true);
-      setSeriesList([]);
-    }
-  }, [category, network, filters]);
-
-  // 4. Fetch catalog series from TMDB API based on category, filters, network, and page
+  // 3. Fetch catalog series (Page 1) whenever category, network, or filters change
   useEffect(() => {
     let active = true;
-    if (page === 1) {
-      setSeriesLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+    setSeriesLoading(true);
+    setLoadingMore(false);
+    setPage(1);
+    setHasMore(true);
 
     const catMap = {
       trending: "trending",
@@ -215,7 +211,7 @@ export default function Series() {
       service: filters.service,
       language: filters.language,
       rating: filters.rating,
-      page: String(page),
+      page: "1",
     });
     if (network && network !== "all") {
       params.set("network", network);
@@ -226,36 +222,85 @@ export default function Series() {
       .then((data) => {
         if (!active) return;
         const newItems = Array.isArray(data) ? data : [];
+        setSeriesList(newItems);
+        setSeriesLoading(false);
         if (newItems.length < 10) {
           setHasMore(false);
-        }
-        if (page === 1) {
-          setSeriesList(newItems);
-          setSeriesLoading(false);
-        } else {
-          setSeriesList((prev) => {
-            const seen = new Set(prev.map((t) => String(t.id || t.tmdbId)));
-            const distinct = newItems.filter((t) => !seen.has(String(t.id || t.tmdbId)));
-            return [...prev, ...distinct];
-          });
-          setLoadingMore(false);
         }
       })
       .catch(() => {
         if (!active) return;
-        if (page === 1) {
-          setSeriesList([]);
-          setSeriesLoading(false);
-        } else {
-          setLoadingMore(false);
-          setHasMore(false);
-        }
+        setSeriesList([]);
+        setSeriesLoading(false);
+        setHasMore(false);
       });
 
     return () => {
       active = false;
     };
-  }, [category, network, filters, page]);
+  }, [category, network, filters]);
+
+  // 4. Load next page for infinite scroll
+  const loadMore = useCallback(() => {
+    if (seriesLoading || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+
+    const catMap = {
+      trending: "trending",
+      popular: "popular",
+      top: "top",
+      airing_today: "airing_today",
+      on_air: "on_the_air",
+    };
+
+    const params = new URLSearchParams({
+      type: "tv",
+      category: catMap[category] || category,
+      genre: filters.genre,
+      country: filters.country,
+      year: filters.year,
+      service: filters.service,
+      language: filters.language,
+      rating: filters.rating,
+      page: String(nextPage),
+    });
+    if (network && network !== "all") {
+      params.set("network", network);
+    }
+
+    fetch(`/api/tmdb/discover?${params.toString()}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        const newItems = Array.isArray(data) ? data : [];
+        if (newItems.length === 0) {
+          setHasMore(false);
+          setLoadingMore(false);
+          return;
+        }
+
+        let addedCount = 0;
+        setSeriesList((prev) => {
+          const seen = new Set(prev.map((t) => String(t.id || t.tmdbId)));
+          const distinct = newItems.filter((t) => !seen.has(String(t.id || t.tmdbId)));
+          addedCount = distinct.length;
+          if (distinct.length === 0) {
+            return prev;
+          }
+          return [...prev, ...distinct];
+        });
+
+        setPage(nextPage);
+        if (newItems.length < 10 || addedCount === 0) {
+          setHasMore(false);
+        }
+        setLoadingMore(false);
+      })
+      .catch(() => {
+        setLoadingMore(false);
+        setHasMore(false);
+      });
+  }, [seriesLoading, loadingMore, hasMore, page, category, network, filters]);
 
   // 5. Infinite scroll observer
   useEffect(() => {
@@ -265,16 +310,16 @@ export default function Series() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !seriesLoading) {
-          setPage((p) => p + 1);
+        if (entries[0].isIntersecting) {
+          loadMore();
         }
       },
-      { rootMargin: "400px" }
+      { rootMargin: "250px" }
     );
 
     observer.observe(trigger);
     return () => observer.disconnect();
-  }, [hasMore, seriesLoading, loadingMore]);
+  }, [hasMore, seriesLoading, loadingMore, loadMore]);
 
   const filterOptions = useMemo(() => {
     return {
@@ -380,42 +425,44 @@ export default function Series() {
             <TitleGrid items={displayedSeries} wide={true} />
 
             {/* Infinite Scroll Trigger & Indicator */}
-            <div
-              ref={infiniteTriggerRef}
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: "36px 0 16px",
-                minHeight: "60px",
-              }}
-            >
-              {loadingMore && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    color: "rgba(255, 255, 255, 0.6)",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                  }}
-                >
-                  <span
+            {hasMore && (
+              <div
+                ref={infiniteTriggerRef}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "36px 0 16px",
+                  minHeight: "60px",
+                }}
+              >
+                {loadingMore && (
+                  <div
                     style={{
-                      width: "18px",
-                      height: "18px",
-                      border: "2px solid rgba(255, 255, 255, 0.2)",
-                      borderTopColor: "#ffffff",
-                      borderRadius: "50%",
-                      animation: "spin 0.8s linear infinite",
-                      display: "inline-block",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      color: "rgba(255, 255, 255, 0.6)",
+                      fontSize: "14px",
+                      fontWeight: 500,
                     }}
-                  />
-                  <span>Loading more series...</span>
-                </div>
-              )}
-            </div>
+                  >
+                    <span
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        border: "2px solid rgba(255, 255, 255, 0.2)",
+                        borderTopColor: "#ffffff",
+                        borderRadius: "50%",
+                        animation: "spin 0.8s linear infinite",
+                        display: "inline-block",
+                      }}
+                    />
+                    <span>Loading more series...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <Empty

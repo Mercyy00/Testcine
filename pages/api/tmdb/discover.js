@@ -12,7 +12,8 @@ import { fetchAniListDiscover } from "../../../lib/anilist.js";
 import { applyApiGuard, clampInt, handleApiError } from "../../../lib/api-guard.js";
 
 export default async function handler(req, res) {
-  if (!applyApiGuard(req, res, { cacheSeconds: 1800 })) {
+  const guarded = await applyApiGuard(req, res, { cacheSeconds: 1800 });
+  if (!guarded) {
     return;
   }
 
@@ -70,7 +71,7 @@ export default async function handler(req, res) {
     if (!hasCustomFilters) {
       if (category === "trending") {
         const timeWindow = req.query.time_window === "week" ? "week" : "day";
-        items = await fetchTrending(validType, timeWindow);
+        items = await fetchTrending(validType, timeWindow, validPage);
       } else if (category === "popular") {
         items = await fetchPopular(validType, validPage);
       } else if (category === "top") {
@@ -108,15 +109,6 @@ export default async function handler(req, res) {
         sort_by: discoverSort,
         page: validPage,
       });
-    }
-
-    if (category === "upcoming" && Array.isArray(items)) {
-      const todayStr = new Date().toISOString().split("T")[0];
-      items = items.filter((item) => {
-        const d = item.releaseDate;
-        return d && d >= todayStr;
-      });
-      items.sort((a, b) => (a.releaseDate || "").localeCompare(b.releaseDate || ""));
     }
 
     return res.status(200).json(items || []);
