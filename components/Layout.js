@@ -45,7 +45,7 @@ export default function Layout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </Head>
       <div className={styles.mood} aria-hidden="true" />
-      <Header watchTitle={router?.pathname?.startsWith("/watch") ? cleanTitle : null} />
+      <Header />
       <main className={`pageShell ${flush ? "" : styles.padded}`}>{children}</main>
       <footer className={styles.footer}>
         <div style={{ marginBottom: 4 }}>

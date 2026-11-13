@@ -856,17 +856,17 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             <span>{isSaved ? "Saved" : "Save"}</span>
           </button>
 
-          {/* Server selector (Greek Gods / Aura matching vivarium.su reference) */}
+          {/* Server selector (Vivarium reference) */}
           <div ref={sourcePickerRef} className={styles.sourcePicker}>
             <button
               type="button"
               className={`${styles.actionPillBtn} ${showSourceMenu ? styles.actionPillBtnActive : ""}`}
-              aria-label={`Server: ${activeServer?.name || "Poseidon"}`}
+              aria-label={`Server: ${activeServer?.name || "Vivarium"}`}
               aria-expanded={showSourceMenu}
               onClick={() => setShowSourceMenu((open) => !open)}
             >
               <Star size={14} fill="#f59e0b" color="#f59e0b" className={styles.serverStarIcon} />
-              <span>{activeServer?.name || "Poseidon"}</span>
+              <span>{activeServer?.name || "Vivarium"}</span>
               <ChevronDown size={13} className={`${styles.chevronIcon} ${showSourceMenu ? styles.chevronRotated : ""}`} />
             </button>
             {showSourceMenu && (
@@ -920,26 +920,28 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
             )}
           </div>
 
-          {/* Download (Icon Only per Vivarium reference) */}
+          {/* Download (Pill per Vivarium reference) */}
           <button
             type="button"
-            className={`${styles.actionPillBtn} ${styles.actionIconBtn}`}
+            className={styles.actionPillBtn}
             aria-label="Download"
             title="Download"
             onClick={() => showToast("Downloads are not available for this stream")}
           >
-            <Download size={16} />
+            <Download size={15} />
+            <span>Download</span>
           </button>
 
-          {/* Share (Icon Only per Vivarium reference) */}
+          {/* Share (Pill per Vivarium reference) */}
           <button
             type="button"
-            className={`${styles.actionPillBtn} ${styles.actionIconBtn}`}
+            className={styles.actionPillBtn}
             onClick={handleShare}
             aria-label="Share"
             title="Share"
           >
-            <Share2 size={16} />
+            <Share2 size={15} />
+            <span>Share</span>
           </button>
 
           {/* Mark as Watched */}

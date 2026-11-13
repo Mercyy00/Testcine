@@ -74,96 +74,77 @@
 }
 
 .links {
-  height: var(--bar-ctl);
-  border-radius: var(--radius-float, 999px);
-  background-color: rgba(14, 16, 24, 0.45);
+  height: 44px;
+  border-radius: 9999px;
+  background-color: rgba(30, 32, 38, 0.75);
   position: relative;
-  border: 1px double rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.55),
-    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.55),
-    inset 5px -5px 1px -5px rgba(255, 255, 255, 0.3),
-    inset -5px 5px 1px -5px rgba(255, 255, 255, 0.3),
-    inset 0 0 2px rgba(0, 0, 0, 0.8),
-    0 8px 24px -6px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 20px -2px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.05);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   align-items: center;
-  padding: 0 4px;
-  display: flex;
+  padding: 3px 4px;
+  display: inline-flex;
   overflow: hidden;
 }
 
 .links::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  filter: blur(6px);
-  background: linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    transparent 15%,
-    transparent 85%,
-    rgba(255, 255, 255, 0.55) 100%
-  );
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .linkPill {
-  height: calc(var(--bar-ctl) - 8px);
-  border-radius: var(--radius-float, 999px);
-  background: rgba(255, 255, 255, 0.16);
+  height: 38px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
   box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 0.75),
-    inset -1px -1px 1px rgba(255, 255, 255, 0.25),
-    inset 0 0 2px rgba(0, 0, 0, 0.6),
-    0 4px 14px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   opacity: 0;
   pointer-events: none;
-  transition: transform var(--t-base) var(--ease-out), width var(--t-base) var(--ease-out), opacity var(--t-fast);
+  transition: transform var(--t-base, 0.22s) var(--ease-out, ease-out), width var(--t-base, 0.22s) var(--ease-out, ease-out), opacity var(--t-fast, 0.18s);
   position: absolute;
-  top: 4px;
+  top: 3px;
   left: 0;
   z-index: 0;
 }
 
 .link {
   z-index: 1;
-  height: calc(var(--bar-ctl) - 8px);
-  border-radius: var(--radius-float, 999px);
-  color: var(--text, #fff);
+  height: 38px;
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 14.5px;
   white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color 0.18s ease, background 0.18s ease;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 16px;
   font-weight: 600;
   display: inline-flex;
   position: relative;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .link:hover {
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
 }
 
 .link:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .linkOn {
   color: #fff;
+  font-weight: 700;
 }
 
 .linkOn:hover {
@@ -173,35 +154,26 @@
 .linkIcon {
   opacity: 0;
   width: 0;
-  transition: width var(--t-base) var(--ease-out) var(--t-press),
-    margin-right var(--t-base) var(--ease-out) var(--t-press),
-    opacity var(--t-press) var(--ease-out),
-    transform var(--t-press) var(--ease-out);
   flex: 0 0 auto;
   place-items: center start;
   margin-right: 0;
   display: inline-grid;
-  transform: scale(0.8);
   overflow: hidden;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    margin-right 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.15s ease;
 }
 
 .linkIcon > svg {
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
-.link:hover .linkIcon,
-.link:focus-visible .linkIcon,
 .linkOn .linkIcon {
   opacity: 1;
-  width: 22px;
-  transition: width var(--t-base) var(--ease-out),
-    margin-right var(--t-base) var(--ease-out),
-    opacity var(--t-fast) var(--ease-out) var(--t-press),
-    transform var(--t-fast) var(--ease-out) var(--t-press);
-  margin-right: 8px;
-  transform: none;
+  width: 18px;
+  margin-right: 7px;
 }
 
 .dock {
@@ -234,25 +206,21 @@
 }
 
 .round {
-  width: var(--bar-ctl);
-  height: var(--bar-ctl);
+  width: 42px;
+  height: 42px;
   border-radius: 9999px;
   color: var(--text, #fff);
   flex: none;
   place-items: center;
   display: grid;
-  background-color: rgba(14, 16, 24, 0.45);
-  border: 1px double rgba(255, 255, 255, 0.16);
+  background-color: rgba(30, 32, 38, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.75),
-    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.75),
-    inset 4px -4px 1px -4px rgba(255, 255, 255, 0.4),
-    inset -4px 4px 1px -4px rgba(255, 255, 255, 0.4),
-    inset 0 0 2px rgba(0, 0, 0, 0.8),
-    0 6px 20px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
-  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), background 0.25s ease, box-shadow 0.25s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 4px 14px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.05);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   position: relative;
   text-decoration: none;
@@ -260,44 +228,28 @@
 }
 
 .round::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  filter: blur(5px);
-  background: linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.6) 0%,
-    transparent 20%,
-    transparent 80%,
-    rgba(255, 255, 255, 0.6) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 .round svg {
   position: relative;
   z-index: 2;
-  width: 20px;
-  height: 20px;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
-  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  width: 19px;
+  height: 19px;
+  transition: transform 0.2s ease;
 }
 
 .round:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
   box-shadow:
-    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.95),
-    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.95),
-    inset 5px -5px 1px -5px rgba(255, 255, 255, 0.5),
-    inset 0 0 2px rgba(0, 0, 0, 0.8),
-    0 10px 28px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .round:hover svg {
-  transform: scale(1.14);
+  transform: scale(1.08);
 }
 
 .round:active {
@@ -380,25 +332,23 @@
 /* Dropdown popovers */
 .menu {
   position: fixed !important;
-  top: 63px !important;
+  top: 64px !important;
   right: 20px !important;
   left: auto !important;
-  width: 250px !important;
-  min-width: 250px !important;
+  width: 240px !important;
+  min-width: 240px !important;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--text, #ffffff);
-  background-color: rgba(14, 16, 24, 0.8) !important;
+  background-color: rgba(22, 24, 30, 0.92) !important;
   border-radius: 20px !important;
-  border: 1px double rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 0.4),
-    inset -1px -1px 1px rgba(255, 255, 255, 0.1),
-    inset 0 0 2px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 24px 60px -10px rgba(0, 0, 0, 0.85) !important;
   padding: 10px !important;
-  backdrop-filter: blur(36px) saturate(200%) brightness(1.08) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.08) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
   z-index: 300 !important;
   animation: fadeIn 0.2s var(--ease-out) backwards;
   overflow: hidden;
@@ -406,11 +356,11 @@
 
 .menuHead {
   border-radius: 12px;
-  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.2s ease;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-  padding: 10px;
+  gap: 12px;
+  margin-bottom: 2px;
+  padding: 8px 10px;
   display: flex;
   text-decoration: none;
 }
@@ -424,19 +374,15 @@
 }
 
 .menuAvatar {
-  border-radius: 9999px;
-  width: 38px;
-  height: 38px;
-  font-size: var(--fs-md, 14px);
-  color: var(--on-accent, #080808);
-  background: transparent;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   flex: none;
-  place-items: center;
-  font-weight: 700;
-  display: grid;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menuAvatar img {
@@ -453,35 +399,35 @@
 }
 
 .menuName {
-  font-size: var(--fs-sm, 13px);
-  color: var(--text, #fff);
+  font-size: 15px;
+  color: #ffffff;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-weight: 600;
+  font-weight: 700;
   overflow: hidden;
 }
 
 .menuEmail {
-  font-size: var(--fs-xs, 12px);
-  color: var(--text-muted, rgba(255, 255, 255, 0.56));
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
 .menuItem {
-  border-radius: var(--radius-menu-item, 8px);
+  border-radius: 10px;
   width: 100%;
-  min-height: 42px;
-  font-size: var(--fs-md, 14px);
-  color: var(--text, #fff);
+  min-height: 40px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.92);
   text-align: left;
   white-space: nowrap;
-  transition: background var(--t-fast, 0.2s), color var(--t-fast, 0.2s);
+  transition: background 0.18s ease, color 0.18s ease;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  font-weight: 500;
+  gap: 12px;
+  padding: 9px 12px;
+  font-weight: 600;
   display: flex;
   background: transparent;
   border: none;
@@ -491,7 +437,8 @@
 }
 
 .menuItem:hover {
-  background: var(--fill-1, rgba(255, 255, 255, 0.07));
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .menuItem svg {
@@ -500,13 +447,17 @@
 
 .menuBad,
 .menuBad:hover {
-  color: var(--danger, #f4776b);
+  color: #f87171 !important;
+}
+
+.menuBad:hover {
+  background: rgba(248, 113, 113, 0.12) !important;
 }
 
 .menuDivide {
-  background: var(--hairline, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.08);
   height: 1px;
-  margin: 7px 12px;
+  margin: 6px 8px;
   display: block;
 }
 

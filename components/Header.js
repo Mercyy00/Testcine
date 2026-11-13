@@ -45,8 +45,8 @@ import styles from "./Header.module.css";
 
 export const NAV = [
   { href: "/", label: "Home", Icon: House, match: ["/"] },
-  { href: "/browse/movie", label: "Movies", Icon: Clapperboard, match: ["/browse/movie", "/movies"] },
-  { href: "/browse/tv", label: "Series", Icon: TvMinimal, match: ["/browse/tv", "/series"] },
+  { href: "/movies", label: "Movies", Icon: Clapperboard, match: ["/movies", "/browse/movie"] },
+  { href: "/series", label: "Series", Icon: TvMinimal, match: ["/series", "/browse/tv"] },
   { href: "/anime", label: "Anime", Icon: Drama, match: ["/anime"] },
 ];
 
@@ -757,86 +757,49 @@ export default function Header({ watchTitle = null }) {
 
   return (
     <header className={`${styles.bar} ${scrolled ? styles.barScrolled : ""} ${shouldHide ? styles.barHidden : ""}`} data-dock="true">
-      {/* 1. Bar Start: Brand Logo or Watch Breadcrumbs + Capsule with sliding link pill */}
+      {/* 1. Bar Start: Capsule with sliding link pill */}
       <div className={styles.barStart}>
-        {watchTitle ? (
-          <div className={styles.watchBreadcrumbs}>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className={styles.watchBackBtn}
-              aria-label="Back"
-            >
-              <ArrowLeft size={18} strokeWidth={2.4} />
-            </button>
-            <Link href="/" className={styles.breadcrumbLink}>Home</Link>
-            <span className={styles.breadcrumbSep}>&gt;</span>
-            <Link href="/browse/movie" className={styles.breadcrumbLink}>Movies</Link>
-            <span className={styles.breadcrumbSep}>&gt;</span>
-            <span className={styles.breadcrumbCurrent} title={watchTitle}>{watchTitle}</span>
-          </div>
-        ) : (
-          <>
-            <Link href="/" className={styles.brandLink} aria-label="DIVINE Home">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="DIVINE" className={styles.brandLogo} />
-            </Link>
-            <nav className={styles.links} aria-label="Main" ref={navRef}>
-              <span
-                className={styles.linkPill}
-                aria-hidden="true"
-                style={{
-                  width: pillStyle.width ? `${pillStyle.width}px` : undefined,
-                  transform: `translateX(${pillStyle.left}px)`,
-                  opacity: pillStyle.opacity,
-                }}
-              />
-              {NAV.map((item) => {
-                const active = isActive(router.pathname, item);
-                const { href, label, Icon } = item;
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    ref={(el) => (linkRefs.current[href] = el)}
-                    className={`${styles.link} ${active ? styles.linkOn : ""}`}
-                    aria-current={active ? "page" : undefined}
-                    onClick={updatePill}
-                  >
-                    <span className={styles.linkIcon}>
-                      <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
-                        <Icon size={22} strokeWidth={2} />
-                      </span>
-                    </span>
-                    {label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </>
-        )}
+        <nav className={styles.links} aria-label="Main" ref={navRef}>
+          <span
+            className={styles.linkPill}
+            aria-hidden="true"
+            style={{
+              width: pillStyle.width ? `${pillStyle.width}px` : undefined,
+              transform: `translateX(${pillStyle.left}px)`,
+              opacity: pillStyle.opacity,
+            }}
+          />
+          {NAV.map((item) => {
+            const active = isActive(router.pathname, item);
+            const { href, label, Icon } = item;
+            return (
+              <Link
+                key={href}
+                href={href}
+                ref={(el) => (linkRefs.current[href] = el)}
+                className={`${styles.link} ${active ? styles.linkOn : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={updatePill}
+              >
+                <span className={styles.linkIcon}>
+                  <span style={{ display: "inline-flex", flex: "0 0 auto", transform: "none" }}>
+                    <Icon size={18} strokeWidth={2.4} />
+                  </span>
+                </span>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* 2. Center: Docked Search Palette (Hidden on watch page to allow full breadcrumbs) */}
-      {!watchTitle && (
-        <div className={styles.dock} role="search">
-          <SearchPalette />
-        </div>
-      )}
+      {/* 2. Center: Docked Search Palette */}
+      <div className={styles.dock} role="search">
+        <SearchPalette />
+      </div>
 
-      {/* 3. Bar End: Round glass buttons (Search if watch, Watch party, Notifications bell, Profile avatar) */}
+      {/* 3. Bar End: Round glass buttons (Watch party, Notifications bell, Profile avatar) */}
       <div className={styles.barEnd}>
-        {watchTitle && (
-          <button
-            type="button"
-            className={styles.round}
-            onClick={() => setSearchModalOpen(true)}
-            aria-label="Search"
-            title="Search (Ctrl+K)"
-          >
-            <Search size={20} strokeWidth={1.8} />
-          </button>
-        )}
 
         {/* Watch party / community chat */}
         <span className={styles.tooltipWrap}>
@@ -874,7 +837,7 @@ export default function Header({ watchTitle = null }) {
             label="Account"
             trigger={
               <span className={styles.avatarBtn} aria-label="Account">
-                <Avatar name={name} image={avatarImage} size={46} />
+                <Avatar name={name} image={avatarImage} size={40} />
               </span>
             }
             panelClass={styles.menu}

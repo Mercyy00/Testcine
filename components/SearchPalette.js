@@ -184,15 +184,12 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
   return (
     <div className={`${styles.dock} ${wide ? styles.wide : ""}`} ref={wrap}>
       <div className={styles.dockField} onClick={() => input.current?.focus()}>
-        <span className={styles.searchIconLeft} aria-hidden="true">
-          <Search size={16} strokeWidth={2.2} />
-        </span>
         <input
           ref={input}
           id="site-search"
           className={styles.input}
           type="search"
-          placeholder="Search movies, series, anime..."
+          placeholder="Search"
           value={q}
           autoComplete="off"
           autoCorrect="off"
@@ -214,7 +211,7 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           }}
           onKeyDown={onKeyDown}
         />
-        {q ? (
+        {q && (
           <button
             type="button"
             className={styles.wipe}
@@ -230,9 +227,20 @@ export default function SearchPalette({ autoFocus = false, wide = false }) {
           >
             <X size={15} strokeWidth={2.4} />
           </button>
-        ) : (
-          <kbd className={styles.shortcut}>Ctrl K</kbd>
         )}
+        <div className={styles.searchDivider} />
+        <button
+          type="button"
+          className={styles.searchSubmitBtn}
+          onClick={(e) => {
+            e.stopPropagation();
+            submit();
+          }}
+          aria-label="Search"
+          title="Search"
+        >
+          <Search size={17} strokeWidth={2.2} />
+        </button>
       </div>
 
       {open && (
