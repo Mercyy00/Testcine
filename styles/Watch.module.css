@@ -626,6 +626,7 @@
 }
 
 .actionIconBtn {
+  flex: 0 0 38px;
   width: 38px;
   height: 38px;
   padding: 0;
@@ -635,10 +636,14 @@
 
 :global(html[data-theme-mode="default"]) .actionIconBtn {
   border-radius: 50% !important;
+  padding: 0 !important;
+  width: 38px;
 }
 
 :global(html[data-theme-mode="performance"]) .actionIconBtn {
   border-radius: 8px !important;
+  padding: 0 !important;
+  width: 38px;
 }
 
 .actionPillBtnActive {
