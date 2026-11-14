@@ -624,18 +624,26 @@ export default function VideoPlayer({
                 : "embed-player"
             }
             key={activeServer?.id || "embed-player"}
-            src={activeServer.url}
+            src={
+              activeServer?.url && activeServer.url.includes("play4u.org") && !activeServer.url.includes("embed=")
+                ? `${activeServer.url}${activeServer.url.includes("?") ? "&" : "?"}embed=1`
+                : activeServer?.url
+            }
             title={`${title.title || "Video Player"} - ${activeServer.name}`}
             width="100%"
             height="100%"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              border: 0,
+            }}
             frameBorder="0"
             allowFullScreen
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"
-            referrerPolicy={
-              activeServer?.id === "playdrive" || activeServer?.provider === "PlayDrive VIP"
-                ? "origin-when-cross-origin"
-                : "no-referrer-when-downgrade"
-            }
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
+            referrerPolicy="origin-when-cross-origin"
             loading="lazy"
             className={styles.embedIframe}
             onLoad={handleIframeLoad}

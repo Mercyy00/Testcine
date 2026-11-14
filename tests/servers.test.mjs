@@ -465,7 +465,7 @@ test("Ramayana: Rise of a Legend resolves verified PlayDrive (HD) embed server a
   assert.ok(hera);
 });
 
-test("Dionysus (Play4U) generates movie embed route with direct imdbId", () => {
+test("Dionysus (Play4U) generates pure movie embed route with embed=1 and direct imdbId", () => {
   const result = resolveGreekGodSources({
     id: "movie-tt4154796",
     type: "movie",
@@ -477,7 +477,9 @@ test("Dionysus (Play4U) generates movie embed route with direct imdbId", () => {
   assert.equal(dionysus.name, "Dionysus");
   assert.equal(dionysus.provider, "Play4U");
   assert.equal(dionysus.type, "embed");
-  assert.equal(dionysus.url, "https://play4u.org/watch/tt4154796");
+  assert.ok(dionysus.url.startsWith("https://play4u.org/watch/tt4154796?"));
+  assert.match(dionysus.url, /embed=1/);
+  assert.match(dionysus.url, /autoplay=1/);
 });
 
 test("Dionysus (Play4U) generates series embed route with padded season and episode", () => {
@@ -491,7 +493,8 @@ test("Dionysus (Play4U) generates series embed route with padded season and epis
 
   const dionysus = result.servers.find((s) => s.id === "dionysus");
   assert.ok(dionysus);
-  assert.equal(dionysus.url, "https://play4u.org/series/tt23112594/s-01/ep-01");
+  assert.ok(dionysus.url.startsWith("https://play4u.org/series/tt23112594/s-01/ep-01?"));
+  assert.match(dionysus.url, /embed=1/);
 });
 
 test("Dionysus (Play4U) resolves IMDb ID from TMDB catalog mapping", () => {
@@ -503,7 +506,21 @@ test("Dionysus (Play4U) resolves IMDb ID from TMDB catalog mapping", () => {
 
   const dionysus = result.servers.find((s) => s.id === "dionysus");
   assert.ok(dionysus);
-  assert.equal(dionysus.url, "https://play4u.org/watch/tt4154796");
+  assert.ok(dionysus.url.startsWith("https://play4u.org/watch/tt4154796?"));
+  assert.match(dionysus.url, /embed=1/);
+});
+
+test("Dionysus (Play4U) resolves The Odyssey (tt33764258) from title and TMDB ID 1368337", () => {
+  const result = resolveGreekGodSources({
+    id: "the-odyssey",
+    type: "movie",
+    tmdbId: 1368337,
+  });
+
+  const dionysus = result.servers.find((s) => s.id === "dionysus");
+  assert.ok(dionysus);
+  assert.ok(dionysus.url.startsWith("https://play4u.org/watch/tt33764258?"));
+  assert.match(dionysus.url, /embed=1/);
 });
 
 test("Dionysus (Play4U) is omitted when no IMDb ID can be resolved", () => {
