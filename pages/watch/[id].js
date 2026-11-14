@@ -39,7 +39,7 @@ import VideoPlayer from "../../components/VideoPlayer";
 import Ambilight from "../../components/Ambilight";
 import { useAmbientSource } from "../../components/useAmbientSource";
 import { getAllCardTitles, getTitle } from "../../lib/data.server";
-import { fetchLiveTitle } from "../../lib/tmdb";
+import { fetchLiveTitle, fetchImdbId } from "../../lib/tmdb";
 import { fetchAniListDetails, extractAniListId } from "../../lib/anilist";
 import { resolveGreekGodSources, resolveMediaIdentifiers } from "../../lib/servers";
 import {
@@ -136,6 +136,12 @@ export async function getStaticProps({ params }) {
 
   if (!t) {
     return { notFound: true };
+  }
+
+  if (t && !t.imdbId) {
+    try {
+      t.imdbId = await fetchImdbId(t.type, t.tmdbId, t.title, t.year);
+    } catch {}
   }
 
   return {

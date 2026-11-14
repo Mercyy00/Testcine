@@ -2,8 +2,10 @@ import { resolveSources } from "../../lib/sources.mjs";
 import { resolveGreekGodSources } from "../../lib/servers.js";
 import { getTitle } from "../../lib/data.server.js";
 import { extractAniListId } from "../../lib/anilist.js";
+import { fetchImdbId } from "../../lib/tmdb.js";
+import { TMDB_IMDB_MAP } from "../../lib/constants.js";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -44,6 +46,26 @@ export default function handler(req, res) {
     if (!resolvedTmdbId) {
       const numMatch = id.match(/(\d+)$/) || id.match(/(?:movie|tv|series)-(\d+)/i) || id.match(/^(\d+)$/);
       if (numMatch) resolvedTmdbId = parseInt(numMatch[1], 10);
+    }
+
+    // Check catalogue IMDb map
+    if (!resolvedImdbId) {
+      if (resolvedTmdbId && TMDB_IMDB_MAP[String(resolvedTmdbId)]) {
+        resolvedImdbId = TMDB_IMDB_MAP[String(resolvedTmdbId)];
+      } else if (id && TMDB_IMDB_MAP[String(id).toLowerCase()]) {
+        resolvedImdbId = TMDB_IMDB_MAP[String(id).toLowerCase()];
+      }
+    }
+
+    // Automatic live IMDb ID puller (TMDB external_ids + IMDb suggestion fallback)
+    if (!resolvedImdbId) {
+      try {
+        const queryTitle = title || serverTitle?.title || id.replace(/^(movie|tv|series|anime)-/, "").replace(/-/g, " ");
+        const queryYear = serverTitle?.year || null;
+        resolvedImdbId = await fetchImdbId(type, resolvedTmdbId, queryTitle, queryYear);
+      } catch {
+        // dynamic lookup fallback
+      }
     }
 
     // Greek God servers (Poseidon default, Zeus second, etc.)
