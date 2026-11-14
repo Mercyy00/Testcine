@@ -204,10 +204,66 @@
   cursor: default;
 }
 
+.scrollerWrap {
+  position: relative;
+  margin: -12px calc(var(--page-pad) * -1) 0;
+}
+
+.fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(44px, 7vw, 92px);
+  z-index: 10;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fadeLeft {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--bg, #000000) 0%,
+    rgba(7, 9, 14, 0.95) 20%,
+    rgba(7, 9, 14, 0.7) 48%,
+    rgba(7, 9, 14, 0.25) 75%,
+    transparent 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to right, black 0%, rgba(0, 0, 0, 0.8) 35%, rgba(0, 0, 0, 0.25) 75%, transparent 100%);
+  mask-image: linear-gradient(to right, black 0%, rgba(0, 0, 0, 0.8) 35%, rgba(0, 0, 0, 0.25) 75%, transparent 100%);
+}
+
+.fadeRight {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--bg, #000000) 0%,
+    rgba(7, 9, 14, 0.95) 20%,
+    rgba(7, 9, 14, 0.7) 48%,
+    rgba(7, 9, 14, 0.25) 75%,
+    transparent 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to left, black 0%, rgba(0, 0, 0, 0.8) 35%, rgba(0, 0, 0, 0.25) 75%, transparent 100%);
+  mask-image: linear-gradient(to left, black 0%, rgba(0, 0, 0, 0.8) 35%, rgba(0, 0, 0, 0.25) 75%, transparent 100%);
+}
+
+.fadeHidden {
+  opacity: 0;
+}
+
+:global(html[data-theme-mode="performance"]) .fade {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .scroller {
   display: flex;
   gap: 16px;
-  margin: -12px calc(var(--page-pad) * -1) 0;
   padding: 12px var(--page-pad) 18px;
   overflow-x: auto;
   scroll-snap-type: x proximity;

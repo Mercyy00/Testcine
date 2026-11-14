@@ -116,6 +116,8 @@
   padding: 8px var(--page-pad, 36px) 16px;
   overflow-x: hidden;
   position: relative;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 60px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 60px), transparent 100%);
 }
 
 /* Hero Banner Skeleton */

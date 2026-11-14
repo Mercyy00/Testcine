@@ -76,18 +76,6 @@ export default function Layout({
           {BRAND.name} is a curated streaming interface for movies, series, and anime.
           This product uses the TMDB API but is not endorsed or certified by TMDB.
         </p>
-        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, opacity: 0.7 }}>
-          <a
-            href="https://www.themoviedb.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="The Movie Database (TMDB)"
-            style={{ display: "inline-flex", alignItems: "center" }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brands/tmdb.svg" alt="TMDB Logo" width={80} height={10} style={{ display: "block" }} />
-          </a>
-        </div>
       </footer>
       <MobileNav />
     </>

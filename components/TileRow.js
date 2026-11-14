@@ -30,6 +30,18 @@ export default function TileRow({ title, items = [], param = "service", classNam
     return () => ro.disconnect();
   }, [items]);
 
+  const stopDragging = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    const el = scroller.current;
+    if (el) {
+      el.style.scrollBehavior = "smooth";
+      el.style.scrollSnapType = "";
+      el.style.userSelect = "";
+      el.style.cursor = "";
+    }
+  };
+
   useEffect(() => {
     const onWindowMouseUp = () => {
       if (isDragging.current) {
@@ -77,18 +89,6 @@ export default function TileRow({ title, items = [], param = "service", classNam
     el.scrollLeft = scrollLeftStart.current - walk;
   };
 
-  const stopDragging = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    const el = scroller.current;
-    if (el) {
-      el.style.scrollBehavior = "smooth";
-      el.style.scrollSnapType = "";
-      el.style.userSelect = "";
-      el.style.cursor = "";
-    }
-  };
-
   const onClickCapture = (e) => {
     if (hasMoved.current) {
       e.preventDefault();
@@ -125,6 +125,10 @@ export default function TileRow({ title, items = [], param = "service", classNam
 
       <div className={styles.scrollerWrap}>
         <div
+          className={`${styles.fade} ${styles.fadeLeft} ${edge.start ? styles.fadeHidden : ""}`}
+          aria-hidden="true"
+        />
+        <div
           className={styles.scroller}
           ref={scroller}
           onScroll={measure}
@@ -136,6 +140,10 @@ export default function TileRow({ title, items = [], param = "service", classNam
             <BrandCard key={it.id} item={it} param={param} />
           ))}
         </div>
+        <div
+          className={`${styles.fade} ${styles.fadeRight} ${edge.end ? styles.fadeHidden : ""}`}
+          aria-hidden="true"
+        />
       </div>
     </section>
   );

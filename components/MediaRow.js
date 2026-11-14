@@ -45,6 +45,18 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
     };
   }, [openMenu]);
 
+  const stopDragging = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    const el = scroller.current;
+    if (el) {
+      el.style.scrollBehavior = "smooth";
+      el.style.scrollSnapType = "";
+      el.style.userSelect = "";
+      el.style.cursor = "";
+    }
+  };
+
   // Window mouseup listener to terminate drag anywhere
   useEffect(() => {
     const onWindowMouseUp = () => {
@@ -93,18 +105,6 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
       el.style.cursor = "grabbing";
     }
     el.scrollLeft = scrollLeftStart.current - walk;
-  };
-
-  const stopDragging = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    const el = scroller.current;
-    if (el) {
-      el.style.scrollBehavior = "smooth";
-      el.style.scrollSnapType = "";
-      el.style.userSelect = "";
-      el.style.cursor = "";
-    }
   };
 
   const onClickCapture = (e) => {
@@ -196,15 +196,25 @@ export default function MediaRow({ title, href, menu, menus, tabs, pager, childr
           </div>
         )}
       </header>
-      <div
-        className={styles.scroller}
-        ref={scroller}
-        onScroll={measure}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onClickCapture={onClickCapture}
-      >
-        {children}
+      <div className={styles.scrollerWrap}>
+        <div
+          className={`${styles.fade} ${styles.fadeLeft} ${edge.start ? styles.fadeHidden : ""}`}
+          aria-hidden="true"
+        />
+        <div
+          className={styles.scroller}
+          ref={scroller}
+          onScroll={measure}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onClickCapture={onClickCapture}
+        >
+          {children}
+        </div>
+        <div
+          className={`${styles.fade} ${styles.fadeRight} ${edge.end ? styles.fadeHidden : ""}`}
+          aria-hidden="true"
+        />
       </div>
     </section>
   );
