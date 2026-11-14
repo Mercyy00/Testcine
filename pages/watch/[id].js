@@ -259,6 +259,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
         type: t.type,
         tmdbId: t.tmdbId,
         anilistId: t.anilistId || extractAniListId(id) || extractAniListId(t.id),
+        imdbId: t.imdbId || t.external_ids?.imdb_id,
         season: currentSeason,
         episode: currentEpisode,
         progress: initialResumeSeconds,
@@ -486,6 +487,8 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
     if (t.tmdbId) query.set("tmdbId", String(t.tmdbId));
     const aniId = t.anilistId || extractAniListId(id) || extractAniListId(t.id);
     if (aniId) query.set("anilistId", String(aniId));
+    const imdbId = t.imdbId || t.external_ids?.imdb_id;
+    if (imdbId) query.set("imdbId", String(imdbId));
     if (t.title) query.set("title", t.title);
     if (t.poster) query.set("poster", t.poster);
     if (t.type !== "movie") {
@@ -523,7 +526,7 @@ function WatchContent({ title: t, id, season, episode, isReady }) {
       });
 
     return () => controller.abort();
-  }, [id, t.type, t.tmdbId, t.anilistId, t.title, t.poster, currentSeason, currentEpisode, isReady, request]);
+  }, [id, t.type, t.tmdbId, t.anilistId, t.imdbId, t.title, t.poster, currentSeason, currentEpisode, isReady, request]);
 
   const lastSaveTimeRef = useRef(0);
   const lastSaveTimestampRef = useRef(0);

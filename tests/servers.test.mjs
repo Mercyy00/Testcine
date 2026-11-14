@@ -7,9 +7,9 @@ import {
   resolveGreekGodSources,
 } from "../lib/servers.js";
 
-test("Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, and Atlas are registered as Greek god servers with Poseidon as default and Hera below Zeus", () => {
+test("Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, Atlas, and Dionysus are registered as Greek god servers with Poseidon as default and Hera below Zeus", () => {
   const servers = getGreekGodServers();
-  assert.ok(servers.length >= 8, "Should have at least 8 servers (Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, Atlas)");
+  assert.ok(servers.length >= 9, "Should have at least 9 servers (Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, Atlas, Dionysus)");
   assert.equal(servers[0].id, "poseidon");
   assert.equal(servers[1].id, "zeus");
   assert.equal(servers[2].id, "hera", "Hera must be positioned immediately below Zeus");
@@ -72,6 +72,14 @@ test("Poseidon, Zeus, Hera, Hades, Apollo, Hermes, Ares, and Atlas are registere
   assert.equal(atlas.provider, "Atlantic");
   assert.equal(atlas.type, "embed");
   assert.equal(atlas.status, "online");
+
+  const dionysus = servers.find((s) => s.id === "dionysus");
+  assert.ok(dionysus);
+  assert.equal(dionysus.name, "Dionysus");
+  assert.equal(dionysus.provider, "Play4U");
+  assert.equal(dionysus.type, "embed");
+  assert.equal(dionysus.status, "online");
+  assert.equal(dionysus.isDefault, false);
 
   const defaultServer = getDefaultGreekGodServer();
   assert.equal(defaultServer.id, "poseidon");
@@ -455,4 +463,56 @@ test("Ramayana: Rise of a Legend resolves verified PlayDrive (HD) embed server a
   assert.ok(zeus);
   const hera = result.servers.find((s) => s.id === "hera");
   assert.ok(hera);
+});
+
+test("Dionysus (Play4U) generates movie embed route with direct imdbId", () => {
+  const result = resolveGreekGodSources({
+    id: "movie-tt4154796",
+    type: "movie",
+    imdbId: "tt4154796",
+  });
+
+  const dionysus = result.servers.find((s) => s.id === "dionysus");
+  assert.ok(dionysus);
+  assert.equal(dionysus.name, "Dionysus");
+  assert.equal(dionysus.provider, "Play4U");
+  assert.equal(dionysus.type, "embed");
+  assert.equal(dionysus.url, "https://play4u.org/watch/tt4154796");
+});
+
+test("Dionysus (Play4U) generates series embed route with padded season and episode", () => {
+  const result = resolveGreekGodSources({
+    id: "series-tt23112594",
+    type: "series",
+    imdbId: "tt23112594",
+    season: 1,
+    episode: 1,
+  });
+
+  const dionysus = result.servers.find((s) => s.id === "dionysus");
+  assert.ok(dionysus);
+  assert.equal(dionysus.url, "https://play4u.org/series/tt23112594/s-01/ep-01");
+});
+
+test("Dionysus (Play4U) resolves IMDb ID from TMDB catalog mapping", () => {
+  const result = resolveGreekGodSources({
+    id: "avengers-endgame",
+    type: "movie",
+    tmdbId: 299534,
+  });
+
+  const dionysus = result.servers.find((s) => s.id === "dionysus");
+  assert.ok(dionysus);
+  assert.equal(dionysus.url, "https://play4u.org/watch/tt4154796");
+});
+
+test("Dionysus (Play4U) is omitted when no IMDb ID can be resolved", () => {
+  const result = resolveGreekGodSources({
+    id: "movie-99999999",
+    type: "movie",
+    tmdbId: 99999999,
+  });
+
+  const dionysus = result.servers.find((s) => s.id === "dionysus");
+  assert.equal(dionysus, undefined, "Dionysus should be omitted when no IMDb ID is available");
 });

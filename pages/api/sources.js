@@ -10,7 +10,7 @@ export default function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    const { id, type = "movie", season, episode, ep, tmdbId, anilistId, progress, title, poster, idType, subType, dub } = req.query;
+    const { id, type = "movie", season, episode, ep, tmdbId, anilistId, imdbId, progress, title, poster, idType, subType, dub } = req.query;
 
     if (typeof id !== "string" || !/^[a-zA-Z0-9_.-]{1,160}$/.test(id)) {
       return res.status(400).json({ error: "Invalid id parameter" });
@@ -25,15 +25,17 @@ export default function handler(req, res) {
       return res.status(400).json({ error: "Movies do not accept season or episode parameters" });
     }
 
-    // Resolve TMDB and AniList identifiers
+    // Resolve TMDB, AniList, and IMDb identifiers
     let resolvedTmdbId = tmdbId ? parseInt(tmdbId, 10) : null;
     let resolvedAniListId = anilistId ? parseInt(anilistId, 10) : null;
+    let resolvedImdbId = imdbId ? String(imdbId).trim() : null;
     const serverTitle = getTitle(id);
 
-    if (!resolvedTmdbId || !resolvedAniListId) {
+    if (!resolvedTmdbId || !resolvedAniListId || !resolvedImdbId) {
       if (serverTitle) {
         if (!resolvedTmdbId && serverTitle.tmdbId) resolvedTmdbId = serverTitle.tmdbId;
         if (!resolvedAniListId && serverTitle.anilistId) resolvedAniListId = serverTitle.anilistId;
+        if (!resolvedImdbId && serverTitle.imdbId) resolvedImdbId = serverTitle.imdbId;
       }
     }
     if (!resolvedAniListId) {
@@ -50,6 +52,7 @@ export default function handler(req, res) {
       type,
       tmdbId: resolvedTmdbId,
       anilistId: resolvedAniListId,
+      imdbId: resolvedImdbId,
       season: season || 1,
       episode: episode ?? ep ?? 1,
       progress: progress || 0,
