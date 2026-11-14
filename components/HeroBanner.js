@@ -3,13 +3,82 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Play, ChevronLeft, ChevronRight } from "lucide-react";
 import Art from "./Art";
-import LiquidGlassButton from "./LiquidGlassButton";
 import { RatingRing, CertBadge, Dot } from "./Meta";
 import { runtimeLabel } from "../lib/constants";
 import { useSettings } from "../lib/store";
 import styles from "./HeroBanner.module.css";
 
-function Wordmark({ title }) {
+const copyVariants = {
+  initial: {
+    opacity: 0,
+    x: -50,
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.16, 1, 0.3, 1],
+      staggerChildren: 0.07,
+      delayChildren: 0.04,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -40,
+    transition: {
+      duration: 0.32,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const childVariants = {
+  initial: {
+    opacity: 0,
+    x: -25,
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      duration: 0.22,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const backdropVariants = {
+  initial: {
+    opacity: 0,
+    scale: 1.05,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.85,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+function Wordmark({ title, isPerformance }) {
   const [logoFailed, setLogoFailed] = useState(false);
   const titleStr =
     typeof title?.title === "string"
@@ -18,9 +87,36 @@ function Wordmark({ title }) {
       ? title.name
       : String(title?.title || title || "");
 
+  const words = titleStr ? titleStr.toUpperCase().split(" ") : [];
+  const stack = words.length <= 3 && title?.type === "movie";
+
+  if (isPerformance) {
+    if (title?.logo && !logoFailed) {
+      return (
+        <h1 className={styles.logoWrap}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={title.logo}
+            alt={titleStr}
+            className={styles.logoImg}
+            onError={() => setLogoFailed(true)}
+          />
+          <span style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", border: 0 }}>
+            {titleStr}
+          </span>
+        </h1>
+      );
+    }
+    return (
+      <h1 className={`${styles.mark} ${stack ? styles.markStack : styles.markWide}`} aria-label={titleStr}>
+        {stack ? words.map((w, i) => <span key={i}>{w}</span>) : (titleStr ? titleStr.toUpperCase() : "")}
+      </h1>
+    );
+  }
+
   if (title?.logo && !logoFailed) {
     return (
-      <h1 className={styles.logoWrap}>
+      <motion.h1 variants={childVariants} className={styles.logoWrap}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={title.logo}
@@ -31,15 +127,14 @@ function Wordmark({ title }) {
         <span style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", border: 0 }}>
           {titleStr}
         </span>
-      </h1>
+      </motion.h1>
     );
   }
-  const words = titleStr ? titleStr.toUpperCase().split(" ") : [];
-  const stack = words.length <= 3 && title?.type === "movie";
+
   return (
-    <h1 className={`${styles.mark} ${stack ? styles.markStack : styles.markWide}`} aria-label={titleStr}>
+    <motion.h1 variants={childVariants} className={`${styles.mark} ${stack ? styles.markStack : styles.markWide}`} aria-label={titleStr}>
       {stack ? words.map((w, i) => <span key={i}>{w}</span>) : (titleStr ? titleStr.toUpperCase() : "")}
-    </h1>
+    </motion.h1>
   );
 }
 
@@ -49,6 +144,8 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
   const [hover, setHover] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [settings] = useSettings();
+  const isPerformance =
+    settings?.themeMode === "performance" || settings?.theme === "performance";
   const paused = hover || isFocused || settings.autoplay === false || settings.autoplayPreviews === false;
   const n = validItems.length;
   const go = useCallback((next) => setI(((next % n) + n) % n), [n]);
@@ -74,33 +171,32 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
       onBlurCapture={() => setIsFocused(false)}
     >
       <div className={styles.stage}>
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={t.id}
-            className={styles.backdrop}
-            initial={{ opacity: 0, scale: 1.06 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
+        {isPerformance ? (
+          <div key={t.id ?? i} className={styles.backdrop}>
             <Art title={t} variant="backdrop" className={styles.art} priority />
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={t.id ?? i}
+              className={styles.backdrop}
+              variants={backdropVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <Art title={t} variant="backdrop" className={styles.art} priority />
+            </motion.div>
+          </AnimatePresence>
+        )}
         <div className={styles.fadeLeft} />
         <div className={styles.fadeBottom} />
       </div>
 
       <div className={styles.content}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={t.id}
-            className={styles.copy}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Wordmark title={t} />
+        {isPerformance ? (
+          <div key={t.id ?? i} className={styles.copy}>
+            <Wordmark title={t} isPerformance={true} />
             <div className={styles.meta}>
               <RatingRing value={t.rating} size={38} />
               <Dot />
@@ -128,8 +224,50 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
                 <span>Details</span>
               </Link>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={t.id ?? i}
+              className={styles.copy}
+              variants={copyVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <Wordmark title={t} isPerformance={false} />
+              <motion.div variants={childVariants} className={styles.meta}>
+                <RatingRing value={t.rating} size={38} />
+                <Dot />
+                <span>{t.year}</span>
+                <Dot />
+                <span>{runtimeLabel(t)}</span>
+                <Dot />
+                <CertBadge cert={t.cert} />
+                <Dot />
+                <span>HD</span>
+              </motion.div>
+              <motion.p variants={childVariants} className={styles.overview}>
+                {t.overview}
+              </motion.p>
+              <motion.div variants={childVariants} className={styles.actions}>
+                <Link
+                  href={t.type === "movie" ? `/watch/${t.id}` : `/watch/${t.id}?season=1&episode=1`}
+                  className={styles.playBtn}
+                >
+                  <Play size={16} fill="currentColor" stroke="none" />
+                  <span>Play</span>
+                </Link>
+                <Link
+                  href={`/title/${t.id}`}
+                  className={styles.detailsBtn}
+                >
+                  <span>Details</span>
+                </Link>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
 
       <div className={styles.pager}>
@@ -139,7 +277,7 @@ export default function HeroBanner({ items = [], interval = 8000 }) {
         <div className={styles.dots} role="tablist" aria-label="Choose title">
           {validItems.map((it, idx) => (
             <button
-              key={it.id}
+              key={it.id ?? idx}
               type="button"
               role="tab"
               aria-selected={idx === i}

@@ -52,6 +52,12 @@
   max-width: min(720px, 100%);
 }
 
+:global(html[data-theme-mode="default"]) .copy {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 .logoWrap {
   max-width: min(700px, 85vw);
   width: min(700px, 85vw);
